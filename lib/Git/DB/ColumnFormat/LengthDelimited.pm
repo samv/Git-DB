@@ -1,9 +1,9 @@
 
-package Git::DB::ColumnType::LengthDelimited;
+package Git::DB::ColumnFormat::LengthDelimited;
 
 use Moose;
 use MooseX::Method::Signatures;
-with 'Git::DB::ColumnType';
+with 'Git::DB::ColumnFormat';
 
 use Git::DB::RowFormat qw(BER read_BER)
 
@@ -25,7 +25,7 @@ __END__
 
 =head1 NAME
 
-Git::DB::ColumnType::LengthDelimited - data store for strings etc
+Git::DB::ColumnFormat::LengthDelimited - data store for strings etc
 
 =head1 SYNOPSIS
 

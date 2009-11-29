@@ -1,9 +1,9 @@
 
-package Git::DB::ColumnType::Text;
+package Git::DB::ColumnFormat::Text;
 
 use Moose;
 
-extends 'Git::DB::ColumnType::LengthDelimited';
+extends 'Git::DB::ColumnFormat::LengthDelimited';
 
 use Encode qw(encode decode);
 use utf8 qw(is_utf8);
@@ -29,7 +29,7 @@ __END__
 
 =head1 NAME
 
-Git::DB::ColumnType::Text - type for UTF-8 valid data
+Git::DB::ColumnFormat::Text - type for UTF-8 valid data
 
 =head1 SYNOPSIS
 

@@ -1,9 +1,9 @@
 
-package Git::DB::ColumnType::Float;
+package Git::DB::ColumnFormat::Float;
 
 use Moose;
 use MooseX::Method::Signatures;
-with 'Git::DB::ColumnType';
+with 'Git::DB::ColumnFormat';
 
 sub type_num { 1 };
 
@@ -22,7 +22,7 @@ __END__
 
 =head1 NAME
 
-Git::DB::ColumnType::VarInt - Variable-length BER int
+Git::DB::ColumnFormat::VarInt - Variable-length BER int
 
 =head1 SYNOPSIS
 

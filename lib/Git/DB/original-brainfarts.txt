@@ -1,0 +1,673 @@
+GIT DATABASE SUPPORT
+====================
+
+Introduction
+------------
+
+Structured data is not source code, but still the basic mechanics
+of git are sound enough and the benefits of distribution great enough,
+that already people are putting structured data in files in git
+repositories in order to achieve a distributed and auditable data
+store.
+
+Perhaps it would be nice to support and standardize these efforts
+early.
+
+This document lays down a design for storing RDBMS-like relations in a
+git repository, and design for enough plumbing to be a storage
+back-end for a SQL engine such as MySQL or SQLite.
+
+The following are the design goals:
+
+* minimal complexity of implementation; re-use git features as much as
+  possible.  Able to get off the ground quickly with something simple.
+* fast operation (efficient COPY IN, packed row format), even
+  without a working tree or using a sparse index.
+* efficient storage that does not leave a very fragmented store,
+  allowing the huffman coding to ramp up and save space for bulk
+  writes.
+* built to allow for eventual development of the full set of
+  database features that we've all come to know and love over the
+  last 50 years; such as
++
+* ACID semantics and concurrency at "Serializable" level, if not
+  better (ie full predicate)
+* constraints, such as data types, value constraints and foreign keys
+* Views and Indexes (either part of the official schema and in-tree,
+  like Oracle's "Materialized View", or out-of-tree like a regular
+  index)
+* schema transactions
+* support for heirarchical data management (ie, free-form,
+  pointer-filled databases so beloved by modern OO programmers)
+
+The design put forward in this document draws a lot of design
+inspiration and some detail from Postgres and MVCC, and the row format
+draws design from ASN.1 BER and Google's ProtocolBuffer.
+
+http://code.google.com/apis/protocolbuffers/docs/encoding.html
+
+
+Plumbing API
+------------
+
+There are three key areas that plumbing needs to be developed;
+
+* schema operations, such as creating, dropping and altering tables,
+  views, etc.
+* CRUD interface - create, read, update, delete
+* Transaction related - begin transaction, commit/rollback, read/write
+  lock tracking, transaction merging, savepoints.
+
+Initially the plumbing will be very simple - eg, select might
+reasonably be expected to perform only selection of rows by primary
+key read on standard input, or full scanning - without any ability to
+process a query expression.  Nevertheless this API should serve as a
+solid foundation for a table back-end for an engine such as MySQL or
+SQLite, the duct tape between them being a SMOP.
+
+The interface presented in this document will confine itself to a
+minimal set of features.
+
+
+Schema Interface
+~~~~~~~~~~~~~~~~
+The schema for the store is itself stored in a set of tables in the
+data store.
+
+[verse]
+'git db schema' <filename>
+
+The `filename` here is a dump of the schema-related tables from an
+existing database.  The dump is a data dump of the 'meta' schema (see
+later), in any of the allowable forms (eg, CSV, JSON/YAML, or the
+binary format).  For applications wishing to connect to a store which
+may require upgrading, this method of setup is preferred.  Running
+this command may result in the schema tables being altered.
+
+For building the schema without directly editing the schema data
+structures, a traditional DDL-like interface is used:
+
+[verse]
+'git db create' <table> [<column> <type>...]
+     [--primary-key "<column>"...]
++
+'git db drop' <table>
++
+'git db alter' <table>
+     [--drop <column>]
+     [--add <column> <type>]
+     [--rename <column> <newname>]
+
+These commands return a basic interface to create and drop tables, and
+columns.  They edit the 'meta' schema and 
+
+'git db describe' <table> ... > defines.txt
++
+'git db define' defines.txt
+
+This is a way to get the information about the current structure of a
+table.  The definition can be saved and re-loaded using the 'define'
+command.
+
+
+CRUD Interface
+~~~~~~~~~~~~~~
+[verse]
+'git db select' [--csv] [--json]
+     [--stdin]
+     <table> [<PK>...]
++
+'git db delete'
+     [--stdin]
+     <table> [<PK>...]
++
+'git db insert' [--csv] [--json]
+     [--stdin]
+     <table> [<columns>]
++
+'git db update' [--csv] [--json]
+     [--stdin]
+     <table> [<PK>...]
+
+Note with all of these commands it is assumed that only selection by
+primary key is required.  The primary keys are piped to standard input
+with --stdin.  Two forms of output are suggested; CSV and JSON.
+
+
+Transaction Interface
+~~~~~~~~~~~~~~~~~~~~~
+[verse]
+'git db begin'
++
+'git db commit'
++
+'git db rollback'
++
+'git db merge' <commit-ish>
+
+Like git commits, transactions may be long-lived.  Like databases,
+safety in the face of concurrent access can cost in terms of the extra
+information you need to record to be able to prove that the two
+concurrent updates are "safe".
+
+The purpose of this section is to describe that an isolation level
+equivalent to the SQL SERIALIZABLE level is achievable, and what is
+required to do this at the most strict level.  Various other levels
+are available with higher performance but subject to classic and
+probably novel caveats, such as "phantom read", "dirty read", etc.
+
+Opening a transaction
+^^^^^^^^^^^^^^^^^^^^^
+To start a transaction, a process must read the HEAD ref that it is
+working against.  This is the mechanism of the A in ACID - Atomic
+updates.
+
+Concurrent transactions
+^^^^^^^^^^^^^^^^^^^^^^^
+If a database is to be multi-user, then a process must first claim a
+git index (as current plumbing must do), and know its starting ref.
+This provides "atomic updates" and "independence".  A fully
+transactionally safe update should start with an empty index.
+
+Depending on the active isolation level, the CRUD sub-commands mark
+rows or tables which are selected or updated.  These would generally
+be recorded as primary key ranges "locked".
+
+Commit sequence
+^^^^^^^^^^^^^^^
+This is described in further detail later, but the highest and slowest
+transaction isolation level depends on being able to compare the sets
+of rows which were modified and/or "locked" by a concurrent
+transaction.  These are stored in the commit message, and depending on
+what happens concurrently there may be merge commits which represent
+concurrent updates.  'git db merge <commitish>' implements this logic
+and would normally be automatically invoked by 'git db commit' in
+situations where another transaction has updated the master reference
+since this transaction began.
+
+
+Implementation Details
+----------------------
+
+Unlike the interface API, this design is more fleshed out than the
+others because it matters much more.
+
+Table Storage
+~~~~~~~~~~~~~
+
+It makes sense to talk about table storage first, as the DDL is itself
+stored in tables.
+
+Aside from the page optimization, rows and even columns are stored in
+individual blobs.
+
+The starting point of the design is to use the schema name at the top
+level, table/relation name next, and then within those, a UTF-8
+representation of the value of the primary key(s) of the row (or a
+UUID if there is no primary key) as the filename within the tree for
+the relation.
+
+eg
+
+   tracker/ticket/1
+   tracker/ticket/2
+
+For relations with a lot of contents, sub-trees can be used.  This is
+equivalent to use of nodes in a B-Tree.
+
+   tracker/ticket/1-1000/
+   tracker/ticket/1001-2000/
+
+The exact mechanism for converting from a value to the above is
+type-dependent.
+
+For the tree, normalisation of how exactly it appears is traded off
+for options which allow programs to change as little of the tree as
+safe, and for individual trees to remain relatively small.  This means
+that different transactions could conceivably write the same data in
+different ways; this is one of the things that the "merge" phase of
+commit must consider when approving two commits' contents to be
+combined, and possibly re-emit rows or even pages.  However, a
+"normalised" form exists which involves no sub-directories and a
+particular way to normalise any given value.
+
+Conversion and Escaping rules
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The driving principle of the conversion rules are;
+
+ 1. they must be able to encode all possible values in path names
+    which are compatible with the git filesystem layout.
+
+ 2. they should be as straightforward and intuitive as possible.
+
+Firstly, columns in multi-column primary keys are delimited in the
+path with a simple comma.
+
+Columns which are 'integral numeric quantities' are converted to their
+base 10 form.
+
+Columns which are 'rational numeric quantities' are specified to
+``double'' precision in base 10.
+
+Columns which are 'dates', 'timestamps' or 'intervals' are converted
+to the corresponding ISO-9660 representation.
+
+Columns which are 'booleans' are converted to `t` and `f`.
+
+Columns which are 'strings' which have characters that are considered
+special are escaped in various ways.
+Entire ranges of control characters are indiscriminately escaped to
+various pretty Unicode forms:
+
+  - ASCII 0x0 through 0x1f are converted to their U+24xx escapes
+  - Special ASCII characters (currently, ',', '-', '/' and '\') are
+    converted to their fullwidth forms U+ffxx
+  - Should the above unicode characters appear in a key, it is in turn
+    escaped to `\x\{24xx\}` (where `24xx` is the Unicode codepoint)
+
+Columns which cannot be reduced to any of the above forms are not
+considered legal primary key candidates.
+
+
+Row Pages
+^^^^^^^^^
+Multiple rows may be combined into single blobs; these are akin to
+database "pages";
+
+   ticket/1001-2000/1001-1100
+   ticket/1001-2000/1101-1200
+
+A drawback to using this style of update is that it must also be
+possible to record deletes and updates to pages without deleting or
+re-writing those pages; blobs which contain newer versions of rows
+compared to existing blobs will be distinguished by a suffix.  The
+highest suffix is the one used.
+
+   ticket/1001-2000/1001-1100
+   ticket/1001-2000/1006;1
+
+In the above, 'select' can tell from the index that the file '1006;1'
+contains a newer version of the row with PK = 1006; it has been
+updated.
+
+Deletes from combined blobs will be recorded with a different suffix;
+
+   ticket/1001-2000/1001-1100
+   ticket/1001-2000/1006;X
+
+The decision whether to clean up these dead rows from the store is
+akin to the decision to rebalance a B+ or B* Tree.
+
+The "Row Page" feature is optional and may be disallowed on some
+stores which prefer to keep the representation of a given set of data
+content predictable.
+
+Row pages are thought to be required to achieve compression of table
+content, as otherwise the string matching and huffman coding features
+of LZW compression used by gzip cannot use a very likely source of
+string matches - the previous row!
+
+
+Row Format
+~~~~~~~~~~
+An important consideration in the design is to be able to avoid
+rewriting table data if a table's column definitions change, as such a
+DDL change may result in a disastrously large update.
+
+Google's ProtocolBuffer standard fits the bill closely, and is used
+with some modifications.
+
+Firstly, ASN.1 BER integers are preferred to the format for encoding
+arbitrary length numbers in ProtocolBuffer.  This encoding is very
+similar, but supports negative numbers in a more "natural" fashion -
+by treating the most significant bit as a sign bit and extending it.
+Another change is to use four instead of three bits to encode the
+column type to allow for future expansion and allow more compact
+representation of common types such as booleans.  Yet another is to
+use relative column number indexing instead of absolute.  These are
+all minor changes which should hopefully enhance the compressibility
+of row data by huffman-style coding.
+
+A "page" is a blob - either for a single row, or for a sequence of
+rows.
+Each row in a page is a succession of columns, each introduced with a
+BER integer.
+The primary key columns are always written first, followed by an
+optional (but in the "normative" encoding, pointless and hence
+illegal) psuedo-column which says how long the rest of the row is,
+for faster scanning through the page.
+It's possible that table schema changes would break that assumption;
+you can either have normative coding of content or efficient
+incremental operation, not both.
+
+The lowest four bits of this are interpreted as an enumerated type
+indicator for the value which follows; enough to scan the row without
+a schema, but without the schema it is not possible to interpret the
+value fully.
+
+A variety of types are assigned to various value types to allow for
+flexibility of representation.
+In "Normative Representation" this is not the case and a single type
+is always represented with a particular value type; this implies some
+loss of information as the rigid schema (round hole) is applied to the
+data (square peg).  
+An example of this is timestamp types.
+Should a timestamp type be indicated for a column in the schema, it
+would be assumed to be a quantity of seconds from the epoch.
+
+Encountering an integer (type 0) would indicate a traditional `time_t`
+epoch time.
+Encountering a float (type 1) would indicate a floating point epoch
+time.
+Encountering a numeric (type 3) with a scale of 6 would indicate a
+Postgres-style 64-bit integer date (number of microseconds since the
+epoch).
+A string (type 2) would indicate an ISO-9660 encoded date.
+
+The top N bits of the number is a relative column offset.
+Given that there are four bits for data type, one bit to indicate BER
+extension and one bit for sign, that leaves only two bits to represent
+value.
+If this is '0' then it means the next column which is due.
+This will be the case a lot of the time - always in the normative
+form.
+This repetition of byte values should increase compressibility of data
+pages.
+A number such as '2' means that the next two columns were NULL (or
+dropped before this row was written) and that the third next column
+follows.
+A negative number means that the columns are appearing out of order;
+for example, the primary key was not set to the first defined columns
+in the original schema.
+Rows can still be horizontally combined simply due to a special
+psuedo-type that resets the expected column back to 1.
+
+This means that no matter how many columns there are, only long (>3)
+sequences of NULL columns involve multi-byte headers, instead of
+all columns after the 15th as with ProtocolBuffer.
+Also, groups of boolean columns will be efficiently stored with one
+byte each, and generally in a form that will huffman code well.
+
+
+Column types
+^^^^^^^^^^^^
+The meaning of the 4-bit type field is given below.  Some of these
+come from ProtocolBuffer.
+
+------------
+ Type   Meaning     Used For
+ ----   -------     --------
+   0     Varint      Any integer type (BER int follows)
+   1     float       64-bit float/timestamp
+   2     Length-     Strings etc. BER int N follows, then N
+         delimited   bytes of data.
+   3     numeric     Two BER ints follow to denote scale
+                     (base 10) and value.
+   4     rational    Two BER ints follow to denote a
+                     rational number - scalar and quotient
+   5     NULL        Explicit NULL
+   6      -          reserved
+   7     object      null-terminated path to value follows
+   8     false       Boolean; False; no data follows
+   9     true        Boolean; True; no data follows
+   a     EOR         End of row
+   b     length      BER int follows with length of remaining row.
+   c      -          reserved
+   d     Reset       Reset column index to 0; expect 1st
+                     column next
+   e      -          reserved
+   f      -          reserved
+------------
+
+As in ProtocolBuffer, well formed rows from two sources can be
+combined by string concatenation, except using the ASCII carriage
+return (CR) character between them, which encodes a 'Reset' column.
+Normally it is not necessary to encode NULL column values; leaving
+them out is equivalent, but in the context of combining rows this may
+be useful.
+Explicit NULL values should never appear on disk; it is reserved for
+stream use in situations where it is required.
+The "Normative" form never uses such facilities.
+
+The 'length' type allows for skipping over row content to allow faster
+lookup by by primary key.  Instead of decoding all columns in the rows
+that precede it, columns can be skipped.
+
+For larger column values, they may have their data saved in their own
+blob instead of stored in the page using the 'object' code.  These are
+necessarily linked from the filesystem level as well; in a 'toast'
+relation, these would typically be arbitrarily named with a special
+filename form for the necessary back-references required for garbage
+management.
+
+
+Heirarchical Data Storage
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Heirarchical designs were popular in the 60's and are recently making
+a resurgence with systems such as CouchDB.  They are a lot simpler;
+instead of trying to reduce the data management problem to its minimal
+set of data points via a rigourously defined system of normalisation
+and instructing the database to protect integrity by systematically
+enforcing data preconditions in the form of constraints, you just
+throw objects and data structures into "catch-all" columns and allow
+references from within these free-form data fields to other database
+objects, cross your fingers and hope it all goes well.  All that
+database knowledge that comes from the early eras of computing like
+ACID, 3NF, Set Theory it's all a bunch of ivory tower crap.
+
+The basic idea is to dump the structure in YAML or JSON form, with
+references to other database objects converted to function calls which
+return the object with that type and primary key.
+
+eg, in JSON
+
+[verse]
+ {'foo': 'bar', 'field': o('relation', 'primary-key')}
+
+The object's 'field' property would be a link to the row with primary
+key of 'primary-key' in the 'relation' table.
+
+The store must necessarily keep track of these back-references, in
+order to maintain their integrity.  For instance, if a row's primary
+key is changed then this must be reflected in the rows which refer to
+it.
+
+A column of the heirarchical type appears in the row format as a
+string.
+
+
+Schema Design
+~~~~~~~~~~~~~
+
+This specification must define the schema for the representation of
+table and column definitions.  These are found as tables in the 'meta'
+schema.
+
+eg
+
+  meta/relation/mytable
+  meta/attribute/mytable,1
+
+The format of these is rows as for the regular data.
+
+This design of this part is quite important to get right; design will
+be lifted as far as possible from Postgres as its information schema
+is quite feature-rich and certainly more suitable than the
+information_schema defined in the various SQL standards.  Postgres
+column names are re-used to keep this emphasis.
+
+
+Schema table - relation
+^^^^^^^^^^^^^^^^^^^^^^^
+The 'relation' table contains information about relations (tables,
+indexes, views and 'toast' tables)
+
+------
+  Column     Definition   Meaning
+  relname    string       name of the relation
+  relnum     integer      unique number of relation
+  relkind    char         r=relation, i=index, v=view, t=toast
+------
+
+`relname` is the primary key of this table.  Currently the only useful
+value for `relkind` is `r`.
+
+`relnum` is also unique.  It is used to identify tables when they are
+renamed.  If a table is renamed its `relname` will change (and the
+tree will, too, as the `relname` forms the path), but the `relnum`
+will not.
+This may end up being a UUID to make collisions when merging schema
+changes impossible.
+
+
+Schema table - attribute
+^^^^^^^^^^^^^^^^^^^^^^^^
+This table stores information on columns which exist in relations and
+indexes.
+
+------
+  Column     Definition   Meaning
+  relname    string       name of the relation
+  attname    string       name of the column
+  attnum     integer      position of the column
+  atttype    string       refers to an entry in the types schema table
+  attnotnull boolean      true if the column must be set
+------
+
+`relname` and `attname` are the primary key of this table, but there
+is also a unique constraint over `relname` and `attnum`, used to
+implement column renumbering, as above.
+
+
+Schema table - type
+^^^^^^^^^^^^^^^^^^^
+This table stores type information.  It allows extensibility of the
+database format by allowing for custom types to be listed.
+
+------
+  Column     Definition   Meaning
+  typname    string       name of the relation
+  typtype    char         type of type - 'b'asic or 'c'ompound
+  typisval   boolean      is a value type
+  typinput   string       function name for conversion to value
+  typoutput  string       function name for conversion from value
+  typrecv    string       function name for conversion from row format
+  typsend    string       function name for conversion to row format
+------
+
+The important parts of this are the function names; if the functions
+in this column are not known then tables which use them will be
+restricted, probably read-only.
+
+A value type means that the representation of the column is all there
+is to know about this value.
+If a type is not a value type, then it is possible that magic stuff
+must happen with it.
+An example of a type that is not a value type is a ... (if I can't
+think of one / figure this out I might have to scrap this)
+
+The compound type means that the value of the type is an entire row
+and should be unpacked from column values.
+
+The function names are there to make it easy for an implemenation to
+figure out when it doesn't know how to deal with a value.
+It is also planning ahead for the time where named functions can be
+stored in the schema, to allow for custom data types.
+
+
+Schema table - index
+^^^^^^^^^^^^^^^^^^^^
+This table lists the columns which are indexed for each table, along
+with the general type of index (eg, B-Tree, hash, bitmap, etc).
+
+
+Schema table - constraint
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This table contains information about constraints.  These might be
+CHECK constraints, or they might be the constraints which tie in with
+an index to enforce a unique or foreign key constraint.
+
+
+Schema table - inherits
+^^^^^^^^^^^^^^^^^^^^^^^
+With an 'inherits' relationship between two tables, the child has all
+of the properties of the parent, and selects of tuples of the type of
+the parent also return rows of the child.
+
+------
+  Column         Definition  Meaning
+  inh_child      string      name of child table
+  inh_parent     string      name of inherited table
+  inh_parent_ord int         for determining order of inherited tables
+------
+
+
+Transaction Design
+~~~~~~~~~~~~~~~~~~
+
+The following describes behaviour for what is thought to be equivalent
+to a SERIALIZABLE level of isolation.
+
+During Transaction
+^^^^^^^^^^^^^^^^^^
+
+From the moment that a transaction is started, all select reads are
+noted - by the primary key ranges that were returned or affected the
+transaction.  eg, if someone does a full scan on a table, the entire
+relation is noted as read.  As mentioned previously, this can be
+disabled for performance, at the expense of some transaction safety.
+
+Commit Phase 1
+^^^^^^^^^^^^^^
+The details of the primary key ranges of rows read, and touched
+noted in the commit log.
+
+So OLTP-unfriendly queries that full scan entire tables are noted in
+the commit log:
+
+  Read: relation/*
+
+Reading a range of primary keys would read:
+
+  Read: relation/1-1000
+
+If the query is index scanning, noting which pages were read for the
+transaction would be enough to be safe.
+
+Rows changed will be 'obvious' during the merge, but rows marked
+select for update without being updated must also be noted.
+
+  Locks: relation/5-10
+
+Once the commit is requested (or a savepoint command issued), writing
+a commit object with the above locks is noted and the first phase of
+commit is complete.
+
+
+Commit Phase 2
+^^^^^^^^^^^^^^
+
+The second phase of commit is when the reference which represents the
+'official' state of the repository is locked and updated.  If the
+commit which is now there is no longer current, then the second phase
+must check that the reads, locks and changes are compatible with the
+changes that are being introduced by this commit.
+
+If it can prove that the updates since the merge base did not conflict,
+it will merge the two trees and update the ref.  Otherwise it has to
+roll back the transaction (or, perhaps, to the last savepoint which
+*didn't* conflict with the concurrent updates).
+
+For large scale OLTP systems this phase being able to execute very
+quickly is very important.  This design gets by needing only to look
+at information visible in 'git whatchanged COMMITID..refs/db/current'
+in the common case; for systems which are not memory starved, the
+objects to answer these requests are likely to already be in cache;
+after all the transaction has recently been written.  So, while it may
+never have the break-neck TPC benchmark speed of shared memory based
+locks for extremely high performance cases, it should be able to scale
+well to practical cases of large online systems with many updates,
+where thousands of updates per minute is acceptable and auditability
+is the key concern.

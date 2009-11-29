@@ -1,7 +1,10 @@
 
 package Git::DB::RowFormat;
 
-
+has 'columns' =>
+	is => 'rw',
+	isa => "ArrayRef[Git::DB::Type]",
+	;
 
 1;
 
@@ -14,7 +17,7 @@ Git::DB::RowFormat - Document and implement the GitDB Row Format
 =head1 SYNOPSIS
 
  my $row_format = Git::DB::RowFormat->new
-    ( columns => [ Git::DB::ColumnType->new(...) ],
+    ( columns => [ Git::DB::Type->new(...) ],
     );
 
 =head1 DESCRIPTION
@@ -115,14 +118,14 @@ come from ProtocolBuffer.
                      (base 10) and value.
    4     rational    Two BER ints follow to denote a
                      rational number - scalar and quotient
-   5     NULL        Explicit NULL
+   5      -          reserved
    6     bigfloat    128-bit float/timestamp
-   7     object      null-terminated path to value follows
+   7     lob         null-terminated path to value follows
    8     false       Boolean; False; no data follows
    9     true        Boolean; True; no data follows
    a     EOR         End of row
    b     length      BER int follows with length of remaining row.
-   c      -          reserved
+   c     NULL        Explicit NULL
    d     Reset       Reset column index to 0; expect 1st
                      column next
    e      -          reserved
@@ -141,6 +144,8 @@ The "Normative" form never uses such facilities.
 The 'length' type allows for skipping over row content to allow faster
 lookup by by primary key.  Instead of decoding all columns in the rows
 that precede it, columns can be skipped.
+In the "normative" form, such a column appears only in pages
+containing multiple rows, and follows the primary key columns.
 
 For larger column values, they may have their data saved in their own
 blob instead of stored in the page using the 'object' code.  These are
@@ -148,3 +153,24 @@ necessarily linked from the filesystem level as well; in a 'toast'
 relation, these would typically be arbitrarily named with a special
 filename form for the necessary back-references required for garbage
 management.
+
+The 'dump' type is for schema-less operation.  Any data which can be
+encoded in JSON form is allowed.  Additionally, links to other objects
+in the database are permitted.  These are represented in the data
+structure using a function:
+
+  { "foo": "bar", "baz": link("Type", "key1", "key2") }
+
+Most standard JSON serializers likely to choke on this, but
+unfortunately without designating a "sentinel value", this is the
+cleanest approach.
+
+There is also another function, which may be used for dumping:
+B<bless>.  It is called just like Perl's C<bless>, and is only
+required when the dumper dumps a data object.
+
+Both of these extended forms of JSON must be explicitly enabled for a
+particular column; if the column type does now allow it, then they are
+not permitted.
+
+
