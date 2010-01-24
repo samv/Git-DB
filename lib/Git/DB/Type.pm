@@ -21,7 +21,7 @@ has 'dump' =>
 	required => 1,
 	;
 
-has 'thaw' =>
+has 'load' =>
 	is => "ro",
 	isa => "Str",
 	required => 1,
@@ -68,7 +68,7 @@ appropriate.
 =item B<formats>
 
 This is an C<bitarray> column, containing a list of the allowable
-column formats.
+column formats in the store for this type.
 
 =item B<dump>
 
@@ -81,7 +81,7 @@ object - but this may tie your application to a particular language or
 platform until a standard method for representing functions is
 established.
 
-=item B<thaw>
+=item B<load>
 
 The name of a function which converts a value in the column to value
 in your program.

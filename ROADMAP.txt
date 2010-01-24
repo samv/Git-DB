@@ -1,0 +1,32 @@
+
+1. 1st normal form
+
+   Get the Git DB schema objects, and a test structure, going in.
+
+   git db ( select | insert | update | delete )
+   git db schema ( dump | load | migrate )
+
+   git db check --data
+
+   demo: gitpan index, using Mouse?
+
+2. 2nd normal form
+
+   Get ArrayRef[], Set[], HashRef[], Foreign Keys working.
+
+   git db check --constraints
+
+3. 0th normal form
+
+   Get JSPON-style links working.
+
+   git db check --references
+
+4. transactions
+
+   Get 'repeatable read' level serialization going
+     - isolation levels
+
+   git db check --merges
+
+5. publish!

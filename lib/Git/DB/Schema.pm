@@ -1,12 +1,25 @@
 
 package Git::DB::Schema;
 
+use Moose; # -traits => ["NaturalKey"]
+
+# the URI of the schema is its start of authority.  No 'mob' schema
+# changes should happen without changing this, and this way we can
+# still avoid ugly UUIDs
+has 'id' =>
+	is => "ro",
+	isa => "URI",
+	;
+
+# we can gracefully handle schema versioning by storing multiple
+# incarnations of the schema objects in the store.
 has 'version' =>
 	is => "ro",
 	isa => "Num",
 	default => 0.01,
 	;
 
+#__PACKAGE__->meta->keys(qw(id version));
 has 'classes' =>
 	is => "rw",
 	isa => "HashRef[Git::DB::Class]",

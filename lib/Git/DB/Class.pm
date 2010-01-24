@@ -3,19 +3,39 @@ package Git::DB::Class;
 
 use Moose;
 
-has 'class' =>
+has 'schema' =>
 	is => "rw",
-	isa => "Class::MOP::Class",
+	isa => "Git::DB::Schema",
 	;
 
-has 'isa' =>
+has 'index' =>
+	is => "ro",
+	isa => "Int",
+	;
+
+has 'version' =>
 	is => "rw",
+	isa => "Int",
+	;
+
+#__PACKAGE__->meta->keys(qw(schema index version));
+
+# features?
+
+has 'name' =>
+	is => "ro",
 	isa => "Str",
 	;
 
-has 'has' =>
-	is => "rw",
+has 'columns' =>
+	is => "ro",
 	isa => "HashRef[Git::DB::Column]",
+	;
+
+has 'class' =>
+	is => "rw",
+	isa => "Str",
+	gitdb_none => 1,
 	;
 
 has 'auto_attrs' =>

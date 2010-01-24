@@ -4,6 +4,9 @@ package Git::DB;
 use Moose;
 use Moose::Util::TypeConstraints;
 
+use Git::DB::Meta::Attr;
+use Git::DB::Meta::Class;
+
 # specify the path if you like.
 has 'git_dir' =>
 	is => "ro",
@@ -26,6 +29,7 @@ subtype "Git::DB::commitid" => as "Git::DB::objectid";
 subtype "Git::DB::treeid"   => as "Git::DB::objectid";
 subtype "Git::DB::blobid"   => as "Git::DB::objectid";
 subtype "Git::DB::tagid"    => as "Git::DB::objectid";
+
 
 
 1;

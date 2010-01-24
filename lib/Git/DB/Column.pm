@@ -1,10 +1,20 @@
 
 package Git::DB::Column;
 
+use Moose; # -traits => ["NaturalKey", "Constraint"];
+
 has 'type' =>
 	is => "ro",
 	isa => "Git::DB::Type",
+	coerce => 1,
 	required => 1,
+	;
+
+has 'class' =>
+	is => "rw",
+	isa => "Git::DB::Class",
+	required => 1,
+	writer => "_set_class",
 	;
 
 has 'name' =>
@@ -16,9 +26,23 @@ has 'name' =>
 has 'index' =>
 	is => "rw",
 	isa => "Int",
+	writer => "_set_index",
 	;
 
+has 'version' =>
+	is => "ro",
+	isa => "Int",
+	;
+
+#__PACKAGE__->meta->keys(qw(class index version));
+#__PACKAGE__->meta->unique(qw(class name version));
+
 has 'required' =>
+	is => "ro",
+	isa => "Bool",
+	;
+
+has 'deleted' =>
 	is => "ro",
 	isa => "Bool",
 	;
