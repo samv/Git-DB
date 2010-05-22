@@ -2,6 +2,8 @@
 
 use strict;
 use Test::More qw(no_plan);
+use lib "t";
+use TestEncoder;
 
 # part 1.  Encoding of data types
 
@@ -119,19 +121,11 @@ my @TESTS = (
 	#"0xfe808080808080808000" => -$two**64-1,
        );
 
-while ( my ($ber, $num) = splice @TESTS, 0, 2 ) {
+test_encoder
+	sub { encode_BER($_[0]) },
+	sub { decode_BER($_[0]) },
+	sub { $_[1] =~ m{e+}i },
+	@TESTS,
+	"BER ints";
 
-	next if $num =~ m{e+}i;  # skip big numbers on 32-bit...
-
-	$ber =~ s{0x}{};
-	$ber = pack("H*", $ber);
-
-	is(unpack("H*",encode_BER($num)), unpack("H*",$ber),
-	   "encode_BER($num)") or
-		diag("ber is ".length($ber)." bytes long");
-
-
-	is(decode_BER($ber), $num,
-	   "decode_BER(0x".unpack("H*",$ber).")")
-		or diag("that's v".join(".",map{ord($_)}split"",$ber));
-}
+;
