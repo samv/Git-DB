@@ -34,7 +34,7 @@ sub test_encoder(&&@) {
 		main::is_deeply(
 			$decode_sub->($binary),
 			$value,
-			"decode - $test_name test $num ($hex_digits)",
+			"decode - $test_name test $num (0x$hex_digits)",
 		       );
 	}
 }

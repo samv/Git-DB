@@ -4,18 +4,25 @@ package Git::DB::Encode;
 # this module provides functions for marshalling data types to byte
 # streams.
 
+use strict;
 use bytes;
 use Encode;
 use utf8;
 use 5.010;
+use Math::BigInt try => "GMP";
+use Scalar::Util qw(blessed);
+
+use Git::DB::Defines qw(MAX_INT MAX_NV_INT MANTISSA_BITS MAX_NEG);
 
 use Sub::Exporter -setup => {
-	exports => [qw(to_bytes from_bytes encode_BER
-		       decode_BER read_BER)],
+	exports => [qw(encode_string decode_string
+		       encode_int decode_int read_int
+		       encode_float decode_float
+		     )],
 	};
 
 # utf-8 or nothing for this module
-sub to_bytes {
+sub encode_string {
 	my $str = shift;
 	if ( utf8::is_utf8 ) {
 		Encode("utf8", $str);
@@ -26,23 +33,15 @@ sub to_bytes {
 }
 
 # but alway return in utf8
-sub from_bytes {
+sub decode_string {
 	my $str = shift;
 	utf8::upgrade($str);
 	$str;
 }
 
-use Math::BigInt try => "GMP";
-#use Math::BigInt;
-use Scalar::Util qw(blessed);
-
-use constant MAX_INT => (-1<<1)+1;
-use constant MAX_NEG => (MAX_INT>>1)+1;
-use constant MAX_NV_INT => 2**52;
-
 sub _pack_w {
 	my $num = shift;
-	if ( abs($num) > MAX_NV_INT and blessed($num) ) {
+	if ( abs($num) > MAX_NV_INT and blessed $num ) {
 		pack("w", "$num");
 	}
 	else {
@@ -52,13 +51,13 @@ sub _pack_w {
 
 # a bit like Perl's pack("w", "*") but always packs a 2's complement
 # number.
-sub encode_BER {
+sub encode_int {
 	my $x = shift;
 	given ($x) {
 		when ($_<0) {
 			my $bnot = ~$x;
 			my $x = ~_pack_w($bnot);
-			if ( !vec($x, 6, 1) ) {
+			if ( !vec(substr($x,0,1), 6, 1) ) {
 				# would look positive, make longer
 				#vec($x, 6, 1) = 0;
 				$x = chr(0x7f).$x;
@@ -70,7 +69,7 @@ sub encode_BER {
 		}
 		default {
 			my $x = _pack_w($x);
-			if ( vec($x, 6, 1) ) {
+			if ( vec(substr($x,0,1), 6, 1) ) {
 				# would look negative, make longer
 				#vec($x, 6, 1) = 0;
 				return chr(0x80).$x;
@@ -82,9 +81,9 @@ sub encode_BER {
 	}
 }
 
-sub decode_BER {
+sub decode_int {
 	my $ber = shift;
-	my $neg = vec($ber,6,1);
+	my $neg = vec(substr($ber,0,1),6,1);
 	if ( $neg ) {
 		$ber = ~$ber;
 		for (my $i=0;$i<length($ber);$i++) {
@@ -92,7 +91,6 @@ sub decode_BER {
 		}
 		my $num = unpack("w", $ber);
 		if ( $num > abs(MAX_NEG)-1 ) {
-			$DB::single = 1;
 			return Math::BigInt->new("-$num")-1
 		}
 		else {
@@ -110,14 +108,39 @@ sub decode_BER {
 	 }
 }
 
-sub read_BER {
+sub read_int {
 	my $handle = shift;
 	my $ber = "";
+	my $x;
 	do {
-		$handle->read(my $x, 1);
+		$handle->read($x, 1);
 		$ber .= $x;
 	} while ( vec($x,7,1) );
-	decode_BER($ber);
+	decode_int($ber);
+}
+
+use Git::DB::Float qw(float_to_intpair intpair_to_float);
+
+sub encode_float {
+	my $float = shift;
+
+	join "",
+		map { encode_int($_) }
+			float_to_intpair( $float );
+}
+
+sub decode_float {
+	my $ber_float = shift;
+	intpair_to_float
+		map { decode_int($_) }
+			split /(?<=[\0-\177])/, $ber_float;
+}
+
+sub read_float {
+	my $handle = shift;
+	my $exp = read_int($handle);
+	my $multiplicand = read_int($handle);
+	intpair_to_float($exp, $multiplicand);
 }
 
 1;
@@ -135,18 +158,18 @@ Git::DB::Encode - encodings for the Git DB format
  # -- Integers --
  # this is a version of pack("w", $int) which works on ints
  # of any size and sign.
- my $ber = encode_BER($int);
+ my $ber = encode_int($int);
 
  # similarly unpack("w", $ber)
- my $int = decode_BER($ber);
+ my $int = decode_int($ber);
 
  # a version that works on filehandles
- my $int = read_BER($fh);
+ my $int = read_int($fh);
 
  # -- Strings --
- my $bytes = to_bytes($string);
+ my $bytes = encode_string($string);
 
- my $string = from_bytes($bytes);
+ my $string = decode_string($bytes);
 
 =head1 DESCRIPTION
 
