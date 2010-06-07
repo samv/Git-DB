@@ -1,6 +1,7 @@
 #!/usr/bin/perl -w
 
 use strict;
+BEGIN { binmode STDOUT, ":utf8"; };
 use Test::More qw(no_plan);
 use lib "t";
 use TestEncoder;
@@ -240,8 +241,28 @@ test_encoder
 	sub { encode_float($_[0]) },
 	sub { decode_float($_[0]) },
 	@TESTS,
-	"float format";
+	"float format"
+	if 0;
 
-# floats - quad precision
+# test utf8 strings
+use utf8;
+@TESTS = (
+	"" => "",
+	"0x3132333435" => "12345",
+	"0x".("78"x64) => "x" x 64,
+	"0x4672616ec3a7616973" => "Français",
+	"0x4d61cc846f7269" => "Māori",
+	"0xe4b8ade59c8b" => "中國",
+       );
 
+test_encoder
+	sub {
+		my $x = encode_str($_[0]);
+		$x
+	},
+	sub {
+		my $x = decode_str($_[0]);
+		$x
+	},
+	@TESTS,
 ;

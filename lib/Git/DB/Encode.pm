@@ -16,7 +16,7 @@ use Scalar::Util qw(blessed);
 use Git::DB::Defines qw(MAX_INT MAX_NV_INT MANTISSA_BITS MAX_NEG);
 
 use Sub::Exporter -setup => {
-	exports => [qw(encode_string decode_string
+	exports => [qw(encode_str decode_str
 		       encode_int decode_int read_int
 		       encode_uint decode_uint read_uint
 		       encode_float decode_float
@@ -24,21 +24,21 @@ use Sub::Exporter -setup => {
 	};
 
 # utf-8 or nothing for this module
-sub encode_string {
+sub encode_str {
 	my $str = shift;
-	if ( utf8::is_utf8 ) {
-		Encode("utf8", $str);
+	utf8::upgrade($str);
+	if ( utf8::is_utf8($str) ) {
+		encode("utf8", $str);
 	}
 	else {
 		$str;
 	}
 }
 
-# but alway return in utf8
-sub decode_string {
+# but always return in utf8
+sub decode_str {
 	my $str = shift;
-	utf8::upgrade($str);
-	$str;
+	decode("utf8", $str);
 }
 
 sub _pack_w {
@@ -195,9 +195,9 @@ Git::DB::Encode - encodings for the Git DB format
  my $int = read_int($fh);
 
  # -- Strings --
- my $bytes = encode_string($string);
+ my $bytes = encode_str($string);
 
- my $string = decode_string($bytes);
+ my $string = decode_str($bytes);
 
 =head1 DESCRIPTION
 
