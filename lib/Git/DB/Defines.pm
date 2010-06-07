@@ -23,7 +23,7 @@ BEGIN {
 }
 use constant MANTISSA_BITS => $bits;
 use constant MANTISSA_2XXBITS => 2**MANTISSA_BITS;
-use constant MAX_NV_INT => 2**(MANTISSA_BITS-2);
+use constant MAX_NV_INT => 2**(MANTISSA_BITS-2)-1;
 
 BEGIN {
 	print "Float size is ".MANTISSA_BITS."\n" if DEBUG_DEFINES;
