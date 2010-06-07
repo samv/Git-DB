@@ -9,7 +9,7 @@ use TestEncoder;
 
 BEGIN { use_ok("Git::DB::Encode", ":all") }
 
-# 1a. integers.
+# 1a. signed integers.
 #
 #   As well as actual integers, for types like rationals, and many
 #   parts of the row format where an integer is called for, this is
@@ -159,6 +159,35 @@ test_encoder
 	sub { $_[1] =~ m{e+}i },
 	@TESTS,
 	"Signed BER ints"
+	if 0;
+
+# unsigned version - same as perl BER
+@TESTS = (
+	# some 1 byte values
+	"0x00" => 0,
+	"0x01" => 1,
+	"0x02" => 2,
+	# ...
+	"0x3d" => 61,
+	"0x3e" => 62,
+	"0x3f" => 63,
+	# ...
+	"0x7d" => 125,
+	"0x7e" => 126,
+	"0x7f" => 127,
+	"0x8100" => 128,
+	"0x83ffffffffffff7f" => "2251799813685247",
+	"0x8480808080808000" => "2251799813685248",
+	"0x8480808080808001" => "2251799813685249",
+	"0xffffffffffffffffff7f" => $two**70-1,
+       );
+
+test_encoder
+	sub { encode_uint($_[0]) },
+	sub { decode_uint($_[0]) },
+	sub { $_[1] =~ m{e+}i },
+	@TESTS,
+	"Unsigned BER ints"
 	if 1;
 
 # Sam's signed BER float format - re-use signed variable length int

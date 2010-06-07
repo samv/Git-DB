@@ -7,6 +7,7 @@ package Git::DB::Encode;
 use strict;
 use bytes;
 use Encode;
+use Carp;
 use utf8;
 use 5.010;
 use Math::BigInt try => "GMP";
@@ -17,6 +18,7 @@ use Git::DB::Defines qw(MAX_INT MAX_NV_INT MANTISSA_BITS MAX_NEG);
 use Sub::Exporter -setup => {
 	exports => [qw(encode_string decode_string
 		       encode_int decode_int read_int
+		       encode_uint decode_uint read_uint
 		       encode_float decode_float
 		     )],
 	};
@@ -98,26 +100,52 @@ sub decode_int {
 		}
 	}
 	else {
-		 my $num = unpack("w", $ber);
-		 if ( $num > MAX_INT ) {
-			 return Math::BigInt->new($num)
-		 }
-		 else {
-			 return $num;
-		 }
-	 }
+		decode_uint($ber);
+	}
 }
 
-sub read_int {
-	my $handle = shift;
-	my $ber = "";
-	my $x;
-	do {
-		$handle->read($x, 1);
-		$ber .= $x;
-	} while ( vec($x,7,1) );
-	decode_int($ber);
+sub encode_uint {
+	my $uint = shift;
+	croak "$uint is negative" if $uint < 0;
+	_pack_w($uint);
 }
+
+sub decode_uint {
+	my $ber = shift;
+	my $num = unpack("w", $ber);
+	if ( $num > MAX_INT ) {
+		return Math::BigInt->new($num)
+	}
+	else {
+		return $num;
+	}
+}
+
+=for searching
+
+# looking for: ?
+sub read_int {
+sub read_uint {
+
+=cut
+
+BEGIN {
+	no strict 'refs';
+	for my $type ( qw(int uint) ) {
+		my $cb = \&{"decode_$type"};
+		*{"read_$type"} = sub {
+			my $handle = shift;
+			my $ber = "";
+			my $x;
+			do {
+				$handle->read($x, 1);
+				$ber .= $x;
+			} while ( vec($x,7,1) );
+			$cb->($ber);
+		}
+	}
+}
+
 
 use Git::DB::Float qw(float_to_intpair intpair_to_float);
 
