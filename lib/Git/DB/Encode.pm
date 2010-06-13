@@ -59,26 +59,26 @@ sub encode_int {
 	given ($x) {
 		when ($_<0) {
 			my $bnot = ~(0+$x);
-			my $x = ~_pack_w($bnot);
-			if ( !vec(substr($x,0,1), 6, 1) ) {
+			my $b = ~_pack_w($bnot);
+			if ( !vec(substr($b,0,1), 6, 1) ) {
 				# would look positive, make longer
 				#vec($x, 6, 1) = 0;
-				$x = chr(0x7f).$x;
+				$b = chr(0x7f).$b;
 			}
-			for (my $i=0;$i<length($x);$i++) {
-				vec($x,$i*8+7,1)^=1;
+			for (my $i=0;$i<length($b);$i++) {
+				vec($b,$i*8+7,1)^=1;
 			}
-			return $x;
+			return $b;
 		}
 		default {
-			my $x = _pack_w($x);
-			if ( vec(substr($x,0,1), 6, 1) ) {
+			my $b = _pack_w($x);
+			if ( vec(substr($b,0,1), 6, 1) ) {
 				# would look negative, make longer
 				#vec($x, 6, 1) = 0;
-				return chr(0x80).$x;
+				return chr(0x80).$b;
 			}
 			else {
-				return $x;
+				return $b;
 			}
 		}
 	}
