@@ -153,7 +153,17 @@ my @TESTS = (
 	"0x82808080808080808000" => $two**64,
 	"0xfeffffffffffffffff7f" => -$two**63-1,
 	"0xfe808080808080808000" => -$two**64,
-	#"0xfe808080808080808000" => -$two**64-1,
+	"0xfdffffffffffffffff7f" => -$two**64-1,
+	"0xfc808080808080808001" => -$two**65+1,
+	"0xf88080808080808080808001" => -$two**80+1,
+
+	"0x80ffffffffffffffff7f" => ($two**63)-1,
+
+	# A Mersenne Prime, discovered November 3, 1961 by Hurwitz,
+	# using the IBM 7090 (this 1281 bit number is stored in 184
+	# bytes)
+	"0x80".("ff"x(int((1281-7)/7)))."7f" => $two**1281-1,
+
        );
 
 test_encoder
