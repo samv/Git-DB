@@ -12,6 +12,7 @@ use utf8;
 use 5.010;
 use Math::BigInt try => "GMP";
 use Scalar::Util qw(blessed);
+use IO::Handle;
 
 use Git::DB::Defines qw(MAX_INT MAX_NV_INT MANTISSA_BITS MAX_NEG);
 
@@ -19,7 +20,7 @@ use Sub::Exporter -setup => {
 	exports => [qw(encode_str decode_str
 		       encode_int decode_int read_int
 		       encode_uint decode_uint read_uint
-		       encode_float decode_float
+		       encode_float decode_float read_float
 		     )],
 	};
 
