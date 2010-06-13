@@ -57,7 +57,7 @@ sub encode_int {
 	my $x = shift;
 	given ($x) {
 		when ($_<0) {
-			my $bnot = ~$x;
+			my $bnot = ~(0+$x);
 			my $x = ~_pack_w($bnot);
 			if ( !vec(substr($x,0,1), 6, 1) ) {
 				# would look positive, make longer

@@ -68,6 +68,8 @@ my @TESTS = (
 	#"0xff41" => -63,   # could 'reserve' ?
 	#"0xff42" => -62,   # could 'reserve' ?
 
+	"0xece951" => "-314159",
+
 	# largest 4-byte values
 	"0xbfffff7f" => 2**27-1,
 	"0xc0808000" => -2**27,
