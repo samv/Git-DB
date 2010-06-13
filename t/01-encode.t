@@ -161,8 +161,7 @@ test_encoder
 	sub { decode_int($_[0]) },
 	sub { $_[1] =~ m{e+}i },
 	@TESTS,
-	"Signed BER ints"
-	if 0;
+	"Signed BER ints";
 
 # unsigned version - same as perl BER
 @TESTS = (
@@ -190,8 +189,7 @@ test_encoder
 	sub { decode_uint($_[0]) },
 	sub { $_[1] =~ m{e+}i },
 	@TESTS,
-	"Unsigned BER ints"
-	if 1;
+	"Unsigned BER ints";
 
 # Sam's signed BER float format - re-use signed variable length int
 # format above, then (E, M):
@@ -243,8 +241,7 @@ test_encoder
 	sub { encode_float($_[0]) },
 	sub { decode_float($_[0]) },
 	@TESTS,
-	"float format"
-	if 0;
+	"float format";
 
 # test utf8 strings
 use utf8;
