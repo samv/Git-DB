@@ -1,27 +1,31 @@
 
 package Git::DB::ColumnFormat::Text;
 
-use Moose;
+use Mouse;
 
-extends 'Git::DB::ColumnFormat::LengthDelimited';
+extends 'Git::DB::ColumnFormat::Bytes';
 
 use Encode qw(encode decode);
-use utf8 qw(is_utf8);
+use utf8;
 
-method to_row( Str $text ) {
-	if ( is_utf8($text) ) {
-		$self->SUPER::to_row(encode("utf8", $text));
+around to_row => sub {
+	my $orig = shift;
+	my $self = shift;
+	my $text = shift;
+	if ( utf8::is_utf8($text) ) {
+		$self->$orig(encode("utf8", $text));
 	}
 	else {
-		$self->SUPER::to_row($text);
+		$self->$orig($text);
 	}
 };
 
-method read_col( IO::Handle $data ) {
-	my $length = read_BER($data);
-	my $data = $data->read($length);
-	return decode("utf8", $data);
-}
+around read_col => sub {
+	my $orig = shift;
+	my $self = shift;
+	my $bytes = $self->$orig(shift);
+	return decode("utf8", $bytes);
+};
 
 1;
 

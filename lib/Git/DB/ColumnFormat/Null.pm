@@ -1,19 +1,19 @@
 
 package Git::DB::ColumnFormat::Null;
 
-use Moose;
-use MooseX::Method::Signatures;
+use Mouse;
 with 'Git::DB::ColumnFormat';
 
-use Git::DB::RowFormat qw(BER read_BER)
+sub type_num { 9 };
 
-sub type_num { 5 };
-
-method to_row( $data ) {
-	die if defined($data);
+sub to_row {
+	my $inv = shift;
+	my $data = shift;
+	die "can't use a defined value with a null column format"
+		if defined($data);
 }
 
-method read_col( IO::Handle $data ) {
+sub read_col {
 	undef;
 }
 

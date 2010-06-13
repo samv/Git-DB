@@ -1,13 +1,15 @@
 
 package Git::DB::ColumnFormat::Boolean;
 
-use Moose::Role;
-use MooseX::Method::Signatures;
-with 'Git::DB::ColumnFormat';
+use Mouse::Role;
 
-method type_class( Bool $data ) {
+sub type_class {
+	my $inv = shift;
+	my $data = shift;
 	$data ? "Git::DB::ColumnFormat::True" : "Git::DB::ColumnType::False";
 }
+
+with 'Git::DB::ColumnFormat';
 
 1;
 
@@ -20,8 +22,8 @@ Git::DB::ColumnFormat::Boolean - Compact boolean representation
 =head1 DESCRIPTION
 
 This type is actually a role; there are two types, one for true and
-one for false.  This allows a boolean column to be encoded as a single
-byte.
+one for false.  This allows boolean columns to be encoded as single
+bytes.
 
 =cut
 

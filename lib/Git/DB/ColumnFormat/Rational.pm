@@ -1,27 +1,32 @@
 
 package Git::DB::ColumnFormat::Rational;
 
-use Moose;
-use MooseX::Method::Signatures;
-with 'Git::DB::ColumnFormat';
+use Mouse;
 
-use Git::DB::RowFormat qw(BER read_BER)
+use Git::DB::Encode qw(encode_int read_int encode_uint read_uint);
 
 sub type_num { 4 };
 
-method to_row( Math::BigRat $int ) {
-	BER($self->numerator) . BER( $self->denominator );
-}
+use Math::BigRat try => 'GMP';
 
-method read_col( IO::Handle $data ) {
-	my $scale = read_BER($data);
-	my $value = read_BER($data);
-	if ( $scale == $self->scale ) {
-		$value / $self->mul
+sub to_row {
+	my $inv = shift;
+	my $rat = shift;
+	if ( blessed $rat ) {
+		encode_int( $rat->numerator ),
+			encode_uint( $rat->denominator );
 	}
 	else {
-		$value / 10**$scale;
+		die "must be passed blessed objects for Rational";
 	}
+}
+
+sub read_col {
+	my $inv = shift;
+	my $data = shift;
+	my $numerator = read_int($data);
+	my $denominator = read_uint($data);
+	Math::BigRat->new("$numerator / $denominator");
 }
 
 1;

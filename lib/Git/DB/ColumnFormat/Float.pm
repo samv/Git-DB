@@ -1,19 +1,25 @@
 
 package Git::DB::ColumnFormat::Float;
 
-use Moose;
-use MooseX::Method::Signatures;
-with 'Git::DB::ColumnFormat';
+use Mouse;
+
+use Git::DB::Encode qw(encode_float read_float);
 
 sub type_num { 1 };
 
-method to_row( $data ) {
+sub to_row {
+	my $inv = shift;
+	my $data = shift;
 	return encode_float($data);
 }
 
-method read_col( IO::Handle $data ) {
+sub read_col {
+	my $inv = shift;
+	my $data = shift;
 	return read_float($data);
 }
+
+with 'Git::DB::ColumnFormat';
 
 1;
 

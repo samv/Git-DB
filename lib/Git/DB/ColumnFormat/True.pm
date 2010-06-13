@@ -1,19 +1,24 @@
 
 package Git::DB::ColumnFormat::True;
 
-use Moose;
-use MooseX::Method::Signatures;
+use Mouse;
+
+sub type_num { 6 };
+
+sub to_row {
+	my $inv = shift;
+	my $data = shift;
+	die "value not true" unless $data;
+	"";
+}
+
+sub read_col {
+	my $inv = shift;
+	my $data = shift;
+	return 1;
+}
+
 with 'Git::DB::ColumnFormat::Boolean';
-
-sub type_num { 9 };
-
-method to_row( Bool $data ) {
-	die unless $data;
-}
-
-method read_col( IO::Handle $data ) {
-	1;
-}
 
 1;
 
