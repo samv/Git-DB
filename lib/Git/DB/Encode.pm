@@ -55,10 +55,10 @@ sub _pack_w {
 # a bit like Perl's pack("w", "*") but always packs a 2's complement
 # number.
 sub encode_int {
-	my $x = shift;
+	my $x = 0+shift;
 	given ($x) {
 		when ($_<0) {
-			my $bnot = ~(0+$x);
+			my $bnot = ~$x;
 			my $b = ~_pack_w($bnot);
 			if ( !vec(substr($b,0,1), 6, 1) ) {
 				# would look positive, make longer
