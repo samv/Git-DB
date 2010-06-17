@@ -45,7 +45,7 @@ use POSIX qw(floor);
 memoize qw(mant_pow);
 
 sub float_to_intpair {
-	my $num = shift;
+	my $num = 0+shift;
 	my $sign = $num < 0;
 	$num = abs($num);
 	if ( $num == 0 ) {
