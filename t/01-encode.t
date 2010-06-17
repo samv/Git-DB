@@ -233,17 +233,77 @@ use Git::DB::Defines qw(:all);
 	"0x0701" => 128,
 	"0x0801" => 256,
 	"0x008201" => 257,
+
+	# negative
+	"0x007f" => -1,
+	"0x057f" => -32,
+	"0x057d" => -96,
+	"0x057b" => -160,
+
+	# test a few pieces of eighth
+	"0x7f01" => 0.5,
+	"0x7f7f" => -0.5,
+	"0x7e01" => 0.25,
+	"0x7e7f" => -0.25,
+	"0x7e7f" => -0.25,
+	"0x7601" => 0.0009765625,
+	"0x767f" => -0.0009765625,
+
+	# stuff what might reasonably be in ints
+	"0x1001" => 2**(16),
+	"0x2001" => 2**(32),
+	"0x3001" => 2**(48),
+	"0x3f01" => 2**(63),
+	"0x4001" => 2**(-64),
+	"0x5001" => 2**(-48),
+	"0x6001" => 2**(-32),
+	"0x7001" => 2**(-16),
+
+	# stuff what probably isn't on today's computers, but even if
+	# NV is plain float then should be representable.
+	"0x804001" => 2**(64),
+	"0xff3f01" => 2**(-65),
+	"0x806001" => 2**(96),
+	"0x807f01" => 2**(127),
+	"0xff2001" => 2**(-96),
+	"0xff0101" => 2**(-127),
+
        );
 
 diag("mantissa bits: ".MANTISSA_BITS.", int bits: ".INT_BITS);
 diag("max_nv_int is: ".MAX_NV_INT.", mantissa_2xxbits: ".MANTISSA_2XXBITS);
 
 if ( MANTISSA_BITS == 53 ) {
-	# ieee64 systems.
+	# ieee64 systems.  Test some decimals.
 	push @TESTS, (
-		"488fe6d9ffd3faed3f" => 0.123456,
-		"821792a4eba4d9a68d7a" => 10 ** 100,
+		# the example in the encode doc
 		"4a86b399cce6b3994d" => 0.2,
+
+		# other random numbers
+		"488fe6d9ffd3faed3f" => 0.123456,
+		"48f099a680ac859241" => -0.123456,
+
+		# 0.000976563 is 1/1024 from above, but rounded to 6
+		# s.f.
+		"4288808088cbc1be41" => 0.000976563,
+
+		# round down instead - notice the mantissa (4rd hex
+		# digit on) rolls around the 1/1024 boundary
+		"4287fffff7b4bec13f" => 0.000976562,
+
+		# more noticable with these numbers - these are at the
+		# limit of the exact decimal representation.
+		"42888080808080834d" => 0.0009765625000001,
+		"4287fffffffffffc33" => 0.0009765624999999,
+
+		"438480808080808017" => 0.00097656250000001,
+
+		# this one loses precision, but we're very close to
+		# using all of the mantissa up already.
+		#"4287ffffffffffff69" => 0.00097656249999999,
+
+		# a google
+		"821792a4eba4d9a68d7a" => 10 ** 100,
 	       );
 }
 
