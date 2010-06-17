@@ -67,11 +67,13 @@ sub float_to_intpair {
 			$num *= 2;
 			$exp --;
 		}
-		#this might not work on all number platforms ... FIXME
-		while ( floor( ($num+254)/256 ) == int($num/256) ) {
+
+		#this might not work as intended on all number
+		#platforms/rounding rules ... FIXME
+		while ( floor( ($num+126)/128 ) == int($num/128) ) {
 			#print STDERR "Had to make num smaller (bigeven): $num\n";
-			$num /= 256;
-			$exp += 8;
+			$num /= 128;
+			$exp += 7;
 		}
 		while ( int( ($num+1)/2 ) == int($num/2) ) {
 			#print STDERR "Had to make num smaller (even): $num\n";
