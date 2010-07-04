@@ -5,24 +5,42 @@ use Moose; # -traits => ["NaturalKey"]
 
 # the URI of the schema is its start of authority.  No 'mob' schema
 # changes should happen without changing this, and this way we can
-# still avoid ugly UUIDs
-has 'id' =>
+# still avoid ugly UUIDs.
+use Moose::Util::TypeConstraints;
+use Regexp::Common qw/RE_URI/;
+subtype "URI"
+	=> as "Str"
+	=> where \&RE_URI;
+
+has 'ns_url' =>
 	is => "ro",
 	isa => "URI",
 	;
 
 # we can gracefully handle schema versioning by storing multiple
-# incarnations of the schema objects in the store.
-has 'version' =>
+# incarnations of the schema objects in the store.  Any change in
+# version means that a reschema is necessary.
+has 'ns_rev' =>
 	is => "ro",
 	isa => "Num",
 	default => 0.01,
 	;
 
-#__PACKAGE__->meta->keys(qw(id version));
+#natural key => qw(id version);
 has 'classes' =>
 	is => "rw",
 	isa => "HashRef[Git::DB::Class]",
+	# category => "name",
+	;
+
+# the "types" data is notes from the m²model, about what conversion
+# functions are used for conversion of data types into the standard
+# column format layout.  This is like a type library, though most
+# languages will need only a few primitives implemented to cover it.
+has 'types' =>
+	is => "rw",
+	isa => "HashRef[Git::DB::Type]",
+	# category => "name",
 	;
 
 1;

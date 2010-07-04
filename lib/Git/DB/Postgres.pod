@@ -1,0 +1,87 @@
+
+=for consideration
+
+ samv=# select relname,relkind from pg_class
+               where relname like 'pg_%' and relkind not in ('t','i');
+         relname          | relkind | gitdb_name
+ -------------------------+---------+------------
+ pg_type                  | r       | Git::DB::Type
+ pg_statistic             | r       |
+ pg_authid                | r       |
+ pg_database              | r       |
+ pg_roles                 | v       |
+ pg_shadow                | v       |
+ pg_group                 | v       |
+ pg_user                  | v       |
+ pg_rules                 | v       |
+ pg_views                 | v       | Git::DB::View?
+ pg_tables                | v       |
+ pg_indexes               | v       | (see pg_index)
+ pg_stats                 | v       |
+ pg_locks                 | v       |
+ pg_cursors               | v       |
+ pg_prepared_xacts        | v       |
+ pg_prepared_statements   | v       |
+ pg_settings              | v       |
+ pg_timezone_abbrevs      | v       |
+ pg_timezone_names        | v       |
+ pg_stat_all_tables       | v       |
+ pg_stat_sys_tables       | v       |
+ pg_stat_user_tables      | v       |
+ pg_statio_all_tables     | v       |
+ pg_statio_sys_tables     | v       |
+ pg_statio_user_tables    | v       |
+ pg_stat_all_indexes      | v       |
+ pg_stat_sys_indexes      | v       |
+ pg_statio_user_indexes   | v       |
+ pg_statio_all_sequences  | v       |
+ pg_statio_sys_sequences  | v       |
+ pg_statio_user_sequences | v       |
+ pg_stat_activity         | v       |
+ pg_stat_database         | v       |
+ pg_listener              | r       |
+ pg_stat_user_functions   | v       |
+ pg_description           | r       |
+ pg_stat_bgwriter         | v       |
+ pg_user_mappings         | v       |
+ pg_cast                  | r       |
+ pg_user_mapping          | r       |
+ pg_enum                  | r       |
+ pg_namespace             | r       | - may be important
+ pg_attribute             | r       |
+ pg_proc                  | r       | - more of an impl. thing
+ pg_class                 | r       | Git::DB::Class
+ pg_attrdef               | r       | (property of Git::DB::Attr)
+ pg_constraint            | r       | Git::DB::Constraint
+ pg_inherits              | r       | (property of Git::DB::Class)
+ pg_index                 | r       | Git::DB::Index
+ pg_operator              | r       | - more of an impl. thing
+ pg_opfamily              | r       |
+ pg_opclass               | r       |
+ pg_am                    | r       |
+ pg_amop                  | r       |
+ pg_amproc                | r       |
+ pg_language              | r       |
+ pg_largeobject           | r       |
+ pg_aggregate             | r       |
+ pg_rewrite               | r       | - after/enabling views
+ pg_trigger               | r       | - enabling Constraints ?
+ pg_conversion            | r       |
+ pg_depend                | r       |
+ pg_tablespace            | r       |
+ pg_pltemplate            | r       |
+ pg_shdepend              | r       |
+ pg_shdescription         | r       |
+ pg_ts_config             | r       |
+ pg_ts_config_map         | r       |
+ pg_ts_dict               | r       |
+ pg_ts_parser             | r       |
+ pg_ts_template           | r       |
+ pg_foreign_data_wrapper  | r       |
+ pg_foreign_server        | r       |
+ pg_auth_members          | r       |
+ pg_stat_user_indexes     | v       |
+ pg_statio_all_indexes    | v       |
+ pg_statio_sys_indexes    | v       |
+
+=cut

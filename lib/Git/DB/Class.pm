@@ -1,51 +1,77 @@
 
 package Git::DB::Class;
 
+# corresponding to pg_class from postgres
+
 use Moose;
+#use MooseX::NaturalKey;
 
 has 'schema' =>
-	is => "rw",
+	is => "ro",
 	isa => "Git::DB::Schema",
 	;
 
+# the index uniquely identifies the class.  We don't use a UUID or
+# something here, because that would be CRAZY HORSES.
 has 'index' =>
 	is => "ro",
 	isa => "Int",
 	;
 
-has 'version' =>
-	is => "rw",
-	isa => "Int",
+# the unique key of the class is the schema, and index
+#natural key => qw(schema index);
+
+# note: the first part of the class is the schema; when a compount
+# object forms part of a primary key, this is equivalent to its
+# natural key appearing in that point on our primary keys.  This could
+# be mapped using an OID, like Postgres does in pg_class - the
+# "relnamespace" column on pg_class.  however this requires surrogates
+# which are evil and wrong.
+has 'primary_key' =>
+	is => "ro",
+	isa => "Git::DB::Key",
 	;
-
-#__PACKAGE__->meta->keys(qw(schema index version));
-
-# features?
 
 has 'name' =>
 	is => "ro",
 	isa => "Str",
 	;
 
-has 'columns' =>
+#use MooseX::UniqueKey;
+#unique key => qw(schema name);
+
+# attr for _this_ version
+has 'attr' =>
 	is => "ro",
-	isa => "HashRef[Git::DB::Column]",
+	isa => "ArrayRef[Maybe[Git::DB::Attr]]",
+	# category => "index",
 	;
 
+# the Perl Mo[uo]se metaclass
 has 'class' =>
 	is => "rw",
 	isa => "Str",
-	gitdb_none => 1,
+	#traits => [qw[Git::DB::None]],
+	handles => {
+		class_name => "name",
+	},
 	;
 
+# makes the class automatically get a storage layout.
 has 'auto_attrs' =>
 	is => "ro",
 	isa => "Bool",
+	#traits => [qw[Git::DB::None]],
 	;
 
 no Moose;
 
+# pg_inherits: more like haskell data classes; composes just the data
+# type definitions but none of the behaviour (constraints, triggers,
+# etc)
+
 1;
+
 
 __END__
 

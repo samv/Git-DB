@@ -1,0 +1,222 @@
+
+=head1 NAME
+
+Git::DB::Tables - meta-tables in the git db store, and what they mean
+
+=head1 INTRODUCTION
+
+The various descriptions of classes need to be illuminated by example.
+This documentation tries to do that, by showing how they all map to
+concrete table structures.  In this documentation, the schema tables
+are described as regular relational tables, as that is currently the
+least ambiguous way to describe them to the widest audience.
+
+=head1 META TABLES
+
+Note that tables with a name after the : is a B<slave table> or B<link
+table>; they are tables which always have a foreign key relationship
+with the table they are slave to.  These are used for 1 to many
+relationships between items.
+
+  # a schema is like a namespace; it's what you connect to.
+  meta.schema:
+    ns_url text not null
+    ns_rev num not null
+    primary key (ns_url, ns_rev)
+
+  # a class essentially describes a table
+  meta.class:
+    ns_url text not null
+    ns_rev num not null
+    foreign key (id, ns_rev) references meta.schema
+    class_index int not null
+    primary key (id, ns_rev, class_index)
+    name text not null
+    unique key (id, ns_rev, name)
+
+  # this enforces the unique key above^ and is optional in the store
+  meta.class:nameidx
+    id text not null
+    ns_rev num not null
+    foreign key (id, ns_rev) references meta.schema
+    name not null
+    primary key (id, ns_rev, name)
+    class_index not null
+    foreign key (id, ns_rev, class_index)
+            references meta.class
+
+  # superclass heirarchy.  whole table is primary key! (link table)
+  meta.class:super
+    id text not null
+    ns_rev num not null
+    foreign key (id, ns_rev) references meta.schema
+    class_index int not null
+    foreign key (id, ns_rev, class_index)
+            references meta.class
+    superclass index int not null
+    foreign key (id, ns_rev, superclass)
+          references meta.class (id, ns_rev, class_index)
+
+  # this is basically a compatibility table and is optional if
+  # using defined types only.
+  meta.type:
+    id text not null
+    ns_rev num not null
+    foreign key (id, ns_rev) references meta.schema
+    name text not null
+    primary key (id, ns_rev, name)
+    formats int not null
+    choose_func text null
+    dump_func text null
+    load_func text null
+
+  meta.key:
+    id text not null
+    ns_rev num not null
+    foreign key (id, ns_rev) references meta.schema
+    class_index int not null
+    foreign key (id, ns_rev, class_index)
+            references meta.class
+    name text not null
+    primary key (id, ns_rev, class_index, name)
+    unique bool not null
+    primary bool not null
+    stored bool not null
+    heritable bool not null
+
+  meta.key:attr
+    id text not null
+    ns_rev num not null
+    foreign key (id, ns_rev) references meta.schema
+    class_index int not null
+    foreign key (id, ns_rev, class_index)
+            references meta.class
+    name text not null
+    foreign key (id, ns_rev, class_index, name)
+            references meta.key
+    key_pos int not null
+    primary key (id, ns_rev, class_index, name, key_pos)
+    attr_index int not null
+    foreign key (id, ns_rev, class_index, attr_index)
+            references meta.attr
+    foreign_class int not null
+    foreign key (id, ns_rev, foreign_class)
+            references meta.class (id, ns_rev, class_index)
+    foreign_attr int not null
+    foreign key (id, ns_rev, foreign_class, foreign_attr)
+            references meta.attr (id, ns_rev, class_index, attr_index)
+
+  meta.attr:
+    id text not null
+    ns_rev num not null
+    foreign key (id, ns_rev) references meta.schema
+    class_index int not null
+    foreign key (id, ns_rev, class_index)
+            references meta.class
+    attr_index int not null
+    primary key (id, ns_rev, class_index, attr_index)
+    name text not null
+    unique key (id, ns_rev, class_index, name)
+    type text not null
+    foreign key (id, ns_rev, type) references meta.type
+         (id, ns_rev, name)
+    required bool not null
+    default item null
+    deleted bool not null
+    scale int null
+    precision int null
+
+  meta.attr:nameidx
+    id text not null
+    ns_rev num not null
+    foreign key (id, ns_rev) references meta.schema
+    class_index int not null
+    foreign key (id, ns_rev, class_index) references meta.class
+    name text not null
+    primary key (id, ns_rev, class_index, name)
+    attr_index int not null
+    foreign key (id, ns_rev, class_index, attr_index)
+            references meta.attr
+
+=head1 DEFERRED FEATURES
+
+=head2 PARTITIONING AND FAN-OUT
+
+Being able to specify the exact fan-out of the schema in the store may
+be useful.  This will likely be visited quite early in development.
+
+=head2 FUNCTIONS
+
+This is probably the first next big thing to describe.  A function is
+described by a few things;
+
+=over
+
+=item *
+
+Its name, which within a schema can be reasonably happy to be unique
+
+=item *
+
+The number and type of input arguments and return values.
+
+=back
+
+This will likely be the first thing to be tackled.
+
+=head2 CHECK CONSTRAINTS
+
+Check constraints are a basic part of data modelling and allow sanity
+checks to be applied to the data as it goes in.  These do however
+require a mechanism for expressing functions, so until that is solved,
+check constraints will be out of scope.
+
+=head2 TRIGGERS
+
+Triggers are a way of making database stuff happen on certain events;
+such as inserting, deleting or updating a row.  This can be used to
+enforce very domain-specific rules.
+
+=head2 INDEX PREDICATES
+
+Sometimes you don't want an index to apply to all rows.  There will be
+an implied predicate of all indexes; they will only apply if the
+columns they index are not null.  This itself is useful, but being
+able to only index a select portion of columns is also very handy.
+
+=head2 FUNCTIONAL INDEXES
+
+Normally values are inserted into indexes as is, but this allows for
+some transformation of columns to the value which is considered
+unique.  Useful for things like case insensitive (but case preserving)
+constraints.
+
+=head2 ARRAY TYPES
+
+Array types allow for more compact class definitions, and for example
+in the above definitions would allow for some slave tables to be
+removed entirely (C<meta.key:attr> and C<meta.class:super>)
+
+=head2 SEQUENCES
+
+Not really useful until they can be used, as with functions.  They are
+also not a very good fit to the distributed approach in many of the
+distributed computing profiles; GUIDs are often a better idea.
+
+That being said, if sequences are used as default values and
+constraints, then the work to merge when two writers use the same
+sequence number is defined and limited to changing the values in the
+new rows which were written or the linked rows which were updated.
+This is likely to be an acceptable penalty for all but the busiest
+OLTP systems.
+
+=head2 VIEWS
+
+Describing a view requires a good definition of query syntax, joins,
+expressions, etc.  After the abstract query syntax tree is completed,
+this will be revisited.  Materialized views should also come "for
+free" in this design without having to manually write triggers
+
+=back
+
+=cut
