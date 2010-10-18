@@ -1,0 +1,71 @@
+
+# gidb (pronounced "giddy bee") is the perl interface to Git DB
+
+# it has a stupid name to destin it to be removed from scripts once
+# the C version comes out with a non-silly name.
+
+# Git DB is a protocol for storing relational data sets.  It can also
+# store heirarchical values such as JSON blobs.  Atop of this, you can
+# build Kioku-style stores, though reference counting of any data
+# inside JSON-encoded columns is not guaranteed  [But hey - at least
+# it's audited].
+
+
+# gitb select: takes sql immediate form, shows result set pretty in PAGER
+gidb select \* from table where col = val;
+
+# specific output formats: eg tsv, csv, json
+gidb select --tsv \* from table where col = val;
+
+#  . = indicate column/object name
+#  , = indicate data value
+gidb select select cols from table where clause and .status != ,Completed
+
+# for input: JSON/SQL-Abstract form is assumed for arg if string
+# starts with [ or {; or single arg for rest of line:
+gidb select "[ 
+     "tablename",
+     [ 'select', 'cols' ],
+     { 'where': 'clause',
+       'status': { '!=', 'Completed' } },
+     [ 'order', 'by', 'cols' ]
+]"
+#  the above represents ($tablename, \@select, \%where, \@order) in SQLA
+
+# with --json, result will be a json-encoded array of hashes, one per
+# row.  --array can be used to make arrays in selected order instead
+# of hashrefs.
+
+# one liner: row input one row
+   gidb insert into tablename col1 col2 values col1_value col2_value
+
+# row input from pipe:
+echo "col1_value\tcol2_value" |
+   gidb insert --tsv into tablename col1 col2 values -
+
+# json version:
+   gidb insert --json into tablename "[
+        ['col1', 'col2'],
+        [ [ 'col1_value', 'col2_value' ],
+          ['more', 'data'] ],
+   ]"
+#  the above represents ($table, \%fieldvals || \@values) in SQLA
+
+#---- Update ----
+
+  gidb update tablename set foo = bar where id = 3;
+  gidb update tablename "{'foo': 'bar'}" "{id: 3}"
+
+#  the above represents ($table, \%fieldvals, \%where) in SQLA
+
+#---- Delete ----
+
+  gidb delete tablename where id = 3;
+  gidb delete tablename "{id: 3}"
+
+#---- Commit ----
+  gidb commit
+
+  gidb during "merge conflicted" states:
+     - LEFT., RIGHT. and ANCESTOR. merge funcs
+

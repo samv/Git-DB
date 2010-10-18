@@ -1,0 +1,5 @@
+
+# gidb-dbi - dump to and from a DBI Database
+# 
+# this program must scan all of the rows in the dbi database and check
+# whether or not the row is different to the one in the store.

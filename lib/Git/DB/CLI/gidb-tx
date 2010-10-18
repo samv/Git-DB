@@ -1,0 +1,35 @@
+
+# gidb begin: start a transaction
+
+# (specify a transaction ID)
+eval "`gidb begin MODE -s`"
+
+#  MODE:        Locking Read: Locks:  Index for Read  Index for Write
+#      (Respects/Ignores`----^-----'Reads/Writes
+#  uncommitted  Yes     R/R   R/W           Many :)        Own
+#  committed    Yes     R/R   R/W           Own (w/ff)     Own
+#  repeatable   Yes     R/R   R/W           Own (no ff)    Own
+#  serializable opt.    R/W   R/W           Own (no ff)    Own
+#  distributed  No      R/W   R/W           Own (no ff)    Own
+
+# ERROR CODES FROM COMMANDS:
+#    0   - ok (results written to stdout)
+#    1   - transaction is aborted due to usage error
+#    2   - transaction is aborted due to concurrent update
+#    3   - transaction is aborted due to merge conflict
+
+  gidb commit -m "Description of update" : commit a transaction
+     - put an update description in or be humiliated
+
+  gidb during "merge conflicted" states:
+     - LEFT., RIGHT. and ANCESTOR. virtual tables to refer to stages
+       of index
+
+# rollback, start again...
+  gidb rollback
+
+# savepoints: private index gets "undo" buffer: another overlaid index
+# (empty) which is checked first/overlaid last
+  gidb savepoint foo
+  gidb savepoint rollback foo
+  gidb savepoint release foo

@@ -1,0 +1,6 @@
+#
+# gidb encode --tsv NUM NUM,NUM NUM
+#
+#  Encodes from STDIN to a row
+
+use Git::DB::CLI::encode;

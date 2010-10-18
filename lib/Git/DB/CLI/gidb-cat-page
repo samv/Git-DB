@@ -1,0 +1,52 @@
+#
+# cat-page:
+#
+#   gidb cat-page PAGEID
+#   gidb cat-page --batch
+
+# ROWID is the row name (filesystem path) to extract.
+#
+# if the transaction is open, this will add the returned pages to the
+# index.
+
+use Git::DB qw(tx_status);
+use Git::DB::CLI::Cat_Page;
+
+my $cli = Git::DB::CLI::Cat_Page->new_with_options;
+
+my $gidb = Git::DB->new($cli->git_options)
+	or $cli->abort("could not connect to gitdb");
+
+$gidb->setup_env;
+
+if ($cli->batch_mode) {
+	my $next_in = sub {
+		$rev_arg = readline STDIN;
+		chomp($rev_arg);
+		$rev_arg;
+		my ($sha1, $type, $size);
+		$gidb->git->cat_file_check(
+			"blob",
+			$rev_arg,
+			sub {
+				($sha1, $type, $size) = @_;
+				if ( $type ne "blob" ) {
+					$cli->error(
+					"$rev_arg is $type, not page"
+					       );
+				}
+			},
+		       );
+	};
+	while ( !eof STDIN ) {
+		$next_in->();
+		$gidb->git->
+	}
+}
+
+if ( $rev = $gidb->rev_parse($rev_arg) ) {
+}
+
+$cli->do_cat($cli->revision_argument);
+
+
