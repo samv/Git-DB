@@ -98,12 +98,12 @@ come from ProtocolBuffer.
    1  ␁  Float    Floating point: E, M            M×2^E
    2  ␂  Bytes    Strings etc: len, data            N
    3  ␃  Decimal  Base 10: E, M                   M×10^E
-   4  ␄  Rational Fractions: M, Q                  M/Q
+   4  ␄  Rational Fractions: N, D                  N/D
    5  ␅  False    Boolean; False; no data
    6  ␆  True     Boolean; True; no data
    7  ␇  LOB      out-of-row values; length-delimited binary
                   hash follows
-   8  ␈   -       reserved
+ x 8  ␈  Trie     JSON storage
    9  ␉  Null     Explicit NULL
    a  ␊  EOR      End of row
  x b  ␋  RowLeft  primary key over; int gives
@@ -117,6 +117,10 @@ The C<♨> column may contain unicode glyphs to help remind what ASCII
 control character you will see if you end up directly inspecting heap
 contents.  Columns prefixed with an C<x> are provisionally assigned
 but will not be implemented initially.
+
+B<footnote>: the B<x> columns are possibly better layered over the
+Bytes and/or LOB types.  B<RowLeft> may happen for page bundling,
+depending on results of testing.
 
 =head2 Row Filename Formats
 
