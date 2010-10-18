@@ -1,32 +1,126 @@
 
-1. 1st normal form
+git-db abstract classes
+-----------------------
+These classes will eventually allow for loading of rows from a Git DB
+store with no magic.  They are the simple representations of the data
+and store, but don't try to do anything fancy meta-wise.
 
-   Get the Git DB schema objects, and a test structure, going in.
+  Git::DB::ColumnFormat::*
 
-   git db ( select | insert | update | delete )
-   git db schema ( dump | load | migrate )
+  Git::DB::Class
+  Git::DB::Attr
+  Git::DB::Type
+  Git::DB::Key
+  Git::DB::Schema
+
+On top of these abstract classes can be built the CRUD feature set,
+and potentially XS porting, or even a C version.
+
+* bootstrapping the schema objects into the store with a fixed M2
+
+* dump from relational databases:
+** 'dump' facility for Pg/DBI `git db backup`
+** 'copy in/insert' basic functionality
+
+* restore to relational databases:
+** 'restore' facility for Pg/DBI `git db restore`
+** 'copy out/select' basic functionality
+*** select: full scan
+
+* basic integrity checking:
 
    git db check --data
 
-   demo: gitpan index, using Mouse?
+☝ MILESTONE: 1st Normal Form
 
-2. 2nd normal form
+* selects using ASTs (SQL::Abstract queries via JSON)
+** simple:
+*** select: query by ID
 
-   Get ArrayRef[], Set[], HashRef[], Foreign Keys working.
+* 'insert' features
+** honouring key constraints
 
    git db check --constraints
 
-3. 0th normal form
+☝ MILESTONE: 2nd normal form
 
-   Get JSPON-style links working.
+* 'delete' features
+** honouring key constraints
+** cascade delete
+
+* 'update' & 'upsert'
+** 'redump' facility (incremental dump) for Pg/DBI 
+
+* transaction logic: `git db commit`
+** git index mapping: `git db begin shared`
+** marking and recording read rows
+** merge logic
+
+   git db merge
+   git db check --merges
+
+☝ MILESTONE: audited, decentralised operation
+
+* integration with SRS cluster logic system
+
+☝ MILESTONE: audited, decentralised CAP - P support
+
+* advanced selects:
+** select methods:
+*** index scans
+** joins:
+*** cartesian products
+*** nested loop
+*** hash merge
+
+* schema logic
+** detecting schema changes
+** programs which convert schemas
+** merging in the face of schema changes
+
+
+git-db metaclass traits
+-----------------------
+These are the metaclass traits you mix in to get Git::DB::Class
+objects generated from your Perl classes.  ie, re-use the
+normalization that you already do with Moose attributes for use in the
+storage representation.
+
+This direction is certainly more of a higher order magic-land.
+Metaprogramming.
+
+There are a number of yaks to be shaved along this road.
+
+MooseX::NaturalKey - needs to be trait-ified
+
+MooseX::UniqueKey - another constraint-like module
+
+MooseX::ForeignKey - providing relational collection attributes
+
+
+relational meeting OO/heirarchical/whatever
+-------------------------------------------
+This avenue of development is where certain problems will be shoved
+for later categorisation.
+
+* JSPON-style links
+
+   mapping arbitrary back-references and reference counting
+   garbage collection
+   all that other insane stuff people left behind with relational
+   databases :)
 
    git db check --references
 
-4. transactions
+* Polymorphic retrieval
 
-   Get 'repeatable read' level serialization going
-     - isolation levels
+   considerations
+   primary key variability
+   'horizontal' vs 'vertical' mapping
 
-   git db check --merges
+* mapping ideas:
 
-5. publish!
+   array primary keys (nested directories a la DNS)
+   submodule trees: hiding portions of the data
+
+* scaling to mapreduce size?

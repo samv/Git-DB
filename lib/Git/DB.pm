@@ -96,9 +96,7 @@ A simple interface for accessing the store from Perl is also shipped
 which may prove sufficient for many applications.  However, the
 underlying API should also be sufficiently flexible and fine-grained
 enough to allow integration with other Perl storage systems, such as
-L<Prophet>, L<KiokuDB>, etc.  If you try to integrate L<Git::DB> with
-such a storage system and encounter difficulties, please contact the
-author for assistance.
+L<Prophet>, L<KiokuDB>, etc.
 
 =head2 Why are you using a Version Control System as a Database?
 
@@ -118,15 +116,16 @@ a flexible general purpose platform.  Therefore, if we can express
 relational data in terms of a filesystem, then we can combine the
 successes of these two technologies.
 
-B<Replication> will be a much simpler undertaking with this
-technology.
+B<Scaling> through techniques such as data partitioning (aka
+"sharding") and b<denormalization> (such as materialized views or
+Google's map/reduce) fit naturally with immutable data systems.  Aka:
+this system will be "web scale".
+
+B<Replication> for B<decentralised> and/or B<democratic> computing
+will be a much simpler undertaking with this technology.
 
 B<Auditing> of changes is much simpler if you can trace the history of
 changes.
-
-B<Parallel processing> will be much simpler to implement, though
-subject to the underlying constraints of underlying contention in the
-computations being undertaken.
 
 =cut
 
