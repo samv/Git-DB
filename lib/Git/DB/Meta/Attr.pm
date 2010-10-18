@@ -4,32 +4,37 @@ package Git::DB::Meta::Attr;
 use Moose::Role;
 use MooseX::Method::Signatures;
 
-has 'gitdb_name' =>
+has "attr" =>
+	is => "ro",
+	isa => "Git::DB::Attr",
+	;
+
+has 'gidb_name' =>
 	is => "ro",
 	isa => "Str",
 	;
 
-has 'gitdb_out' =>
+has 'gidb_in' =>
 	is => "ro",
 	isa => "Str",
 	;
 
-has 'gitdb_out' =>
+has 'gidb_out' =>
 	is => "ro",
 	isa => "Str",
 	;
 
-has 'gitdb_none' =>
+has 'gidb_none' =>
 	is => "ro",
 	isa => "Bool",
 	;
 
-has 'gitdb_type' =>
+has 'gidb_type' =>
 	is => "ro",
 	isa => "Str",
 	;
 
-package Moose::Meta::Attribute::Custom::Trait::Git::DB;
+package Moose::Meta::Attribute::Custom::Trait::gidb;
 sub register_implementation { "Git::DB::Meta::Attr" }
 
 1;
@@ -41,13 +46,13 @@ Git::DB::Meta::Attr - pepper classes with normalization hints
 =head1 SYNOPSIS
 
  package Aubergine;
- use Moose -traits => ["Git::DB"];
+ use Moose -traits => [gidb];  # no use strict yet..
 
  # customise the 'spam' column, to use the 'LOB' mapping.
-g has spam =>
+ has spam =>
      is => "ro",
      isa => "Str",
-     traits => ["Git::DB"],
+     traits => ["gidb"],
      gitdb_type => "LOB",
      ;
 
@@ -56,6 +61,13 @@ g has spam =>
 A database table is a series of columns, and an object is a series of
 properties.  There may be a one to one mapping of these, but then
 again there may just as easily not be, too.
+
+Separating the object into a series of typed members is the first
+normal form.  It is asserting knowledge about the type that we are
+dealing with.
+
+Of course, sometimes these can be wildcards, where objects are mapped
+in systems similar to L<KiokuDB>, or the older L<Pixie>, etc.
 
 In the case where there is a one to one mapping, with no surprises
 then 'auto attributes' may be selected, as described on the
@@ -72,6 +84,9 @@ The L<Git::DB::Class> and L<Git::DB::Column> objects, which are stored
 in the database and loaded at connection time, describe the valid
 values for C<Class> and C<Column>, and the forms that C<Value> may
 take.  However the C<Object> is fully under your control.
+
+The system is designed such that you should be able to load from the
+schema in the database into un-customised classes.
 
 =head2 Marshalling out (dump/freeze) rules
 
@@ -166,4 +181,3 @@ different, then a schema change is required before the connection can
 complete.
 
 =cut
-

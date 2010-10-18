@@ -43,9 +43,46 @@ has 'name' =>
 # attr for _this_ version
 has 'attr' =>
 	is => "ro",
+	traits => ['Array'],
 	isa => "ArrayRef[Maybe[Git::DB::Attr]]",
 	# category => "index",
+	handles => {
+		get_attr => "get",
+		num_attr => "count",
+	},
 	;
+
+# convert an object to a list of encoded field values
+# TODO: not all columns may need to be stored, if the primary key was
+# already in the path
+sub encode_object {
+	my $self = shift;
+	my $object = shift;
+
+	my @encoded;
+	my $last_col = 0;
+	for my $index ( 0 .. $self->num_attr-1 ) {
+		my $attr = $self->get_attr($index);
+		next if $attr->deleted;
+		push @encoded, $attr->encode_value(
+			($index - $last_col),
+			$attr->fetch_value($object),
+		       );
+		$last_col = $index;
+	}
+}
+
+sub read_object {
+	my $self = shift;
+
+	
+}
+
+1;
+
+__END__
+
+# Meta-y stuff lives below here...
 
 # the Perl Mo[uo]se metaclass
 has 'class' =>
