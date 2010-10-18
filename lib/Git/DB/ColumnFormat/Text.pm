@@ -9,21 +9,21 @@ use Encode qw(encode decode);
 use utf8;
 
 around to_row => sub {
-	my $orig = shift;
+	my $to_row = shift;
 	my $self = shift;
 	my $text = shift;
 	if ( utf8::is_utf8($text) ) {
-		$self->$orig(encode("utf8", $text));
+		$self->$to_row(encode("utf8", $text));
 	}
 	else {
-		$self->$orig($text);
+		$self->$to_row($text);
 	}
 };
 
 around read_col => sub {
-	my $orig = shift;
+	my $read_col = shift;
 	my $self = shift;
-	my $bytes = $self->$orig(shift);
+	my $bytes = $self->$read_col(shift);
 	return decode("utf8", $bytes);
 };
 

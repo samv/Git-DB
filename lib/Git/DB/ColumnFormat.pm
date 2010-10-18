@@ -21,9 +21,17 @@ sub column_format {
 			}
 		}
 	}
+	# XXX - 'Text' vs 'Bytes' is not a distinct type num.
 	my ($cf_class) =
 		grep { $_->can("type_num") && $_->type_num eq $column_format }
+			grep {
+				my $class = $_;
+				!( grep { $_ ne __PACKAGE__ &&
+						  $_->isa(__PACKAGE__) }
+					   $class->meta->superclasses);
+			}
 			@plugins;
+
 	$cf_class;
 }
 
@@ -51,17 +59,20 @@ Git::DB::ColumnFormat - Role for column formats
 =head1 SYNOPSIS
 
  # sub-class API
- package Git::DB::ColumnType::LengthDelimited;
- use Moose;
- use MooseX::Method::Signatures;
- with 'Git::DB::ColumnType';
- sub type_num { 2 };
- method to_row( $data ) {
-     return encode_int(length($data)), $data;
+ package Git::DB::ColumnFormat::Foo;
+ use Mouse;
+ with 'Git::DB::ColumnFormat';
+ sub type_num { 8 };
+ sub to_row {
+     my $inv = shift;
+     my $data = shift;
+     return encode_uint(length($data)), $data;
  }
- method read_col( IO::Handle $data ) {
-     my $length = read_int($data);
-     my $data = read($data, $length);
+ sub read_col {
+     my $inv = shift;
+     my $io = shift;
+     my $length = read_uint($io);
+     my $data = read($io, $length);
      return $data;
  }
 
