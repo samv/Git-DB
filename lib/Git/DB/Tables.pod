@@ -5,145 +5,249 @@ Git::DB::Tables - meta-tables in the git db store, and what they mean
 
 =head1 INTRODUCTION
 
-The various descriptions of classes need to be illuminated by example.
-This documentation tries to do that, by showing how they all map to
-concrete table structures.  In this documentation, the schema tables
-are described as regular relational tables, as that is currently the
-least ambiguous way to describe them to the widest audience.
+There is a special schema in the git db store which represents the
+schema of the tables itself; these are identified with the C<meta.>
+schema name.  Optionally there are rows in the schema which represent
+the schema of the C<meta.> store itself.
 
 =head1 META TABLES
 
-Note that tables with a name after the : is a B<slave table> or B<link
-table>; they are tables which always have a foreign key relationship
-with the table they are slave to.  These are used for 1 to many
-relationships between items.
+As the intrinsic storage building block, the C<meta.> tables have the
+following restrictions;
+
+=over
+
+=item B<column types>
+
+All columns I<must> be defined in terms of primitive types; arrays and
+nested types are not permitted.  Instead, in this version of git db
+they are implemented using the traditional, relational approach using
+foreign keys and suchlike, called B<slave tables> in this
+specification (see below).
+
+=item B<keys>
+
+All tables in C<meta.> space I<must> have a primary key.  Primary key
+columns must come first.  Keys are simple (ie, not functional) and
+unconditional (ie, not partial), unless one of the columns in the key
+is marked NULL.
+
+B<Foreign key> constraints are present and I<must> reference another
+table's primary key.
+
+=item B<unique constraints>
+
+Non-primary unique constraints I<may> be implemented in terms of
+foreign key constraints to specially named tables.  These are
+effectively I<indexes> and exist in regular databases but are not
+normally referencable.
+
+=back
+
+Note that tables with a name after the C<:> is a B<slave table> or
+B<link table>; they are tables which always have a foreign key
+relationship with the table they are slave to.  These are used for 1
+to many relationships between items.  In later versions, arrays may be
+used instead.
+
+=head2 SCHEMA / NAMESPACE
 
   # a schema is like a namespace; it's what you connect to.
   meta.schema:
     ns_url text not null
     ns_rev num not null
     primary key (ns_url, ns_rev)
+    ns_name str not null
+    unique key (ns_name)
+
+  # this table is the schema name index.
+  meta.schema:ns_name_idx
+    ns_name str not null
+    primary key (ns_name)
+
+=head2 CLASS / TABLE
 
   # a class essentially describes a table
   meta.class:
     ns_url text not null
     ns_rev num not null
-    foreign key (id, ns_rev) references meta.schema
+    foreign key (ns_url, ns_rev)
+            references meta.schema
     class_index int not null
-    primary key (id, ns_rev, class_index)
-    name text not null
-    unique key (id, ns_rev, name)
+    primary key (ns_url, ns_rev, class_index)
+    class_name text not null
+    unique key (ns_url, ns_rev, class_name)
 
   # this enforces the unique key above^ and is optional in the store
   meta.class:nameidx
-    id text not null
+    ns_url text not null
     ns_rev num not null
-    foreign key (id, ns_rev) references meta.schema
     name not null
-    primary key (id, ns_rev, name)
-    class_index not null
-    foreign key (id, ns_rev, class_index)
+    primary key (ns_url, ns_rev, name)
+    class_index int not null
+    foreign key (ns_url, ns_rev, class_index)
+            references meta.class
+
+  # only one revision of the schema may actually have tables at any
+  # given time.  Also enforces that no two tables can have the same
+  # name, and lets you figure out which class the filesystem paths
+  # relate to.
+  meta.class:ns_name_class_name
+    ns_name not null
+    foreign key (schema_name) references meta.schema:name
+    class_name not null
+    primary key (schema_name, class_name)
+    ns_url text not null
+    ns_rev num not null
+    class_index int not null
+    foreign key (ns_url, ns_rev, class_index)
             references meta.class
 
   # superclass heirarchy.  whole table is primary key! (link table)
+  # many RDBMSes don't have this concept, but it's like postgres'
+  # INHERITS option to CREATE TABLE
   meta.class:super
-    id text not null
+    ns_url text not null
     ns_rev num not null
-    foreign key (id, ns_rev) references meta.schema
     class_index int not null
-    foreign key (id, ns_rev, class_index)
+    foreign key (ns_url, ns_rev, class_index)
             references meta.class
-    superclass index int not null
-    foreign key (id, ns_rev, superclass)
-          references meta.class (id, ns_rev, class_index)
+    superclass_index int not null
+    foreign key (ns_url, ns_rev, superclass_index)
+          references meta.class (ns_url, ns_rev, class_index)
 
-  # this is basically a compatibility table and is optional if
-  # using defined types only.
-  meta.type:
-    id text not null
+=head2 ATTRIBUTES / COLUMNS
+
+  # this table records the list of attributes/columns of a
+  # class/table.
+  meta.attr:
+    ns_url text not null
     ns_rev num not null
-    foreign key (id, ns_rev) references meta.schema
-    name text not null
-    primary key (id, ns_rev, name)
-    formats int not null
-    choose_func text null
-    dump_func text null
-    load_func text null
+    class_index int not null
+    foreign key (ns_url, ns_rev, class_index)
+            references meta.class
+    attr_index int not null
+    primary key (ns_url, ns_rev, class_index, attr_index)
+    # if attr_name is null, the column is deleted.
+    attr_name text null
+    unique key (ns_url, ns_rev, class_index, attr_name)
+    attr_type text not null
+    foreign key (ns_url, ns_rev, attr_type) references meta.type
+         (ns_url, ns_rev, type_name)
+    attr_required bool not null
+    # a 'default' is somewhat problematic; *any* value can be placed
+    # here, and it is not known how to interpret it without looking up
+    # what the attr_type means; so, it may be seen as 'opaque'
+    attr_default item null
+    # a couple of type parameters common enough to hack in here.
+    attr_scale int null
+    attr_precision int null
 
+  # for unique key in above
+  meta.attr:attr_name_idx
+    ns_url text not null
+    ns_rev num not null
+    class_index int not null
+    name text not null
+    primary key (ns_url, ns_rev, class_index, name)
+    attr_index int not null
+    foreign key (ns_url, ns_rev, class_index, attr_index)
+            references meta.attr
+
+=head2 KEYS & KEY CONSTRAINTS
+
+  # the 'key' table describes unique and foreign key constraints as
+  # well as listing recommended indexes (stored=false)
   meta.key:
-    id text not null
+    ns_url text not null
     ns_rev num not null
-    foreign key (id, ns_rev) references meta.schema
     class_index int not null
-    foreign key (id, ns_rev, class_index)
+    foreign key (ns_url, ns_rev, class_index)
             references meta.class
-    name text not null
-    primary key (id, ns_rev, class_index, name)
-    unique bool not null
-    primary bool not null
-    stored bool not null
-    heritable bool not null
+    key_name text not null
+    primary key (ns_url, ns_rev, class_index, key_name)
+    key_unique bool not null
+    key_primary bool not null
+    key_stored bool not null
+    # whether this key also restricts subclasses of the parent.
+    # subclasses will have multiple key rows!
+    key_heritable bool not null
 
+  # this slave table links the key to the (ordered) list of attributes
+  # which are a part of the key, and if the key is a foreign key, then
+  # also the columns of the foreign key.
   meta.key:attr
-    id text not null
+    ns_url text not null
     ns_rev num not null
-    foreign key (id, ns_rev) references meta.schema
     class_index int not null
-    foreign key (id, ns_rev, class_index)
-            references meta.class
-    name text not null
-    foreign key (id, ns_rev, class_index, name)
+    key_name text not null
+    foreign key (ns_url, ns_rev, class_index, key_name)
             references meta.key
     key_pos int not null
-    primary key (id, ns_rev, class_index, name, key_pos)
+    primary key (ns_url, ns_rev, class_index, name, key_pos)
     attr_index int not null
-    foreign key (id, ns_rev, class_index, attr_index)
+    foreign key (ns_url, ns_rev, class_index, attr_index)
             references meta.attr
-    foreign_class int not null
-    foreign key (id, ns_rev, foreign_class)
-            references meta.class (id, ns_rev, class_index)
-    foreign_attr int not null
-    foreign key (id, ns_rev, foreign_class, foreign_attr)
-            references meta.attr (id, ns_rev, class_index, attr_index)
+    foreign_class_index int null
+    foreign key (ns_url, ns_rev, foreign_class_index)
+            references meta.class (ns_url, ns_rev, class_index)
+    foreign_attr_index int null
+    foreign key (ns_url, ns_rev, foreign_class_index, foreign_attr_index)
+            references meta.attr (ns_url, ns_rev, class_index, attr_index)
 
-  meta.attr:
-    id text not null
+=head2 TYPES
+
+  # meta.type: this is basically a compatibility table and is optional
+  # if using only predefined types.  'Functions' here are strings;
+  # only the name, not the definition nor the function prototype are
+  # represented.  They are to be well-known function names, but the
+  # paranoid should prepare for them to be custom to the schema
+  # ID/revision.
+  meta.type:
+    ns_url text not null
     ns_rev num not null
     foreign key (id, ns_rev) references meta.schema
-    class_index int not null
-    foreign key (id, ns_rev, class_index)
-            references meta.class
-    attr_index int not null
-    primary key (id, ns_rev, class_index, attr_index)
-    name text not null
-    unique key (id, ns_rev, class_index, name)
-    type text not null
-    foreign key (id, ns_rev, type) references meta.type
-         (id, ns_rev, name)
-    required bool not null
-    default item null
-    deleted bool not null
-    scale int null
-    precision int null
-
-  meta.attr:nameidx
-    id text not null
-    ns_rev num not null
-    foreign key (id, ns_rev) references meta.schema
-    class_index int not null
-    foreign key (id, ns_rev, class_index) references meta.class
-    name text not null
-    primary key (id, ns_rev, class_index, name)
-    attr_index int not null
-    foreign key (id, ns_rev, class_index, attr_index)
-            references meta.attr
+    type_name text not null
+    primary key (id, ns_rev, type_name)
+    type_formats int not null
+    type_choose_func text null
+    type_dump_func text null
+    type_load_func text null
 
 =head1 DEFERRED FEATURES
 
-=head2 PARTITIONING AND FAN-OUT
+=head2 PARTITIONING, SHARDING AND FAN-OUT
 
 Being able to specify the exact fan-out of the schema in the store may
-be useful.  This will likely be visited quite early in development.
+be useful; it can be used as a part of a sharding implementation as
+well.
+
+That is, say that the primary key of a row is:
+
+  (urn:ietf:gitdb:schema, 0.1, 4, 2)
+
+This corresponds to the filename;
+
+  urn:ietf:gitdb:schema,0.1,4,2
+
+The fan-out might be specified as the first two keys; so the expected
+filename in the store is then:
+
+  urn:ietf:gitdb:schema,0.1/4,2
+
+This can be useful for partitioning/sharding, where you might have
+your primary key as some function of the lookup ID, then split by the
+first 3 nybbles to achieve 1024 shards;
+
+  badabadabadabadabaa001
+
+becomes:
+
+  bad/abadabadabadabaa001
+
+As each directory has a single checksum which represents the entirety
+of its contents, nodes need not hold a copy of the other shards; just
+the current checksum of the contents.
 
 =head2 FUNCTIONS
 
@@ -160,9 +264,18 @@ Its name, which within a schema can be reasonably happy to be unique
 
 The number and type of input arguments and return values.
 
+=item *
+
+The language which the function is defined in.
+
+=item *
+
+The actual definition of the function, in said language.
+
 =back
 
-This will likely be the first thing to be tackled.
+This is a bit of a can of worms, so a prototype which avoids it is
+probably better.
 
 =head2 CHECK CONSTRAINTS
 
@@ -201,12 +314,14 @@ removed entirely (C<meta.key:attr> and C<meta.class:super>)
 
 Not really useful until they can be used, as with functions.  They are
 also not a very good fit to the distributed approach in many of the
-distributed computing profiles; GUIDs are often a better idea.
+distributed computing profiles; GUIDs (or just random strings) are
+often a better idea.
 
 That being said, if sequences are used as default values and
 constraints, then the work to merge when two writers use the same
 sequence number is defined and limited to changing the values in the
 new rows which were written or the linked rows which were updated.
+
 This is likely to be an acceptable penalty for all but the busiest
 OLTP systems.
 
