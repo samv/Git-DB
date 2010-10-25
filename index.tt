@@ -1,0 +1,11 @@
+[% title = "introduction" %]
+
+git db is an experimental research project, aiming to combine a number
+of emergent technologies to enable a new platform of social-networking
+building, buzzword-coining computing.
+
+Seriously though, its essence is a hybrid/relational data store, built
+to run on top of the git source control management system.  For more
+information on its design, see the <a href="[% link('design.tt')
+%]">design</a> page.
+
