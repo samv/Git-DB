@@ -1,0 +1,137 @@
+<html>
+  <head><title>git db - git db design</title>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+<link type="text/css" rel="stylesheet" href="gitdb.css">
+
+  </head>
+<body>
+  <div id="sitelogo">	<a href="index.html">
+	  <img id="logo" src="files/gitdb-logo.png" border="0" />
+	  <div id="titlebox">
+	  <span id="site_title">git db</span>
+<span id="site_strapline">decentralized data storage in git</span>
+      	  </div>
+	</a>
+
+  </div><!-- id="sitelogo" -->
+  <div id="navbar">
+<div class="menuItem">
+  <a href="index.html" class="menu">Home</a>
+</div>
+
+<div class="menuItem">
+  <a href="err/404.html" class="menu">Blog</a>
+</div>
+
+<div class="menuItem">
+  <a href="design.html" class="menu">Design</a>
+</div>
+
+<div class="menuItem">
+  <a href="code.html" class="menu">Code</a>
+</div>
+
+
+<div style="clear: both"></div>
+
+  </div><!-- id="navbar" -->
+  <div id="body">
+
+  <h1 id="title">git db design</h1>
+
+<p>git db is a layered design, consisting of:
+<p><table>
+  <thead>
+    <tr>
+      <th>Layer</th>
+      <th>Name</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>7</td>
+      <td>
+        <a href="design/distribution.html">
+	  Distribution
+        </a>
+      </td>
+      <td>How change information is passed from node to node</td>
+    </tr>
+    <tr>
+      <td>6</td>
+      <td>
+        <a href="design/tx.html">
+	  Transactions
+        </a>
+      </td>
+      <td>How bundled changes are prepared, and how ACID or BASE
+        semantics are achieved.</td>
+    </tr>
+    <tr>
+      <td>5</td>
+      <td>
+        <a href="design/meta.html">
+	  MetaFormat
+        </a>
+      </td>
+      <td>metamodel which can express basic schemas, including itself,
+        which can be stored in the filesystem structure,</td>
+    </tr>
+    <tr>
+      <td>4</td>
+      <td>
+        <a href="design/treeformat.html">
+	  TreeFormat
+        </a>
+      </td>
+      <td>a filesystem structure for arranging similarly typed
+        pretty-printed packaged rows in git trees,</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>
+        <a href="design/filenames.html">
+	  Filename
+        </a>
+      </td>
+      <td>a pretty-printing row packaging standard, for filename-izing
+        a series of columns, to refer to binary encoded rows</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>
+        <a href="design/columnformat.html">
+	  ColumnFormat
+        </a>
+      </td>
+      <td>a binary value packaging standard, to combine encoded values
+        into binary sequences representing lists of columns</td>
+    </tr>
+    <tr>
+      <td>1</td>
+      <td>
+        <a href="design/encoding.html">
+	  Encoding
+        </a>
+      </td>
+      <td>a set of binary encoding formats for some basic types like
+        Integers, Floats, Strings, etc,
+      </td>
+    </tr>
+  </tbody>
+</table>
+<p>The system is designed to support a wide variety of use cases, some of
+which will not use all of the layers.  See the <a href="scalability.html">scalability page</a> for more information.
+<p>Hopefully the basic layers will be simple enough to be a useful
+back-end for SQLite or embedded uses.  A a traditional multi-user
+RDBMS might want to use layers 1 through 5 as a backing store; a
+distributed computing system might use all of them.
+
+  </div><!-- id="body" -->
+  <div id="footer">   <hr />
+   <a href="copyright.html">copyright info</a> |
+   <a href="map.html">site map</a>
+
+  </div><!-- id="footer" -->
+</body>
