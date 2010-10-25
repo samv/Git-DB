@@ -1,0 +1,25 @@
+[% body = BLOCK; # capture content, let it set globals
+   PROCESS $template;
+   END -%]
+<html>
+  <head>
+    [%- INCLUDE head.tt %]
+  </head>
+<body>
+  <div id="sitelogo">
+    [%- INCLUDE sitelogo.tt %]
+  </div><!-- id="sitelogo" -->
+  <div id="navbar">
+    [%- INCLUDE navbar.tt %]
+  </div><!-- id="navbar" -->
+  <div id="body">
+[% effective_title = layout.title || title;
+   IF !layout.no_title AND effective_title %]
+  <h1 id="title">[% effective_title | html %]</h1>
+[% END %]
+    [%- body | autobr %]
+  </div><!-- id="body" -->
+  <div id="footer">
+    [%- INCLUDE footer.tt %]
+  </div><!-- id="footer" -->
+</body>

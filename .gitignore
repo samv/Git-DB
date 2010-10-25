@@ -1,0 +1,8 @@
+.publish_target
+*.html
+*.css
+*.php
+*.stamp
+*.rss
+*.atom
+/var

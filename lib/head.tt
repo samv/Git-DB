@@ -1,0 +1,6 @@
+[% DEFAULT stylesheets = [ 'gitdb.css.tt' ] -%]
+<title>[% site_title | html %][% IF (head.title || title) %] - [% (head.title||title) | html %][% ELSE %] - [% template.name.replace('.tt','') | html %][% END %]</title>
+<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+[% FOR sheet = stylesheets -%]
+<link type="text/css" rel="stylesheet" href="[% link(sheet) %]">
+[% END -%]
