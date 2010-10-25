@@ -1,0 +1,133 @@
+[% title = "Distribution: sharing data" %]
+
+Disclaimer: a lot of the information on this page is the result of the
+author's own knowledge and experience and should currently be counted
+as expert opinion grade but not yet proven or formally described.
+
+<h2>git db replication</h2>
+
+git db as a standard is relatively neutral to how the data is shared.
+Actually, git itself solves a number of the mechanical aspect of
+distribution problems.  The question frequently becomes, which version
+is considered the "master"?
+
+The answer to this depends a lot on what the objectives of the program
+are.  There are problems which distributing may help solve, such as
+scaling to truly massive sets of data, extra computing power to
+service a lot of requests, or resilience in the face of disasters.
+There are compromises to be made, such as whether results must be
+guaranteed or whether a "best effort" approach is acceptable.
+
+The CAP theorem describes these trade-offs; sacrificing Consistency to
+allow tolerance to network Partitions and supply high Availability -
+BASE systems fall into this category - or whether Consistency (the "C"
+in ACID) must be maintained, at the expense of either Availability
+(distributed systems which shut down when there is a partition), or
+tolerance to network Partitions (implying that systems must all be on
+the same network).
+
+The git db should support all of these styles of replication, through
+<i>configuration</i> - not necessarily settings in a config file or
+dialog box, but how the application is configured to use which
+facility of the git db.  Mixed modes are possible, but in general more
+restrictive systems will not be able to share information with less
+restrictive systems.
+
+<h3>Single Master Replication</h3>
+
+In this mode, there is a single node which is the only one allowed to
+do updates.
+
+An example of application here is "decentralised social networks";
+holding the databases that people collaboratively edit with each
+other, be it a friends list or a photo collection catalogue.  Yet,
+many other nodes have an interest in receiving the information.  Each
+person is the master of their own database, and everyone else's
+versions are comments or suggestions and are not automatically
+promoted to be the master.
+
+This is the easiest mode to support; assuming that the single node for
+updates does not change, there are no conflicts to resolve.
+
+This case matches the majority of traditional replication systems out
+there.
+
+<h3>Strict Multi-Master Replication</h3>
+
+This mode of replication is appropriate for systems where the list of
+changes going into the system are known accurately, and there must be
+no conflicting answers.
+
+In this case, the nodes must always return the same result and be
+Consistent.  Overall, the system must behave as an ACID system;
+transactions must be able to be applied serially and obtain equivalent
+results.  To achieve this, a system called 2 Phase Commit is generally
+employed, where commits which are "ready" to apply are voted on by
+participating nodes and the real result moves forward once there is
+agreement.
+
+The system may provide geographical dispersion guarantees on returned
+answers, limiting performance but making the system very robust to
+localized disasters.  Non-repudiating systems may take this form.
+
+Examples of systems that work like this are clustered ACID databases
+(eg Oracle) and the transaction support in earlier versions of
+CouchDB.
+
+<h3>Lax Multi-Master Replication</h3>
+
+This mode of replication is similar to Multi-Master, but several
+requirements are relaxed.  It is assumed that any two conflicting
+updates can be resolved - called "eventual consistency" (the E in the
+bacronym BASE).  More than one node may produce valid updates.
+
+This approach matches the replication approach of many
+stored-procedure based database replication systems, such as Bucardo.
+Also, current versions of CouchDB.
+
+<h3>Democratic Computing</h3>
+
+This is the proposed label for a cluster of multi-master nodes, where
+no node is trusted fully but every node is trusted equally; a voting
+system is used to resolve possible conflicts and auditing is possible.
+Additionally, it may be possible to relax strict requirements about
+knowing the input requests - answers to these questions should be
+available once more research is completed.
+
+<h3>Partitioning of Data</h3>
+
+The system of <a href="link('design/treeformat.tt')#division">dividing
+tables</a> can be used to take large sets of data and partition them
+in either custom ways when using a primary key, or randomly when using
+a UUID or a hash for the primary key.
+
+As the full data set is not required when computing results involving
+the partitioned chunks - just the SHA1 sums - nodes with incomplete
+information can compute some limited results as if they had the full
+set.
+
+<h3>Distributed Result Processing using Map/Reduce</h3>
+
+Map/Reduce is where a problem is chunked up into parts, and then
+farmed out to many nodes, which all compute a part calculation ("map")
+and then the result is condensed into a result ("reduce").
+
+In the framework of git db, there are many facilities to allow this to
+occur.  The commit id represents a known, immutable database state and
+already solves many of the problems encountered by mutable state
+systems.  Nodes can process their result in terms of that commit ID,
+allowing for what are effectively long-running transactions.  Update
+jobs could potentially work incrementally at little extra incurred
+cost.
+
+<h3>Sharding</h3>
+
+Sharding is another form of scaling, for very large data sets.
+
+Implementing this in git db will require backing the actual object
+storage layer to a distributed system, not simple local git.
+
+However once this infrastructure is available, the partitioning
+facility described above goes hand-in-hand with sharding.  Nodes can
+be masters of their own shard, and hand the condensed summary SHA1 to
+other nodes for their results.
