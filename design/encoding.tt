@@ -1,2 +1,25 @@
 [% title = "Encoding: value types to binary" %]
 
+This page will describe how values are encoded.  For now it is summary
+information only.
+
+<h2>Encoding Ints</h2>
+
+A simple variable length integer encoding is used, similar to that in
+Perl (available using <tt>pack "w", $value</tt>) and in Google's
+ProtocolBuffer.
+
+It differs from both mildly, as Google's format seems abiguous and
+confused, and Perl's does not support negative integers.
+
+<h2>Encoding other Numeric quantities</h2>
+
+These are all built on the integer formats.  Architecture-dependent
+floats can be easily transformed into the underlying integers, through
+either directly accessing the bit fields of the floating point number,
+or using IEEE math.
+
+<h2>Encoding strings</h2>
+
+These are just encoded by length and with data inside.  Strings will
+generally be UTF-8 otherwise they must be encoded as octets.
