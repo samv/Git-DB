@@ -1,0 +1,6 @@
+[% title = '404 Rick-rolled';
+   map.title = '404 page' %]
+
+<img src="[% link('err/200px-RickAstley.jpg') %]" alt="Rick Astley.  He's never gonna let YOU down." title="Can't you tell I'm never gonna run you around and desert you?" />
+<p>Your request cannot be satisfied due to being rick-rolled by an internal server component.  Please notify the owner of the linking page that they have been rick rolled.</p>
+

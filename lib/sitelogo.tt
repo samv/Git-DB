@@ -1,0 +1,7 @@
+	<a href="[% link("index.tt") %]">
+	  <img id="logo" src="[% link("files/gitdb-logo.png") %]" border="0" />
+	  <div id="titlebox">
+	  <span id="site_title">[% site_title | html %]</span>
+[% IF site_strapline %]<span id="site_strapline">[% site_strapline | html %]</span>[% END %]
+      	  </div>
+	</a>

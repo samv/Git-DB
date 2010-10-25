@@ -1,0 +1,3 @@
+   <hr />
+   <a href="[% link('copyright.tt') %]">copyright info</a> |
+   <a href="[% link('map.tt') %]">site map</a>

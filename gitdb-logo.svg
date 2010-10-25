@@ -1,0 +1,257 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:xlink="http://www.w3.org/1999/xlink"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   version="1.0"
+   width="71"
+   height="71"
+   id="svg2"
+   inkscape:version="0.47 r22583"
+   sodipodi:docname="gitdb-logo.svg"
+   inkscape:export-filename="/home/samv/src/gitdb.github.com/files/gitdb-logo.png"
+   inkscape:export-xdpi="90"
+   inkscape:export-ydpi="90">
+  <metadata
+     id="metadata25">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs23">
+    <inkscape:perspective
+       sodipodi:type="inkscape:persp3d"
+       inkscape:vp_x="0 : 13 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_z="71 : 13 : 1"
+       inkscape:persp3d-origin="35.5 : 8.6666667 : 1"
+       id="perspective27" />
+    <inkscape:perspective
+       id="perspective2911"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective2946"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3033"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective3200"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+    <inkscape:perspective
+       id="perspective4003"
+       inkscape:persp3d-origin="0.5 : 0.33333333 : 1"
+       inkscape:vp_z="1 : 0.5 : 1"
+       inkscape:vp_y="0 : 1000 : 0"
+       inkscape:vp_x="0 : 0.5 : 1"
+       sodipodi:type="inkscape:persp3d" />
+  </defs>
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1357"
+     inkscape:window-height="1012"
+     id="namedview21"
+     showgrid="false"
+     inkscape:zoom="7.5352113"
+     inkscape:cx="46.468779"
+     inkscape:cy="49.794731"
+     inkscape:window-x="468"
+     inkscape:window-y="103"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="gitlogo" />
+  <g
+     id="gitlogo"
+     transform="translate(0,4.1252336)">
+    <rect
+       id="shadow"
+       width="70"
+       height="25"
+       ry="2.5"
+       x="1"
+       y="1"
+       style="fill:#60605d" />
+    <rect
+       id="background"
+       width="70"
+       height="25"
+       ry="2.5"
+       x="0.13271017"
+       y="-0.13271026"
+       style="fill:#ffffff" />
+    <rect
+       id="minus"
+       width="6"
+       height="2"
+       x="7"
+       y="8"
+       style="fill:#c00000" />
+    <use
+       xlink:href="#minus"
+       transform="translate(8,0)"
+       id="use8"
+       x="0"
+       y="0"
+       width="71"
+       height="26" />
+    <use
+       xlink:href="#minus"
+       transform="translate(16,0)"
+       id="use10"
+       x="0"
+       y="0"
+       width="71"
+       height="26" />
+    <path
+       id="plus"
+       d="m 9,13 0,2 -2,0 0,2 2,0 0,2 2,0 0,-2 2,0 0,-2 -2,0 0,-2 -2,0 z"
+       style="fill:#008000" />
+    <use
+       xlink:href="#plus"
+       transform="translate(8,0)"
+       id="use13"
+       x="0"
+       y="0"
+       width="71"
+       height="26" />
+    <use
+       xlink:href="#plus"
+       transform="translate(16,0)"
+       id="use15"
+       x="0"
+       y="0"
+       width="71"
+       height="26" />
+    <g
+       id="git"
+       style="fill:#008000;fill-opacity:1">
+      <path
+         id="g"
+         d="m 38,11 0,1 -1,0 0,4 1,0 0,1 3,0 0,1 -3,0 0,1 5,0 0,-1 1,0 0,-1 0,-1 0,-1 0,-3 0,-1 -6,0 z m 2,1 1,0 0,4 -1,0 0,-4 z"
+         style="fill:#008000;fill-opacity:1" />
+      <path
+         id="i"
+         d="m 47,8 0,2 3,0 0,-2 -3,0 z m -2,3 0,1 2,0 0,4 -2,0 0,1 7,0 0,-1 -2,0 0,-4 0,-1 -5,0 z"
+         style="fill:#008000;fill-opacity:1" />
+      <path
+         id="t"
+         d="m 54,9 0,2 -2,0 0,1 2,0 0,4 0,1 5,0 0,-1 -2,0 0,-4 2,0 0,-1 -2,0 0,-2 -3,0 z"
+         style="fill:#008000;fill-opacity:1" />
+    </g>
+    <rect
+       id="shadow-0"
+       width="70"
+       height="25"
+       ry="2.5"
+       x="0.90529281"
+       y="26.9767"
+       style="fill:#60605d" />
+    <rect
+       id="background-1"
+       width="70"
+       height="25"
+       ry="2.5"
+       x="0.03800422"
+       y="25.84399"
+       style="fill:#ffffff" />
+    <text
+       xml:space="preserve"
+       style="font-size:7.57481337000000021px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#c00000;fill-opacity:1;stroke:none;font-family:FreeMono;-inkscape-font-specification:FreeMono"
+       x="4.6082273"
+       y="36.278603"
+       id="text3178"><tspan
+         sodipodi:role="line"
+         x="4.6082273"
+         y="36.278603"
+         id="tspan3182"
+         style="font-weight:bold;fill:#c00000;fill-opacity:1">{&quot;x&quot;:</tspan><tspan
+         sodipodi:role="line"
+         x="4.6082273"
+         y="45.74712"
+         style="font-weight:bold;fill:#c00000;fill-opacity:1"
+         id="tspan4027" /></text>
+    <flowRoot
+       xml:space="preserve"
+       id="flowRoot3184"
+       style="fill:black;stroke:none;stroke-opacity:1;stroke-width:1px;stroke-linejoin:miter;stroke-linecap:butt;fill-opacity:1;font-family:FreeMono;font-style:normal;font-weight:normal;font-size:6;-inkscape-font-specification:FreeMono;font-stretch:normal;font-variant:normal"><flowRegion
+         id="flowRegion3186"><rect
+           id="rect3188"
+           width="18.486547"
+           height="8.4456301"
+           x="3.3782523"
+           y="39.188126" /></flowRegion><flowPara
+         id="flowPara3190"></flowPara></flowRoot>    <g
+       id="g3989"
+       transform="matrix(1.3093073,0,0,1.3093073,-12.255084,-8.000377)">
+      <text
+         id="text3096"
+         y="38.445385"
+         x="37.417927"
+         style="font-size:11.60014915px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#008000;fill-opacity:1;stroke:none;font-family:FreeSans;-inkscape-font-specification:FreeSans"
+         xml:space="preserve"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#008000;fill-opacity:1;font-family:FreeMono;-inkscape-font-specification:FreeMono"
+           y="38.445385"
+           x="37.417927"
+           id="tspan3098"
+           sodipodi:role="line">d</tspan></text>
+      <text
+         id="text3096-4"
+         y="38.413258"
+         x="46.179527"
+         style="font-size:11.60014915px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#008000;fill-opacity:1;stroke:none;font-family:FreeSans;-inkscape-font-specification:FreeSans"
+         xml:space="preserve"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#008000;fill-opacity:1;font-family:FreeMono;-inkscape-font-specification:FreeMono"
+           y="38.413258"
+           x="46.179527"
+           id="tspan3098-7"
+           sodipodi:role="line">b</tspan></text>
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-size:7.57481337000000021px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;fill:#008000;fill-opacity:1;stroke:none;font-family:FreeMono;-inkscape-font-specification:FreeMono"
+       x="11.46859"
+       y="43.791836"
+       id="text3178-9"><tspan
+         sodipodi:role="line"
+         x="11.46859"
+         y="43.791836"
+         id="tspan3182-5"
+         style="font-weight:bold;fill:#008000;fill-opacity:1">123}</tspan></text>
+  </g>
+</svg>
