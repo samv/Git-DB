@@ -1,2 +1,29 @@
 [% title = "Filenames: locating packed values" %]
 
+<h2>Row Filename Formats</h2>
+
+First a basic pretty printing of the value happens.  Row IDs are
+always sorted using the natural sort order of the primary keys.
+
+<pre>
+  Type     Type            Eg Value  Serialize As     Sort
+ -------- ---------------- --------- --------------- ------
+  VarInt   Integer           1234    1234             <=>
+                               -1    -1
+  Float    Floating point    1.234   1.234            <=>
+                               -1    -1
+                             10²³    10e+23
+  Bytes    Strings etc      "1234"   0x3031323334     cmp
+  Text     Text etc         "1234"   1234             cmp
+                              "\0"   ␀                cmp
+                               "1"   ␀                cmp
+  Decimal  Base 10         10.2312   10.2312
+  Rational Fractions    1234124/12   102843.6         cmp
+  Boolean  Boolean              1    t          ($a cmp $b) and
+                                ""   f           ($a ? 1 : -1)
+  LOB      out-of-row vals; "huge.." \a123128312      cmp (data)
+</pre>
+
+The LOB in the filename is problematic, as the blob behind that
+filename needs to be reference counted, but the reference to the row
+itself is problematic to arrange.

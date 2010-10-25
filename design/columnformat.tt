@@ -1,2 +1,44 @@
 [% title = "ColumnFormat: value packing" %]
 
+<h2>Column Format Basics</h2>
+
+...
+
+<h2>Column types</h2>
+
+The meaning of the 4-bit type field is given below.  Some of these
+come from ProtocolBuffer.
+
+<pre>
+ Type ♨  Type     Description                   Formulae
+ ---- - -------- -------------------------   (Numeric Types)
+   0  ␀  VarInt   Integer: N                        N
+   1  ␁  Float    Floating point: E, M            M×2^E
+   2  ␂  Bytes    Strings etc: len, data            N
+   3  ␃  Decimal  Base 10: E, M                   M×10^E
+   4  ␄  Rational Fractions: N, D                  N/D
+   5  ␅  False    Boolean; False; no data
+   6  ␆  True     Boolean; True; no data
+   7  ␇  LOB      out-of-row values; length-delimited binary
+                  hash follows
+ x 8  ␈  Trie     JSON storage
+   9  ␉  Null     Explicit NULL
+   a  ␊  EOR      End of row
+ x b  ␋  RowLeft  primary key over; int gives
+                  length of remaining row
+   c  ␌   -       reserved
+ x d  ␍  Reset    Reset column index to 0
+ x e  ␎  Group    Composite type group start
+ x f  ␏  UnGroup  Composite type group end
+</pre>
+
+The ♨ column may contain unicode glyphs to help remind what ASCII
+control character you will see if you end up directly inspecting heap
+contents.  Columns prefixed with an <tt>x</tt> are provisionally assigned
+but will not be implemented initially.
+
+<b>footnote</b>: the <tt>x</tt> columns are possibly better layered
+over the Bytes and/or LOB types.  <tt>RowLeft</tt> may happen for page
+bundling, depending on results of testing.
+
+
