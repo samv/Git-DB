@@ -3,16 +3,89 @@
 This page will describe how values are encoded.  For now it is summary
 information only.
 
-<h2>Encoding Ints</h2>
+<h2>Encoding Unsigned Integers</h2>
 
-A simple variable length integer encoding is used, similar to that in
-Perl (available using <tt>pack "w", $value</tt>) and in Google's
-ProtocolBuffer.
+<div style="float: right; text-align: center; width: 40%">
+  <img src="[% link('files/varuint.png') %]" alt="diagram showing binary representation of several unsigned integers"  style="width: 30em" />
+  <i><b>Figure 1.</b> The variable-length unsigned integer encoding
+    used by Perl and Google ProtocolBuffer.</i>
+</div>
 
-It differs from both mildly, as Google's format seems abiguous and
-confused, and Perl's does not support negative integers.
+Integers are widely encoded in binary by the design.  For unsigned
+integers, a simple variable length integer encoding is used.  This is
+essentially the same as that used by Perl's <tt>pack "w", $value</tt>
+and in Google's ProtocolBuffer.
 
-<h2>Encoding other Numeric quantities</h2>
+This is a very straightforward convention.  The top bit of every byte
+except the last is set, and the number is contained inside.  The
+encoded number is reconstructed by assembling all of the 7-bit
+fragments together into a binary number.
+
+There can be differences in whether the bytes appearing first or last
+are most significant ("Big Endian") or least significant ("Little
+Endian").  This standard is Big Endian, but that doesn't really make
+much difference to performance on Little Endian systems (which are
+most of the computers in the world) as they are not native machine
+words anyway.
+
+<h2 style="clear: right">Encoding Signed Integers</h2>
+
+In various places, it is possible to encode a number which may be
+negative.
+
+<div style="float: right; text-align: center; width: 40%">
+  <img src="[% link('files/varint.png') %]" alt="diagram showing binary representation of several signed integers"  style="width: 30em"/>
+  <i><b>Figure 2.</b> The variable-length signed integer encoding used
+    by this design.  The sign bit is highlighted in green.</i>
+</div>
+
+However, Perl's built-in function does not permit this, and Google's
+ProtocolBuffer has a glaringly obvious problem; in the <a href="http://code.google.com/apis/protocolbuffers/docs/encoding.html">ProtocolBuffers
+Encoding documentation</a>, it is written:
+
+<blockquote>The lower 7 bits of each byte are used to store the
+<em>two's complement representation</em> of the number in groups of 7
+bits, ...</blockquote>
+
+(emphasis added)
+
+This standard actually implements that, and it is simple and
+efficient.  ProtocolBuffers then does something very weird when it
+comes to signed integers:
+
+<blockquote>If you use <tt>int32</tt> or <tt>int64</tt> as the type
+for a negative number, the resulting varint is <em>always ten bytes
+long</em> – it is, effectively, treated like a very large unsigned
+integer.  If you use one of the signed types, the resulting varint
+uses ZigZag encoding, which is much more efficient.</blockquote>
+
+I'm left thinking, so if I decode a 7-bit quantity with its high bit
+set, am I to interpret that as a negative number, as the "two's
+complement representation" written would imply, or as a 7-bit positive
+number?
+
+I came to the conclusion that they'd simply stuffed up the spec.  It
+wasn't a variable-length 2's complement number at all.  The number is
+to be considered negative, <em>if bit 63 in the number is set</em>.
+The standard is effectively married to 64-bit integers, and I really
+didn't want that.
+
+In fact they invented a whole new type code to work around this bug,
+even though the answer is obvious - simply extend the sign bit in the
+decoded number across the entire machine word.  Conveniently, it's
+even a single instruction on x86 processors (SAR / SAL).
+
+To "convert" a number N, decoded from X bytes, to a native signed
+integer of W bits width, you therefore use:
+
+<samp>(int)( (unsigned int)N &lt;&lt; (W-X*7) ) &gt;&gt; (W-X*7)</samp>
+
+More likely, to "convert" a number Nt, decoded from X bytes, the lower
+7 bits of each were packed into it from the top down, that's:
+
+<samp>Nt &gt;&gt; (W-X*7)</samp>
+
+<h2 style="clear: right">Encoding other Numeric quantities</h2>
 
 These are all built on the integer formats.  Architecture-dependent
 floats can be easily transformed into the underlying integers, through
