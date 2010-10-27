@@ -39,7 +39,76 @@
 
   <h1 id="title">TreeFormat: arranging data</h1>
 
-<p>
+<p><h2>TreeFormat basics</h2>
+<p>The starting point of the design is to use the schema name at the top
+level, table/relation name next, and then within those, a UTF-8
+representation of the value of the primary key(s) of the row (or a
+UUID if there is no primary key) as the filename within the tree for
+the relation.
+<p>eg
+
+<pre>
+   tracker/ticket/1
+   tracker/ticket/2
+</pre>
+<p>The exact mechanism for converting from a value to the above
+representation is type-dependent, and covered by the <a
+href="../design/filenames.html">Filename format</a>).  The
+mechanism to know what the directory names mean is covered by the <a
+href="../design/meta.html">MetaFormat</a>.  To solve the
+re-entrancy problem, a "meta" directory exists at the top level which
+contains fixed directories such as "class", "types" and "attr".
+<p><h2>Dividing large directories</h2>
+<p>For relations with a lot of contents, trees can be used.  This is
+equivalent to use of nodes in a B-Tree.  The name of a tree can either
+be a single value or a range.
+
+<pre>
+   tracker/ticket/1-1000/1
+   tracker/ticket/1001-2000/1001
+</pre>
+<p>If it is a value, it must correspond to an entire key column (and
+there must be subsequent primary key columns).
+<p>The problem of deciding when to divide a large directory, and when to
+"rebalance" the tree, so as to try to ensure an even depth of index,
+are long-standing data management problems which this specification
+will not try to wave a magic wand to make go away.
+<p><h2>Official row filenames</h2>
+<p>As noted in the <a href="../design/filenames.html">Filename</a>
+standard, the "official" filename of the row is that which is stripped
+of all of these divisions along the way.  This is important for
+heirarchical references to rows, which are always by the "official"
+filename.
+<p><h2>Row format</h2>
+<p>The format of the actual rows is described in the <a href="../design/columnformat.html">ColumnFormat</a>.
+<p>If any columns are specified completely in the directory path of the
+row, then those columns may be omitted in the stored row(s).  Tree
+rebalancers beware.
+<p>This does not affect column numbering; the first column is likely to
+have a non-zero increment value.
+<p><h2>Page format</h2>
+<p>Especially if there is a lot of relatively static rows (ie, OLAP
+systems), it may make sense to write out "pages", which are a single
+emission of packed rows.
+<p>This is indicated in the tree by a filename which is a range, but
+which is a blob (file) and not a tree (folder/directory).  Another
+possibility is that the filename does not completely have all the keys
+in the schema listed yet; eg if there are 3 primary key columns, and
+you encounter the blob while scanning:
+
+<pre>
+  myschema/mytable/customerid,projectid
+</pre>
+<p>The third key is still expected and so the system knows that the blob
+is a page and contains the remaining columns.
+<p>For bulk inserts, emitting pages as you go is fair game.
+<p>If a row in a page needs to be removed, or a value in between added,
+then the page must be split or rewritten.  Most random writers will
+use the split policy; rewriting a page for an update should be
+considered the same problem as tree rebalancing; don't overdo it,
+because it wins you relatively little and slows updates down
+tremendously.
+
   </div><!-- id="body" -->
   <div id="footer">   <hr />
    <a href="../copyright.html">copyright info</a> |

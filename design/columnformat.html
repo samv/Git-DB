@@ -39,6 +39,94 @@
 
   <h1 id="title">ColumnFormat: value packing</h1>
 
+<p><h2>Column Format Basics</h2>
+<p>Google's ProtocolBuffers is used as inspiration, but as the standard
+is not being re-used it seems reasonable to revisit it.
+<p>Each column is introduced with a BER integer.
+<p>Columns may appear in any order, but they are numbered according to
+the schema described in <a
+href="../design/meta.html">MetaFormat</a>.  Each is introduced
+with a <a href="../design/encoding.html">variable length
+signed integer</a>.
+<p>The lowest four bits of this are interpreted as an enumerated type
+indicator for the value which follows; enough to scan the row without
+a schema, but without the schema it is not possible to interpret the
+value fully.
+<p>The remaining top bits of the number are a relative column offset.
+Given that there are four bits for data type, one bit to indicate BER
+extension and one bit for sign, that leaves only two bits to represent
+value before a two-byte sequence is required.
+<p>If this is '0' then it means the next column which is due.
+This will be the case a lot of the time - always in the normative
+form.
+This repetition of byte values should increase compressibility of data
+pages.
+<p>A number such as '2' means that the next two columns were NULL (or
+dropped before this row was written) and that the third next column
+follows.
+<p>A negative number means that the columns are appearing out of order;
+for example, the primary key was not set to the first defined columns
+in the original schema.  These situations should be rare and hopefully
+may be excluded by some implementations and remain generally
+interoperable.
+<p>Rows can still be horizontally combined simply due to a special
+psuedo-type that resets the expected column back to 1.
+<p>This means that no matter how many columns there are, only long (>3)
+sequences of NULL columns involve multi-byte headers, instead of
+all columns after the 15th as with ProtocolBuffer.
+Also, groups of boolean columns will be efficiently stored with one
+byte each, and generally in a form that will huffman code well.
+<p><h2>Column types</h2>
+<p>The meaning of the 4-bit type field is given below.  Some of these
+come from ProtocolBuffer.
+
+<pre>
+ Type ♨  Type     Description                   Formulae
+ ---- - -------- -------------------------   (Numeric Types)
+   0  ␀  VarInt   Integer: N                        N
+   1  ␁  Float    Floating point: E, M            M×2^E
+   2  ␂  Bytes    Strings etc: len, data            N
+   3  ␃  Decimal  Base 10: E, M                   M×10^E
+   4  ␄  Rational Fractions: N, D                  N/D
+   5  ␅  False    Boolean; False; no data
+   6  ␆  True     Boolean; True; no data
+   7  ␇  LOB      out-of-row values; length-delimited binary
+                  hash follows
+ x 8  ␈  Trie     JSON storage
+   9  ␉  Null     Explicit NULL
+   a  ␊  EOR      End of row
+ x b  ␋  RowLeft  primary key over; int gives
+                  length of remaining row
+   c  ␌   -       reserved
+ x d  ␍  Reset    Reset column index to 0
+ x e  ␎  Group    Composite/array type group start
+ x f  ␏  UnGroup  Composite/array type group end
+</pre>
+<p>The ♨ column may contain unicode glyphs to help remind what ASCII
+control character you will see if you end up directly inspecting heap
+contents.  Columns prefixed with an <tt>x</tt> are provisionally assigned
+but will not be implemented initially.
+<p>As in ProtocolBuffer, well formed rows from two sources can be
+combined by string concatenation, except using the ASCII carriage
+return (CR) character between them, which encodes a 'Reset' column.
+Normally it is not necessary to encode NULL column values; leaving
+them out is equivalent, but in the context of combining rows this may
+be useful.
+Explicit NULL values should never appear on disk; it is reserved for
+stream use in situations where it is required.
+The "Normative" form never uses such facilities.
+<p>The 'length' type allows for skipping over row content to allow faster
+lookup by by primary key.  Instead of decoding all columns in the rows
+that precede it, columns can be skipped.
+<p>For larger column values, they may have their data saved in their own
+blob instead of stored in the page using the 'object' code.  These are
+necessarily linked from the filesystem level as well; in a 'toast'
+relation, these would typically be arbitrarily named with a special
+filename form for the necessary back-references required for garbage
+management.
+<p><b>footnote</b>: the <tt>x</tt> columns are possibly better layered
+over the Bytes and/or LOB types and are provisional.  <tt>RowLeft</tt>
+may happen for page bundling, depending on results of testing.
 <p>
   </div><!-- id="body" -->
   <div id="footer">   <hr />

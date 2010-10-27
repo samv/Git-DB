@@ -39,7 +39,71 @@
 
   <h1 id="title">Filenames: locating packed values</h1>
 
-<p>
+<p>The filename standard is the first level of the <a
+href="../design/treeformat.html">TreeFormat</a>; it specifies
+an alternate encoding form based on traditional text value rendering.
+<p><h2>The Row Identifier</h2>
+<p>The abstract row identifier is the list of values which comprise its
+<i>primary key</i>; details on which attributes this refers to is
+described in the <a href="../design/meta.html">MetaFormat</a>.
+<p>First a basic standard printing of the values happens.  The details
+depend on the type, but are all relatively well known and standard
+transforms.  The characteristics of functions used for each of these
+uses is given in the <a href="../design/meta.html#types">types
+catalog</a>.
+
+<pre>
+  Type     Type            Eg Value  Serialize As     Sort
+ -------- ---------------- --------- --------------- ------
+  VarInt   Integer           1234    1234             <=>
+                               -1    -1
+  Float    Floating point    1.234   1.234            <=>
+                               -1    -1
+                             10²³    10e+23
+  Bytes    Strings etc      "1234"   0x31323334       cmp
+  Text     Text etc         "1234"   1234             cmp
+                              "\0"   ␀                cmp
+                               "/"   ／                cmp
+                               «\»   ＼               cmp
+                               "／"   \／               cmp
+  Decimal  Base 10         10.2312   10.2312
+  Rational Fractions    1234124/12   102843.6         cmp
+  Boolean  Boolean              1    t          ($a cmp $b) and
+                                ""   f           ($a ? 1 : -1)
+</pre>
+<p>The Row Filename refers to the result of the escaping, and all of the
+string values and joining the lot together with commas.
+<p><h2>Escaping Rules</h2>
+<p>Common problematic characters are converted to their fullwidth form.
+This list of characters includes the colon, the comma, and all the
+ASCII whorlygig characters:
+
+<pre>- \ | / : ,</pre>
+<p>ASCII control characters are converted to their Unicode page 0x24
+equivalents.
+<p>Actually using these crazy unicode characters in a key will see them
+escaped by an ASCII backslash.
+<p><h2>Ranges</h2>
+<p>If a range of values is required to be specified, these are separated
+by a "-"; ranges can cover multiple columns, eg
+
+<pre>
+  1,1-5,50
+  5,52-9,2
+</pre>
+<p><h2>Sorting and Collation</h2>
+<p>Filenames are always sorted using the natural sort order of the
+primary key, key by key.  This means that all tables are stored in
+primary key order.  If you don't like that, key using a hash function,
+UUID or some other surrogate (even a sequence) as a primary key and
+ignore the 'real' primary key in your application.
+<p>Initially all text string sorting and collation must be performed in
+the C locale; future versions or types will address this problem in a
+locale-aware fashion.
+<p>Sorting for numeric types will be by the decimal version of the
+number, ie the value.  Strings will be sorted by the
+<em>unescaped</em> form.
+
   </div><!-- id="body" -->
   <div id="footer">   <hr />
    <a href="../copyright.html">copyright info</a> |

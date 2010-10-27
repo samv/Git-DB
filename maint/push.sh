@@ -3,7 +3,7 @@
 git fetch
 if [ -n "$(git rev-list -1 refs/heads/gh-pages..refs/remotes/origin/website)" ]
 then
-	git update-ref refs/heads/gh-pages refs/remotes/origin/website
+	git update-ref refs/heads/gh-pages refs/remotes/origin/gh-pages
 fi
 old=$(git symbolic-ref HEAD)
 git symbolic-ref HEAD refs/heads/gh-pages
