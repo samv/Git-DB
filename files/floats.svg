@@ -15,7 +15,7 @@
    version="1.1"
    inkscape:version="0.47 r22583"
    sodipodi:docname="floats.svg"
-   inkscape:export-filename="/home/samv/src/Git-DB/varuint.png"
+   inkscape:export-filename="/home/samv/src/Git-DB/files/floats.png"
    inkscape:export-xdpi="150"
    inkscape:export-ydpi="150">
   <defs
@@ -203,9 +203,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="0.49497475"
-     inkscape:cx="435.77168"
-     inkscape:cy="487.80174"
+     inkscape:zoom="0.98994949"
+     inkscape:cx="404.91908"
+     inkscape:cy="672.41917"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -561,7 +561,7 @@
            y="172.3752"
            x="128.14354"
            id="tspan3368-0-2"
-           sodipodi:role="line">Stored as: 42, -150</tspan></text>
+           sodipodi:role="line">Stored as: 21, -149 (divisible by 2¹)</tspan></text>
     </g>
     <text
        xml:space="preserve"
