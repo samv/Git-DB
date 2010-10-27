@@ -4,7 +4,9 @@ This page describes how various elemental value types are encoded.
 When decoding, you need to know what type to expect.  In the next
 level, <a href="[% link('design/columnformat.tt')
 %]">ColumnFormat</a>, it is described how these expectations are
-encoded.
+encoded.  Much later, after the <a href="[% link('design/meta.tt')
+%]">MetaFormat</a> is known then it is possible to interpret the
+values to a type.
 
 <h2>Encoding Unsigned Integers</h2>
 
