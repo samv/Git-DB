@@ -1,14 +1,17 @@
 [% title = "Encoding: value types to binary" %]
 
-This page will describe how values are encoded.  For now it is summary
-information only.
+This page describes how various elemental value types are encoded.
+When decoding, you need to know what type to expect.  In the next
+level, <a href="[% link('design/columnformat.tt')
+%]">ColumnFormat</a>, it is described how these expectations are
+encoded.
 
 <h2>Encoding Unsigned Integers</h2>
 
-<div style="float: right; text-align: center; width: 40%">
-  <img src="[% link('files/varuint.png') %]" alt="diagram showing binary representation of several unsigned integers"  style="width: 30em" />
-  <i><b>Figure 1.</b> The variable-length unsigned integer encoding
-    used by Perl and Google ProtocolBuffer.</i>
+<div style="float: right; text-align: center; width: 60%; padding: 0.3em">
+  <img src="[% link('files/varuint.png') %]" alt="diagram showing binary representation of several unsigned integers"  style="width: 25em" /><br />
+  <i><b>Figure 1.</b> variable-length unsigned integer encoding; used
+    by Perl and Google ProtocolBuffer.</i>
 </div>
 
 Integers are widely encoded in binary by the design.  For unsigned
@@ -33,14 +36,15 @@ words anyway.
 In various places, it is possible to encode a number which may be
 negative.
 
-<div style="float: right; text-align: center; width: 40%">
-  <img src="[% link('files/varint.png') %]" alt="diagram showing binary representation of several signed integers"  style="width: 30em"/>
+<div style="float: right; text-align: center; width: 60%; padding: 0.3em">
+  <img src="[% link('files/varint.png') %]" alt="diagram showing binary representation of several signed integers"  style="width: 25em"/><br />
   <i><b>Figure 2.</b> The variable-length signed integer encoding used
     by this design.  The sign bit is highlighted in green.</i>
 </div>
 
-However, Perl's built-in function does not permit this, and Google's
-ProtocolBuffer has a glaringly obvious problem; in the <a href="http://code.google.com/apis/protocolbuffers/docs/encoding.html">ProtocolBuffers
+Perl's built-in function does not permit storing negative numbers, and
+in Google's <a
+href="http://code.google.com/apis/protocolbuffers/docs/encoding.html">ProtocolBuffers
 Encoding documentation</a>, it is written:
 
 <blockquote>The lower 7 bits of each byte are used to store the
@@ -49,9 +53,12 @@ bits, ...</blockquote>
 
 (emphasis added)
 
-This standard actually implements that, and it is simple and
-efficient.  ProtocolBuffers then does something very weird when it
-comes to signed integers:
+This standard actually implements that, and it is simple,
+straightforward and efficient.  The diagram to the right shows how it
+works with various values.
+
+However, ProtocolBuffers then does something very weird when it comes
+to signed integers:
 
 <blockquote>If you use <tt>int32</tt> or <tt>int64</tt> as the type
 for a negative number, the resulting varint is <em>always ten bytes
@@ -73,7 +80,9 @@ didn't want that.
 In fact they invented a whole new type code to work around this bug,
 even though the answer is obvious - simply extend the sign bit in the
 decoded number across the entire machine word.  Conveniently, it's
-even a single instruction on x86 processors (SAR / SAL).
+even a single instruction on x86 processors (SAR / SAL).  When working
+with signed integers in C, the >> operator refers to this signed
+shift.
 
 To "convert" a number N, decoded from X bytes, to a native signed
 integer of W bits width, you therefore use:
@@ -87,12 +96,187 @@ More likely, to "convert" a number Nt, decoded from X bytes, the lower
 
 <h2 style="clear: right">Encoding other Numeric quantities</h2>
 
-These are all built on the integer formats.  Architecture-dependent
-floats can be easily transformed into the underlying integers, through
-either directly accessing the bit fields of the floating point number,
-or using IEEE math.
+There are several second-order numeric types which are encoded.  These
+are all built on the integer formats.  Currently they all involve
+storing two variable length, signed integers.
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Formula</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>float</td>
+      <td>N × 2<sup>M</sup></td>
+      <td>Floating point: general purpose, real numbers</td>
+    </tr>
+    <tr>
+      <td>decimal</td>
+      <td>N × 10<sup>M</sup></td>
+      <td>Decimal precision values (eg money or IEEE decimal
+        formats)</td>
+    </tr>
+    <tr>
+      <td>rational</td>
+      <td>N ÷ M</td>
+      <td>Arbitrary precision rational numbers</td>
+    </tr>
+  </tbody>
+</table>
+
+Converting from the two integers N and M to a corresponding floating
+point value is trivial in each case; though see the below section for
+how "special" IEEE floating point values are encoded.
+
+Architecture-dependent floats can be easily transformed into the
+underlying integers, through either directly accessing the bit fields
+of the floating point word (eg, from C), or using a relatively IEEE
+math (from other languages).
+
+Only implementations and applications that care about precision of the
+values they are storing need implement output for <tt>decimal</tt> and
+<tt>rational</tt>; others need only know how to read them.  It is also
+possible to specify in the <a href="[% link('design/meta.tt')
+%]">schema</a> that only particular encodings are allowed for a given
+type.
+
+<h3>Floating Point Representation</h3>
+
+Again, it seems like the standard has ended up re-inventing the wheel
+by coming up with its own floating point representation.  However, the
+need for this arose from actually trying to implement the output
+format.
+
+Specifying a particular common format, such as IEEE 754-2008 binary64
+(as ProtocolBuffers uses) was certainly the first choice.  However,
+there are problems if the native float format is not binary64; this
+might seem unlikely, but it happens.  And emitting 64-bit floats if
+that is not what your hardware is using can be problematic, too.
+Finally, if you are working with for instance 80-bit floats and the
+storage system loses 11 bits of precision when you put values in and
+out, this can be an annoyance.
+
+The IEEE 754 standard is a good choice for a machine word, and makes
+computations fast and squeezes every bit of precision it can out of
+the available space.  However the requirements of this standard are
+slightly different.  It doesn't matter a lot if the stored size is
+slightly larger than the machine format, just so long as all platforms
+can read and write them.
+
+<div style="float: right; text-align: center; width: 60%; padding: 0.3em">
+  <img src="[% link('files/floats.png') %]" alt="diagram showing floating point unpacking of various single precision floating point numbers"  style="width: 25em" /><br />
+  <i><b>Figure 3.</b> How various single-precision floating-point
+    values are converted to two integers for encoding</i>
+</div>
+
+To understand the solution used in git db, it helps to understand how
+floating point formats work.  The <a
+href="http://en.wikipedia.org/wiki/Ieee_float#Basic_formats">Wikipedia
+articles</a> are at the time of writing quite useful and informative.
+
+The idea with floating point is to reduce the problem of working with
+fractional values, to working with integers.  Much as how when dealing
+with long multiplication on paper, you ignore the decimal points and
+then at the end put the point at the correct point.  Floating point
+arithmetic is just like this, but in binary instead of base 10.
+
+So, the floating point number is essentially two (binary) numbers: a
+<i>mantissa</i> and an <i>exponent</i>.  When you do something like a
+multiply, you multiply the two mantissas, leaving a much larger
+mantissa, add the exponents together and then "normalize" the result
+so that the mantissa is in range of the amount of space you have for
+it.
+
+The essence of the floating point encoding is to take these two
+numbers from the float, adjust them so that they are in terms of
+<var>N&nbsp;×&nbsp;2<sup>M</sup></var>, and then store those.  In
+terms of converting from IEEE 754 formats, this means subtracting a
+<em>bias</em> for the exponent, and usually putting a 1 at the front
+of the mantissa.  The reason for this is that the only value which
+does not start with a 1 is 0, which is considered a special case.
+
+Once you have expressed the number as
+<var>N&nbsp;×&nbsp;2<sup>M</sup></var>, it can then be
+<em>reduced</em> - while <var>N</var> is even, you can halve it and
+subtract one from <var>M</var>.  Because of this, some floats end up
+encoding to a sequence smaller than the native float, but this is
+unusual.
+
+There are some special cases required for full representation of IEEE
+floats, and these are described below.
+
+<table>
+  <thead>
+    <tr>
+      <th>case</th>
+      <th>N</th>
+      <th>M</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>"normal" number</td>
+      <td>Mantissa, with implied 1 added (if required)</td>
+      <td>Exponent, with bias subtracted</td>
+    </tr>
+    <tr>
+      <td>"subnormal" numbers, and zero</td>
+      <td>Mantissa, no 1 added (it doesn't exist)</td>
+      <td>Exponent, with bias subtracted</td>
+    </tr>
+    <tr>
+      <td>infinity/&#x221e;</td>
+      <td>0</td>
+      <td>1 for +inf and -1 for -inf</td>
+    </tr>
+    <tr>
+      <td>Quiet NaN</td>
+      <td>0</td>
+      <td>2</td>
+    </tr>
+    <tr>
+      <td>Signalling NaN</td>
+      <td>0</td>
+      <td>Unsigned mantissa value + 3</td>
+    </tr>
+  </tbody>
+</table>
+
+In C, the conversion in and out is a matter of including the relevant
+floating point header file, and extracting the bits.  This can all be
+done using fast integer math, without divisions, and without losing
+any precision.
+
+In languages where such low-level manipulation of machine words is not
+available, conversion in is two IEEE math operations, and conversion
+out is three or more, such as:
+
+<pre>
+   scale = int(log(num) / log(2));
+   num = int(num * 2**(MANTISSA_BITS - scale));
+   exp = scale - MANTISSA_BITS;
+   while ( int( (num+1)/2 ) == num/2 ) {
+       num = num / 2;
+       exp++;
+   }
+   _return(num, exp);
+</pre>
+
+<tt>MANTISSA_BITS</tt> would be 53 for binary64 (double precision)
+systems, 23 for binary32 (single precision) and so on.  You may lose a
+few bits of precision with this approach, and it is slow - but it can
+be done.  There is an obvious optimization, too - the final loop can
+be done with higher powers of 2, to reduce the two integers with fewer
+loop iterations.  0, the infinities and nan's will also require
+special case branches.
 
 <h2>Encoding strings</h2>
 
-These are just encoded by length and with data inside.  Strings will
-generally be UTF-8 otherwise they must be encoded as octets.
+These are encoded with a variable length integer, followed by a
+quantity of bytes.  There are two types for encoding arbitrary length
+strings; one which indicates valid UTF-8 data inside and one for raw
+binary.
