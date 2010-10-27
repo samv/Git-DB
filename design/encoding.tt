@@ -287,6 +287,112 @@ language, ignoring the exception cases which result in <tt>mantissa ==
   num = mantissa * (2 ** exp)
 </pre>
 
+Note, the difficulties around this format is not really down to the
+storage format; <var>N&nbsp;×&nbsp;2<sup>M</sup></var> is very simple
+and it is the IEEE 754 format which is (justifiably) more complicated.
+
+This simplicity/space trade-off is quantified in the below table:
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Common Name</th>
+      <th>Native Size</th>
+      <th>Encoded Size</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>binary16</td>
+      <td>half precision</td>
+      <td>2 bytes</td>
+      <td>2-3 bytes</td>
+    </tr>
+    <tr>
+      <td>binary32</td>
+      <td>single precision</td>
+      <td>4 bytes</td>
+      <td>2-6 bytes</td>
+    </tr>
+    <tr>
+      <td>binary64</td>
+      <td>double precision</td>
+      <td>8 bytes</td>
+      <td>2-11 bytes</td>
+    </tr>
+    <tr>
+      <td>8087-80</td>
+      <td>"extended precision"</td>
+      <td>10 bytes</td>
+      <td>2-12 bytes</td>
+    </tr>
+    <tr>
+      <td>binary128</td>
+      <td>quadruple precision</td>
+      <td>16 bytes</td>
+      <td>2-19 bytes</td>
+    </tr>
+  </tbody>
+</table>
+
+Of course, only numbers which are "round numbers" in binary, like 192,
+0.125 and 16777216 will get the most compact end of the size range
+regardless of the native float format.
+
+<h3>Decimal Representation</h3>
+
+The decimal representation is there primarily because most databases
+support a fixed-precision type, eg NUMERIC(9,2), and it should be
+possible to support this precisely when this is requested in the
+schema.
+
+There is another use for decimal representation.  For example, the
+number 0.2 (base 10) will be a recurring number expressed in binary
+(0.001100110011...) and cannot be converted exactly to an integer
+times a power of two.
+
+205&nbsp;×&nbsp;2<sup>-10</sup>, the closest representation available
+in binary16, is 0.200 - not bad for 16 bits.  In float format, at the
+same precision, you're looking at 3 bytes of storage space.  Unpacked
+on a double precision platform, it will render as 0.2001953125.
+
+3355443&nbsp;×&nbsp;2<sup>-24</sup>, for single precision, encodes to
+5 bytes.  In double precision, which most machines will use (and gcc
+can emulate on platforms which don't support it natively), you end up
+with 3602879701896397&nbsp;×&nbsp;2<sup>-54</sup>, taking a whopping 9
+bytes to encode.
+
+For the die-hard 8087 80-bit format,
+3689348814741910323&nbsp;×&nbsp;2<sup>-64</sup>, encoding in 10 bytes,
+is actually the same size as the original float.  If you happened to
+find yourself on some machine with the ieee128 format,
+1038459371706965525706099265844019&nbsp;×&nbsp;2<sup>-112</sup>
+encodes to an 18 byte sequence.
+
+This highlights a point; much extra space is used for precision which
+isn't really there, and in fact it is never precisely the same as the
+simple string "0.2".  Therefore, some implementations might choose to
+try converting floating point values to decimal before they are
+stored, and if the mantissa in decimal (rendered to the IEEE decimal
+rules) is significantly smaller than the maximum float mantissa value,
+then to store the value using the decimal encoding instead.
+
+If an implementation does decide that "0.2" is a decimal, and not a
+floating point value, it can store it as
+2&nbsp;×&nbsp;10<sup>-1</sup>, which is only 2 bytes and fully precise
+on all floating point platforms.
+
+<h3>Rational Representation</h3>
+
+This format can store the set of rational numbers, ℝ, and is included
+as alongside the other two-integer formats it is relatively simple to
+encode and infinitely expands the precisely representable numeric
+values.
+
+In this format the numerator is a signed variable length integer, and
+the denominator is an unsigned one.  The denominator may not be zero.
+
 <h2>Encoding strings</h2>
 
 These are encoded with a variable length integer, followed by a
