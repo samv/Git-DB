@@ -112,7 +112,7 @@ storing two variable length, signed integers.
     <tr>
       <td>float</td>
       <td>N × 2<sup>M</sup></td>
-      <td>Floating point: general purpose, real numbers</td>
+      <td>Floating point: general purpose, "real" numbers</td>
     </tr>
     <tr>
       <td>decimal</td>
@@ -385,10 +385,13 @@ on all floating point platforms.
 
 <h3>Rational Representation</h3>
 
-This format can store the set of rational numbers, ℝ, and is included
-as alongside the other two-integer formats it is relatively simple to
+This format can store the set of rational numbers, and is included as
+alongside the other two-integer formats it is relatively simple to
 encode and infinitely expands the precisely representable numeric
-values.
+values.  ie, while <var>N&nbsp;×&nbsp;2<sup>M</sup></var> is an
+infinite set, it is possible to encode them using the rational format,
+and an infinite set of other precise numeric as well.  Surely this is
+worth an extra type code.
 
 In this format the numerator is a signed variable length integer, and
 the denominator is an unsigned one.  The denominator may not be zero.
