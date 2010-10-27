@@ -224,12 +224,17 @@ floats, and these are described below.
       <td>Exponent, with bias subtracted</td>
     </tr>
     <tr>
-      <td>"subnormal" numbers, and zero</td>
+      <td>"subnormal" numbers</td>
       <td>Mantissa, no 1 added (it doesn't exist)</td>
       <td>Exponent, with bias subtracted</td>
     </tr>
     <tr>
-      <td>infinity/&#x221e;</td>
+      <td>zero (0)</td>
+      <td>0</td>
+      <td>0</td>
+    </tr>
+    <tr>
+      <td>infinity (&#x221e;)</td>
       <td>0</td>
       <td>1 for +inf and -1 for -inf</td>
     </tr>
@@ -257,13 +262,13 @@ out is three or more, such as:
 
 <pre>
    scale = int(log(num) / log(2));
-   num = int(num * 2**(MANTISSA_BITS - scale));
+   mantissa = int(num * 2**(MANTISSA_BITS - scale));
    exp = scale - MANTISSA_BITS;
-   while ( int( (num+1)/2 ) == num/2 ) {
-       num = num / 2;
+   while ( int( (mantissa+1)/2 ) == mantissa/2 ) {
+       mantissa = mantissa / 2;
        exp++;
    }
-   _return(num, exp);
+   _return(mantissa, exp);
 </pre>
 
 <tt>MANTISSA_BITS</tt> would be 53 for binary64 (double precision)
@@ -273,6 +278,14 @@ be done.  There is an obvious optimization, too - the final loop can
 be done with higher powers of 2, to reduce the two integers with fewer
 loop iterations.  0, the infinities and nan's will also require
 special case branches.
+
+However complicated emitting one of these pairs is from a high level
+language, ignoring the exception cases which result in <tt>mantissa ==
+0</tt>, reconstructing is very simple:
+
+<pre>
+  num = mantissa * (2 ** exp)
+</pre>
 
 <h2>Encoding strings</h2>
 
