@@ -1,29 +1,43 @@
 [% title = "Transactions: recording changes" %]
 
-All transactions have a <b>base commit</b>.
+Snapshot states of the database correspond precisely with commits.
 
-A transaction in progress in the Git DB is essentially an
-index/cache/staging area which represents the current state to be
-committed.
+Transactions have a <b>base commit</b>, that corresponds to the
+'parent' in the git commit.  They have a <b>tree</b> which corresponds
+to the data as described in <a href="[% link('design/treeformat.tt')
+%]">TreeFormat</a>, including a <a href="[% link('design/meta.tt')
+%]">MetaFormat</a>-compliant <tt>meta/</tt> directory.
+
+If two transactions operate in isolation, then there may also be
+commits which merge their state.  This will be a <b>merge commit</b>,
+and may include the results of application-specific conflict merging
+(BASE operation).
+
+<h2>Implementing Isolation Levels: the transaction in progress</h2>
+
+<b>warning:</b> this section is a foray into what might and might not
+be possible to achieve easily in terms of transaction isolation using
+the assumptions made and is generally highly speculative.
+
+A transaction in progress in the Git DB is an index/cache/staging area
+which represents the current state to be committed.
 
 When the transaction is committed, information is stored into the
-commit object text to record the locks that were held.  This is the
-first phase of commit, and in higher levels of isolation, will always
+commit object text to record the rows that were read (and hence,
+possibly affecting the transaction result).  This is the first phase
+of commit, and in the distributed level of isolation, will always
 succeed.
 
 The second phase is to move HEAD (or whichever branch this transaction
-is committing to) from the old commitid to the new one.  If another
-transaction has moved it in the meantime, then the transaction must
-prove that the updates are compatible, and then move the commitid on.
-It produces a merge commit that shows it has checked that this is
-fine, and then again tries to advance the HEAD pointer.  We will refer
-to this second phase as <b>merging</b> two commits.
+is committing to) from the old commitid to the new one.  This may
+involve writing a merge commit, or forcing a ROLLBACK if this is not
+possible.
 
-<h1>ISOLATION LEVELS</h1>
+Which parts of this process are locked, and which are negotiated over
+a quorum of participants are all relevant questions to the <a href="[%
+link('design/distribution.tt') %]">distribution</a> layer.
 
-This section is a monologue into what might and might not be possible
-to achieve easily in terms of transaction isolation using these
-assumptions.
+<h3>Isolation Levels</h3>
 
 As far as I'm aware, there are no real definitions of what acceptable
 behaviour is when there are multiple actors on the database running on
@@ -37,7 +51,7 @@ as expected.
 To assist in debugging this process, all transactions will log the
 isolation level that they used in the commit log.
 
-<h2>READ UNCOMMITTED</h2>
+<h4>READ UNCOMMITTED</h4>
 
 In this mode, transactions are supposed to be able to see results
 which are in progress by other transactions, before they are
@@ -57,7 +71,7 @@ outweigh the speed benefits from using a single index.  But for some
 
 applications it may be useful.
 
-<h2>READ COMMITTED</h2>
+<h4>READ COMMITTED</h4>
 
 Here, the private index is used to collect writes as above - but reads
 happen from the shared index, which is updated when transactions are
@@ -86,7 +100,7 @@ This mode is recommended for single-master systems, where dealing with
 rollback is particularly inconvenient - and the occasional failure of
 a writer due to the above corner cases is acceptable.
 
-<h2>REPEATABLE READ</h2>
+<h4>REPEATABLE READ</h4>
 
 In this mode, the private index also caches information on which rows
 have been returned - partially or in full, but not aggregated -
@@ -119,7 +133,7 @@ listed in read locks for the commits being merged in matched changed
 rows in this transaction; and that no read locks in our transaction
 match changed rows in the transactions being merged.
 
-<h2>SERIALIZABLE</h2>
+<h4>SERIALIZABLE</h4>
 
 This level solves the problem of "phantom rows".  This is a
 requirement that extends beyond simple recording of read and write
@@ -149,13 +163,10 @@ therefore scales to distributed writers well.  With the addition of a
 quorum/voting system, 2N+1 nodes of equal trust can even form a useful
 multi-master system.
 
-<h2>FULL PREDICATE</h2>
+<h2>Distributed isolation level</h2>
 
-In this mode, temporary views are created for all queries issued in
-the transaction.  These take up little space, just a few rows in the
-meta tables for each query; the data returned is not duplicated.
-Locks are then recorded on the view rows.  When merging in this
-isolation level, all views computed in other transactions must be
-computed on the new data, to show that they return the same result.
+All row ID ranges <em>read</em> or <em>queried</em> are listed in the
+commit text, not just rows locked for update.
 
-This feature is, shall we say, a long way down the road-map :-).
+It is an open question whether this is truly a new isolation level, or
+merely a distributed implementation of SERIALIZABLE.

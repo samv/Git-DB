@@ -1,9 +1,20 @@
 [% title = "Filenames: locating packed values" %]
 
-<h2>Row Filename Formats</h2>
+The filename standard is the first level of the <a
+href="[%link('design/treeformat.tt')%]">TreeFormat</a>; it specifies
+an alternate encoding form based on traditional text value rendering.
 
-First a basic pretty printing of the value happens.  Row IDs are
-always sorted using the natural sort order of the primary keys.
+<h2>The Row Identifier</h2>
+
+The abstract row identifier is the list of values which comprise its
+<i>primary key</i>; details on which attributes this refers to is
+described in the <a href="[%link('design/meta.tt')%]">MetaFormat</a>.
+
+First a basic standard printing of the values happens.  The details
+depend on the type, but are all relatively well known and standard
+transforms.  The characteristics of functions used for each of these
+uses is given in the <a href="[%link('design/meta.tt')%]#types">types
+catalog</a>.
 
 <pre>
   Type     Type            Eg Value  Serialize As     Sort
@@ -13,17 +24,57 @@ always sorted using the natural sort order of the primary keys.
   Float    Floating point    1.234   1.234            <=>
                                -1    -1
                              10²³    10e+23
-  Bytes    Strings etc      "1234"   0x3031323334     cmp
+  Bytes    Strings etc      "1234"   0x31323334       cmp
   Text     Text etc         "1234"   1234             cmp
                               "\0"   ␀                cmp
-                               "1"   ␀                cmp
+                               "/"   ／                cmp
+                               «\»   ＼               cmp
+                               "／"   \／               cmp
   Decimal  Base 10         10.2312   10.2312
   Rational Fractions    1234124/12   102843.6         cmp
   Boolean  Boolean              1    t          ($a cmp $b) and
                                 ""   f           ($a ? 1 : -1)
-  LOB      out-of-row vals; "huge.." \a123128312      cmp (data)
 </pre>
 
-The LOB in the filename is problematic, as the blob behind that
-filename needs to be reference counted, but the reference to the row
-itself is problematic to arrange.
+The Row Filename refers to the result of the escaping, and all of the
+string values and joining the lot together with commas.
+
+<h2>Escaping Rules</h2>
+
+Common problematic characters are converted to their fullwidth form.
+This list of characters includes the colon, the comma, and all the
+ASCII whorlygig characters:
+
+<pre>- \ | / : ,</pre>
+
+ASCII control characters are converted to their Unicode page 0x24
+equivalents.
+
+Actually using these crazy unicode characters in a key will see them
+escaped by an ASCII backslash.
+
+<h2>Ranges</h2>
+
+If a range of values is required to be specified, these are separated
+by a "-"; ranges can cover multiple columns, eg
+
+<pre>
+  1,1-5,50
+  5,52-9,2
+</pre>
+
+<h2>Sorting and Collation</h2>
+
+Filenames are always sorted using the natural sort order of the
+primary key, key by key.  This means that all tables are stored in
+primary key order.  If you don't like that, key using a hash function,
+UUID or some other surrogate (even a sequence) as a primary key and
+ignore the 'real' primary key in your application.
+
+Initially all text string sorting and collation must be performed in
+the C locale; future versions or types will address this problem in a
+locale-aware fashion.
+
+Sorting for numeric types will be by the decimal version of the
+number, ie the value.  Strings will be sorted by the
+<em>unescaped</em> form.

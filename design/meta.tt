@@ -208,7 +208,7 @@ expect to operate on the data structure.
             references meta.attr (ns_url, ns_rev, class_index, attr_index)
 </pre>
 
-<h2>TYPES</h2>
+<a name="types"><h2>TYPES</h2></a>
 
 <pre>
   # meta.type: this is basically a compatibility table and is optional
@@ -228,4 +228,5 @@ expect to operate on the data structure.
     <b>type_dump_func text null</b>
     <b>type_load_func text null</b>
 </pre>
+
 

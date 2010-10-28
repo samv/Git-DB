@@ -106,3 +106,25 @@ expressions, etc.  After the abstract query syntax tree is completed,
 this will be revisited.  Materialized views should also come "for
 free" in this design without having to manually write triggers
 
+<h2>Skipping storage</h2>
+
+There are MetaFormat ways to specify this, but also regular git
+filesystem mechanisms for skipping storage such as <tt>.gitignore</tt>
+files should be honoured.  If they are discovered and not understood,
+then the program should probably refuse to run.
+
+<h2>Sharding</h2>
+
+Git submodules might be a more sensible way to achieve sharding than 
+backing to cassandra.
+
+<h2>FULL PREDICATE TRANSACTION ISOLATION</h2>
+
+In this mode, temporary views are created for all queries issued in
+the transaction.  These take up little space, just a few rows in the
+meta tables for each query; the data returned is not duplicated.
+Locks are then recorded on the view rows.  When merging in this
+isolation level, all views computed in other transactions must be
+computed on the new data, to show that they return the same result.
+
+This feature is, shall we say, a long way down the road-map :-).

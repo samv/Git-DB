@@ -4,7 +4,9 @@ This page describes how various elemental value types are encoded.
 When decoding, you need to know what type to expect.  In the next
 level, <a href="[% link('design/columnformat.tt')
 %]">ColumnFormat</a>, it is described how these expectations are
-encoded.
+encoded.  Much later, after the <a href="[% link('design/meta.tt')
+%]">MetaFormat</a> is known then it is possible to interpret the
+values to a type.
 
 <h2>Encoding Unsigned Integers</h2>
 
@@ -393,12 +395,14 @@ on all floating point platforms.
 <h3>Rational Representation</h3>
 
 This format can store the set of rational numbers, and is included as
-alongside the other two-integer formats it is relatively simple to
-encode and infinitely expands the precisely representable numeric
-values.  ie, while <var>N&nbsp;×&nbsp;2<sup>M</sup></var> is an
-infinite set, it is possible to encode them using the rational format,
-and an infinite set of other precise numeric as well.  Surely this is
-worth an extra type code.
+alongside the other two-integer formats it is trivial to decode and
+infinitely expands the precisely representable numeric values.  While
+<var>N&nbsp;×&nbsp;2<sup>M</sup></var> is an infinite set, there is
+another infinite set of other precise numeric values as well.  Sure,
+there are useful irrationals one could precisely encode like
+(&#x2081;&#x2082;&#x221a;2)&#x2075 - a major 3rd - but <a
+href="http://www.ehow.com/how_2187418_tune-guitar-using-harmonics.html">4/3
+is usually close enough to a third to tune a guitar</a>.
 
 In this format the numerator is a signed variable length integer, and
 the denominator is an unsigned one.  The denominator may not be zero.
