@@ -352,6 +352,13 @@ number 0.2 (base 10) will be a recurring number expressed in binary
 (0.001100110011...) and cannot be converted exactly to an integer
 times a power of two.
 
+<div style="float: right; text-align: center; width: 60%; padding: 0.3em">
+  <img src="[% link('files/decimaletc.png') %]" alt="diagram showing the value 0.2 encoded in various styles"  style="width: 25em" /><br />
+  <i><b>Figure 4.</b> How the various encodings store "0.2"; the
+    'float' encoding assumes a binary64 source platform.  You can see
+    the reciprocal repeating itself through the digits, and the effect
+    of ieee 754 rounding rules on the final bit.</i>
+</div>
 205&nbsp;×&nbsp;2<sup>-10</sup>, the closest representation available
 in binary16, is 0.200 - not bad for 16 bits.  In float format, at the
 same precision, you're looking at 3 bytes of storage space.  Unpacked
@@ -398,7 +405,18 @@ the denominator is an unsigned one.  The denominator may not be zero.
 
 <h2>Encoding strings</h2>
 
-These are encoded with a variable length integer, followed by a
-quantity of bytes.  There are two types for encoding arbitrary length
-strings; one which indicates valid UTF-8 data inside and one for raw
-binary.
+<div style="float: right; text-align: center; width: 60%; padding: 0.3em">
+  <img src="[% link('files/text.png') %]" alt="diagram showing the string Māori encoded in various styles"  style="width: 20em" /><br />
+  <i><b>Figure 5.</b> how one representation of the string "Māori" is
+    encoded.  UTF-8 multi-byte sequences are similar to the <tt>varuint</tt>
+    encoding, but use the top bit to indicate that the byte is a part
+    of a multi-byte sequence.</i>
+</div>
+These are encoded with a variable length unsigned integer, followed by
+a quantity of bytes.  Neither the encoding nor the column format has
+any knowledge of UTF-8; however there are two
+<a href="[%link('design/meta.tt')%]#types">standard types</a> which have
+different functions depending on whether the content is a byte string,
+or text.
+
+<div style="clear: right"></div>
