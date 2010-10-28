@@ -37,6 +37,11 @@ in the original schema.  These situations should be rare and hopefully
 may be excluded by some implementations and remain generally
 interoperable.
 
+A completely different, more human readable encoding is used for
+converting primary key column values to filenames for referring to
+them.  This is described in the next level, <a
+href="[%link('design/filenames.tt')%]">Filenames</a>.
+
 <h2>Column types</h2>
 
 The meaning of the 4-bit type field is given below.  Some of these
@@ -199,12 +204,17 @@ equivalent, but in the context of combining rows this may be useful.
 Explicit NULL values should never appear in stored rows or pages; it
 is reserved for stream use in situations where it is required.
 
+Otherwise, a stream looks like a continuous data page; see the next
+section.
+
 <h3>Page feature types</h3>
 
 Two types are added for paged rows - blobs which contain multiple
-rows.  Paging allows for "table compression" to work, useful for
-improving OLAP disk space use and scan requirements.  Some
-implementations may choose to omit all support for row paging.
+rows.  Paging, as well as facilitating streaming, allows for "table
+compression" to work, useful for improving OLAP disk space use and
+scan requirements.  Some implementations may find it appropriate to
+omit all support for row paging.  It is described more in the <a
+href="[%link('design/treeformat.tt')%]">TreeFormat section</a>.
 
 First, there is the <tt>eor</tt> marker, which allows for delimiting
 rows in a page.
