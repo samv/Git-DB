@@ -16,25 +16,32 @@ transforms.  The characteristics of functions used for each of these
 uses is given in the <a href="[%link('design/meta.tt')%]#types">types
 catalog</a>.
 
-<pre>
-  Type     Type            Eg Value  Serialize As     Sort
- -------- ---------------- --------- --------------- ------
-  VarInt   Integer           1234    1234             <=>
-                               -1    -1
-  Float    Floating point    1.234   1.234            <=>
-                               -1    -1
-                             10²³    10e+23
-  Bytes    Strings etc      "1234"   0x31323334       cmp
-  Text     Text etc         "1234"   1234             cmp
-                              "\0"   ␀                cmp
-                               "/"   ／                cmp
-                               «\»   ＼               cmp
-                               "／"   \／               cmp
-  Decimal  Base 10         10.2312   10.2312
-  Rational Fractions    1234124/12   102843.6         cmp
-  Boolean  Boolean              1    t          ($a cmp $b) and
-                                ""   f           ($a ? 1 : -1)
-</pre>
+<table border="1">
+  <thead>
+    <tr>
+      <th>type name</th>
+      <th>eg value</th>
+      <th>filename form</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td rowspan="2"><tt>varint</tt></td><td>1234</td><td><tt>1234</tt></td>
+    <tr><td>-1</td><td><tt>-1</tt></td>
+    <tr><td rowspan="3"><tt>float</tt></td><td>1.234</td><td><tt>1.234</tt></td>
+    <tr><td>0.0</td><td><tt>0</tt></td>
+    <tr><td>10²³</td><td><tt>1e+23</tt></td>
+    <tr><td rowspan="6"><tt>string</tt></td><td>"1234"</td><td><tt>1234</tt></td>
+    <tr><td>"\0"</td><td><tt>␀</tt></td>
+    <tr><td>"foo-bar"</td><td><tt>foo&#xff0d;bar</tt></td>
+    <tr><td>"foo/bar"</td><td><tt>foo&#xff0f;bar</tt></td>
+    <tr><td>"foo\\bar"</td><td><tt>foo&#xff3c;bar</tt></td>
+    <tr><td>"foo&#xff3c;bar"</td><td><tt>foo\&#xff3c;bar</tt></td>
+    <tr><td rowspan="1"><tt>decimal</tt></td><td>1.20</td><td><tt>1.2</tt></td>
+    <tr><td rowspan="1"><tt>rational</tt></td><td>123812/7</td><td><tt>17687.42</tt></td>
+    <tr><td rowspan="2"><tt>bool</tt></td><td>true</td><td><tt>t</tt></td>
+    <tr><td>false</td><td><tt>f</tt></td>
+  </tbody>
+</table>
 
 The Row Filename refers to the result of the escaping, and all of the
 string values and joining the lot together with commas.
