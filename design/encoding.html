@@ -387,10 +387,10 @@ the denominator is an unsigned one.  The denominator may not be zero.
 <p><h2>Encoding strings</h2>
 <p><div style="float: right; text-align: center; width: 60%; padding: 0.3em">
   <img src="../files/text.png" alt="diagram showing the string Māori encoded in various styles"  style="width: 20em" /><br />
-  <i><b>Figure 5.</b> how one representation of the string "Māori" is
-    encoded.  UTF-8 multi-byte sequences are similar to the <tt>varuint</tt>
-    encoding, but use the top bit to indicate that the byte is a part
-    of a multi-byte sequence.</i>
+  <i><b>Figure 5.</b> how the NFD representation of the string "Māori"
+    is encoded.  UTF-8 multi-byte sequences are similar to the
+    <tt>varuint</tt> encoding, but use the top bit to indicate that
+    the byte is a part of a multi-byte sequence.</i>
 </div>
 These are encoded with a variable length unsigned integer, followed by
 a quantity of bytes.  Neither the encoding nor the column format has

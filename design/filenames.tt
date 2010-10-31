@@ -48,17 +48,153 @@ string values and joining the lot together with commas.
 
 <h2>Escaping Rules</h2>
 
-Common problematic characters are converted to their fullwidth form.
-This list of characters includes the colon, the comma, and all the
-ASCII whorlygig characters:
+These rules apply to marshalling out strings.
+
+<ol>
+
+<li>Any reserved or otherwise problematic ASCII punctuation character
+is converted to its fullwidth form, by adding 0xFEE0 to their
+codepoint value.  This list of characters minimally includes the
+colon, the comma, and the ASCII whorlygig characters:
 
 <pre>- \ | / : ,</pre>
 
-ASCII control characters are converted to their Unicode page 0x24
-equivalents.
+On marshall in, <em>all</em> of the characters in the full-width plane
+are always converted back to their ASCII versions, by subtracting
+0xFEE0 from their codepoint value.
 
-Actually using these crazy unicode characters in a key will see them
-escaped by an ASCII backslash.
+If a particular implementation is restricted further, it may escape
+more than these core characters, but this is not required.
+
+<li>ASCII control characters are converted to their Unicode page 0x24
+equivalents, by adding 0x2400 to their codepoint value.  On marshall
+in, the reverse transform is applied.
+
+<li>One outlier (\177 or U+007F, the delete character) fits neither
+rules, because the appropriate Unicode escape character is in an odd
+place.  Instead that one gets replaced with U+2421.
+
+<li>All characters which could be interpreted as substitution escapes
+as per the above rules can be escaped by a fall-back escaping rule.
+Two characters may be used, one of which is the regular backblash
+(U+002F REVERSE SOLIDUS), and the other another unicode backslash
+character.  Again, for those implementations for which a real
+backslash is problematic, the is a Unicode alternative, U+244A.</ol>
+
+<table border="1">
+  <thead>
+    <tr>
+      <th>Rule</th>
+      <th>Range name</th>
+      <th>examples</th>
+      <th>input range</th>
+      <th>output format</th>
+      <th>output range</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>1</td>
+      <td>ASCII punctuation</td>
+      <td><tt>, / | \ - :</tt></td>
+      <td>U+0020-U+007E</td>
+      <td><tt>，／｜＼－：</tt></td>
+      <td>U+FF00-U+FF5E</td>
+    </tr>
+    <tr>
+      <td>2</td>
+      <td>ASCII control</td>
+      <td>(not printable)</td>
+      <td>U+0000-U+001F</td>
+      <td><tt>␀, ␇, ␈</tt> etc</td>
+      <td>U+2400-U+241F</td>
+    </tr>
+    <tr>
+      <td>3</td>
+      <td>ASCII delete</td>
+      <td>(unprintable)</td>
+      <td>U+007F</td>
+      <td><tt>␡</tt></td>
+      <td>U+2421</td>
+    </tr>
+    <tr>
+      <td rowspan="3">4</td>
+      <td>Fullwidth forms</td>
+      <td><tt>，／｜＼－：</tt></td>
+      <td>U+FF00-U+FF5F</td>
+      <td><tt>\， \／ \｜ \＼ \－ \：</tt><br />
+        or <tt>⑊， ⑊／ ⑊｜ ⑊＼ ⑊－ ⑊：</tt></td>
+      <td>U+002F, original char<br />
+        or U+244A, original char
+        </td>
+    </tr>
+    <tr>
+      <td>ASCII control representations</td>
+      <td><tt>␀, ␇, ␈</tt> etc</td>
+      <td>U+2400-U+2421</td>
+      <td><tt>\␀ \␇ \␈</tt><br />
+        or <tt>⑊␀ ⑊␇ ⑊␈</tt>
+      </td>
+      <td>U+002F, char<br />
+        or U+244A, char
+        </td>
+    </tr>
+    <tr>
+      <td>unicode escape character</td>
+      <td><tt>⑊</tt></td>
+      <td>U+244A</td>
+      <td><tt>\⑊</tt><br/>
+        or <tt>⑊⑊</tt></td>
+      <td>U+002F, U+244A<br />
+        or U+244A, U+244A</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Checkouts on non-UNIX and MacOS filesystems</h2>
+
+There are a number of issues with using 'git checkout' of the contents
+of a git db repository on various filesystems;
+
+<ul>
+
+<li>On <em>case-insensitive filesystems</em>, such as FAT, NTFS and
+  Mac's HFS, when there are two keys which differ only in case and end
+  up in the same directory.  Eg, one file called "<tt>Bob</tt>" and
+  one called "<tt>bob</tt>".</li>
+
+<li>On filesystems that <em>fold</em> either case or unicode
+  normalization forms.  For instance, when the program tries to write
+  a file called "<tt>bob</tt>", but the file created is later shown as
+  "<tt>BOB</tt>".  The unicode normalization issue is similar but less
+  well known; it is where a filename is written such as
+  "<tt>Ma</tt><var>&lt;U+304&gt;</var><tt>ori</tt>" (NKD -
+  decomposed), but when later read back is returned as
+  "<tt>M</tt><var>&lt;U+101&gt;</var><tt>ori</tt>" (NKC -
+  composed).</li>
+
+<li>On filesystems which <em>prohibit characters</em>.  On most UNIX
+  systems the list of prohibited characters is very short.  For
+  instance, just the NUL character and "<tt>/</tt>", the directory
+  separator.</li>
+
+</ul>
+
+Of these problems, the prohibited characters case is easily solved; so
+long as unicode is allowed in filenames, they can be escaped as per
+above.
+
+The other two problems are harder to work around.  Really though, an
+implementation of this standard that works with a checkout is making
+life hard for itself.  The only real reason for doing so is
+implementations cobbled-together using raw git plumbing.  So, if doing
+this you might have to see how the plumbing you are using addresses
+this problem when dealing with source code.
+
+With the exception of omitted columns, the filenames are really just
+informational, and helping you find the actual data which will be
+inside the blobs they refer to.  So, the other workaround for systems
+like this is to full scan when in doubt.  It's slower, but it works.
 
 <h2>Ranges</h2>
 
@@ -69,6 +205,11 @@ by a "-"; ranges can cover multiple columns, eg
   1,1-5,50
   5,52-9,2
 </pre>
+
+Ranges may appear when using paged rows, or breaking up large
+directories.  See the <a
+href="[%link('design/treeformat.tt')%]"]>TreeFormat</a> for more
+information.
 
 <h2>Sorting and Collation</h2>
 
