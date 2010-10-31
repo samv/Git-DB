@@ -206,6 +206,11 @@ by a "-"; ranges can cover multiple columns, eg
   5,52-9,2
 </pre>
 
+Ranges may appear when using paged rows, or breaking up large
+directories.  See the <a
+href="[%link('design/treeformat.tt')%]"]>TreeFormat</a> for more
+information.
+
 <h2>Sorting and Collation</h2>
 
 Filenames are always sorted using the natural sort order of the
