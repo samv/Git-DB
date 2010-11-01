@@ -224,9 +224,175 @@ expect to operate on the data structure.
     <b>type_name text not null</b>
     primary key (id, ns_rev, type_name)
     <b>type_formats int not null</b>
-    <b>type_choose_func text null</b>
     <b>type_dump_func text null</b>
     <b>type_load_func text null</b>
+    <b>type_choose_func text null</b>
+    <b>type_cmp_func text null</b>
+    <b>type_print_func text null</b>
+    <b>type_scan_func text null</b>
 </pre>
 
+<tt>type_formats</tt> is an integer which is interpreted bitwise, and
+represents the encodings which are allowed for that type in this
+store.  The values for the standard types, below, represent all of the
+encodings which are defined by this standard.  Using an encoding for a
+type which is not permitted by the <tt>type_formats</tt> value in the
+<tt>meta.type</tt> table is a data consistency error.
 
+The functions are described as below:
+
+<dl>
+  <dt><tt>type_choose_func</tt></dt>
+  <dd>Some types get to choose the encoding based on the value to be
+    encoded.  If that is true, this function will be defined,
+    otherwise it will be null and only one <tt>type_formats</tt> bit
+    may be set.
+  </dd>
+  <dt><tt>type_dump_func</tt></dt>
+  <dd>The name of a function which marshalls the value out.  The
+    function will take the value, an encoding, and return a value
+    valid for that encoding.
+  </dd>
+  <dt><tt>type_load_func</tt></dt>
+  <dd>The reverse, but marshalls the value in.  The encoding is a
+    formal parameter.
+  </dd>
+  <dt><tt>type_cmp_func</tt></dt>
+  <dd>The name of a function which can compare two values.  For
+    primary key sorting purposes.
+  </dd>
+  <dt><tt>type_print_func</tt></dt>
+  <dd>The name of a function which converts the value to a primary
+    key-form string.  This need not be reversible; if not, the
+    standard types' function name starts with <tt>hash_</tt>
+  </dd>
+  <dt><tt>type_scan_func</tt></dt>
+  <dd>The reverse of <tt>type_print_func</tt>; turns a formatted
+    string back into a value.  If this is not reversible then the
+    function will be converting the row value to a placeholder.
+  </dd>
+</dl>
+
+<h3>Standard Types</h3>
+
+The <em>standard types</em> here represent a common set of well known
+data types in use in databases and programming, and a corresponding
+set of <em>well known functions</em> which perform the trivial IO
+operations, and for which reference implementations will be provided.
+
+Implementations need not support all types; however if opening a
+store, this table may be checked to see that the understanding of all
+parties as to the nature of the types is known.
+
+<table>
+  <thead>
+    <tr>
+      <th>type_name</th>
+      <th>type_formats</th>
+      <th>type_choose_func</th>
+      <th>type_dump_func</th>
+      <th>type_load_func</th>
+      <th>type_cmp_func</th>
+      <th>type_print_func</th>
+      <th>type_scan_func</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>bool</td>
+      <td>1100000b</td>
+      <td>is_tf</td>
+      <td>emit_bool</td>
+      <td>read_bool</td>
+      <td>false_first</td>
+      <td>fmt_bool</td>
+      <td>scan_bool</td>
+    </tr>
+    <tr>
+      <td>integer</td>
+      <td>1b</td>
+      <td>-</td>
+      <td>emit_varint</td>
+      <td>read_varint</td>
+      <td>cmp_num</td>
+      <td>fmt_int</td>
+      <td>scan_int</td>
+    </tr>
+    <tr>
+      <td>real</td>
+      <td>11011b</td>
+      <td>pack_real</td>
+      <td>emit_real</td>
+      <td>read_real</td>
+      <td>cmp_num</td>
+      <td>fmt_real</td>
+      <td>scan_real</td>
+    </tr>
+    <tr>
+      <td>numeric</td>
+      <td>1000b</td>
+      <td>-</td>
+      <td>emit_real</td>
+      <td>read_real</td>
+      <td>cmp_num</td>
+      <td>fmt_real</td>
+      <td>scan_real</td>
+    </tr>
+    <tr>
+      <td>bytea</td>
+      <td>1000100b</td>
+      <td>large_value</td>
+      <td>emit_bytea</td>
+      <td>read_bytea</td>
+      <td>cmp_bytes</td>
+      <td>fmt_bytea_hex</td>
+      <td>scan_bytea_hex</td>
+    </tr>
+    <tr>
+      <td>text</td>
+      <td>1000100b</td>
+      <td>large_value</td>
+      <td>emit_text</td>
+      <td>read_text</td>
+      <td>cmp_text</td>
+      <td>fmt_text</td>
+      <td>scan_text</td>
+    </tr>
+    <tr>
+      <td>nkd_text</td>
+      <td>1000100b</td>
+      <td>large_value</td>
+      <td>emit_nkd_text</td>
+      <td>read_nkd_text</td>
+      <td>cmp_nkd_text</td>
+      <td>fmt_nkd_text</td>
+      <td>scan_nkd_text</td>
+    </tr>
+    <tr>
+      <td>nkc_text</td>
+      <td>1000100b</td>
+      <td>large_value</td>
+      <td>emit_nkc_text</td>
+      <td>read_nkc_text</td>
+      <td>cmp_nkc_text</td>
+      <td>fmt_nkc_text</td>
+      <td>scan_nkc_text</td>
+    </tr>
+    <tr>
+      <td>json</td>
+      <td>1000100b</td>
+      <td>large_json</td>
+      <td>emit_json</td>
+      <td>read_json</td>
+      <td>cmp_struct_hash</td>
+      <td>hash_json</td>
+      <td>scan_hash</td>
+    </tr>
+  </tbody>
+</table>
+
+The functions are all described in detail in the reference
+implementation.  Most are very simple.
+
+If a <tt>type_name</tt> is used in the schema, but not listed in
+<tt>meta.types</tt>, then the above definitions are used.
