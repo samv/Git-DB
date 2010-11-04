@@ -1,75 +1,67 @@
 
 package Git::DB::ColumnFormat::LOB;
 
-use Mouse;
+use Moose;
 
 #use Git::DB::RowFormat qw(read_charz);
 #use Git::DB::Index qw(write_blob add_index_entry get_index_oid);
 
-extends 'Git::DB::ColumnFormat::Bytes';
+use Git::DB::Encode qw(encode_uint read_uint read_str);
 
-sub type_num { 7 };
+use Git::DB::Defines qw(ENCODE_LOB);
 
-has 'lob_dir' =>
-	is => "rw",
-	isa => "Str",
-	default => "/_lobs",
-	;
+sub type_num { ENCODE_LOB };
 
-has 'lob_width' =>
-	is => "rw",
-	isa => "Int",
-	default => 12,
-	;
+use bytes;
 
-has 'lob_fanout' =>
-	is => "rw",
-	isa => "Int",
-	default => 2,
-	;
-
-sub write_blob {
+sub write_col {
+	my $inv = shift;
+	my $io = shift;
 	my $data = shift;
-	#...
-}
+	my $extra = shift;
 
-sub read_blob {
-	my $oid = shift;
-	#
-}
-
-sub register_blob {
-	my $oid = shift;
-	#...
-}
-
-around to_row => sub {
-	my $orig = shift;
-	my $self = shift;
-	my $data = shift;
-	if ( blessed $data and $data->isa("Git::DB::LOB") ) {
-		$self->$orig($data->hash);
+	my $blobid;
+	if ( blessed $data and $data->can("git_db_blobid") ) {
+		$blobid = $data->git_db_blobid;
 	}
 	else {
-		# write out object and return $oid
-		my $oid = write_blob($data);
+		# not already encoded..
+		my ($store, $row, $col_idx)
+			= $extra->("store", "row", "column_idx");
 
-		#... ok so we will need these passed in ...
-		my $row = shift;
-		my $column = shift;
-		# ... wave hands ...
-		register_blob($oid, $row, $column);
+		$blobid = join ",",
+			$store->rowid_filename($row), $col_idx;
 
-		$self->$orig($oid);
+		my ($schema_idx, $class_idx)
+			= $extra->("schema_idx", "class_idx");
+
+		my $lob = Git::DB::LOB->new(
+			blobid => $blobid,
+			data => $data,
+			schema_idx => $schema_idx,
+			class_idx => $class_idx,
+		);
+		$store->insert($lob);
 	}
-};
+	print { $io } encode_uint(length($blobid)),
+		$blobid;
+}
 
-around read_col => sub {
-	my $self = shift;
-	my $data = shift;
-	my $oid = super($data);
-	return Git::DB::LOB->new(hash => $oid);
-};
+sub read_col {
+	my $inv = shift;
+	my $io = shift;
+	my $extra = shift;
+	my ($schema_idx, $class_idx, $store)
+		= $extra->("schema_idx", "class_idx", "store");
+	my $length = read_uint($io);
+	my $blobid = read_str($io);
+	Git::DB::LOB->new(
+		blobid => $blobid,
+		store => $store,
+		schema_idx => $schema_idx,
+		class_idx => $class_idx,
+	);
+}
 
 with 'Git::DB::ColumnFormat';
 
@@ -86,11 +78,8 @@ Git::DB::ColumnFormat::LOB - Large OBject
 A representation to allow for columns which are just too bloody big to
 go in the regular row store.
 
-They are stored in the git store without any extra headers or
-suchlike, and by default placed under eg '/_lobs/ab/cdef123455', where
-the hex ID is the ID of the actual git blob (the leading digits).
-Collisions are detected, but there is not necessarily a guarantee that
-the filename stored under will uniquely identify the LOB.
+It has custom write and read rules which lazily marshall the value
+through the L<Git::DB::LOB> class to storage and back.
 
 =cut
 

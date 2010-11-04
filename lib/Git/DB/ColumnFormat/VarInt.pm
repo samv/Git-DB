@@ -1,21 +1,24 @@
 
 package Git::DB::ColumnFormat::VarInt;
 
-use Mouse;
+use Moose;
 use Git::DB::Encode qw(encode_int read_int);
 
-sub type_num { 0 };
+use Git::DB::Defines qw(ENCODE_VARINT);
 
-sub to_row {
+sub type_num { ENCODE_VARINT };
+
+sub write_col {
 	my $inv = shift;
+	my $io = shift;
 	my $num = shift;
-	return encode_int($num);
+	print {$io} encode_int($num);
 }
 
 sub read_col {
 	my $inv = shift;
-	my $data = shift;
-	read_int($data);
+	my $io = shift;
+	read_int($io);
 }
 
 with 'Git::DB::ColumnFormat';

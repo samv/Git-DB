@@ -11,19 +11,22 @@ ok(defined(&column_format), "exported column_format OK");
 use_ok("Git::DB::ColumnFormat::VarInt");
 my $cf = Git::DB::ColumnFormat::VarInt->new;
 
+use IO::Scalar;
+my $buffer = "";
+my $io = IO::Scalar->new(\$buffer);
+
 # test emitting; basics on the int type
 my $type = $cf->type_num;
 is($type, 0, "VarInt: type OK");
-my (@data) = $cf->to_row(42);
-is(unpack("H*",join("",@data)), "2a", "VarInt: out OK");
+$cf->write_col($io, 42);
+is(unpack("H*",$buffer), "2a", "VarInt: out OK");
 
 # test reading
 my $cf_class = column_format(0);
-my $buf = pack("H*", "2a");
-open my $io, "<", \$buf;
-#bless $io, "IO::Handle";
+$buffer = pack("H*", "56");
+$io->seek(0,0);
 my $val = $cf_class->read_col($io);
-is($val, 42, "VarInt: in OK");
+is($val, -42, "VarInt: in OK");
 
 require Math::BigRat;
 
@@ -78,14 +81,16 @@ while ( my ($type, $encoded, $value) = splice @TESTS, 0, 3 ) {
 		unless $done_type_test{$type}++;
 
 	$test_name .= ": ".($value//"(undef)");
-	my (@data) = $cf->to_row($value);
+	my $buffer = "";
+	my $io = IO::Scalar->new(\$buffer);
+	$cf->write_col($io, $value);
+
 	$encoded =~ s{^0x}{};
-	is(unpack("H*",join("",@data)), $encoded, "$test_name: out OK");
+	is(unpack("H*",$buffer), $encoded, "$test_name: out OK");
 
 	# test reading
-	my $buf = pack("H*", $encoded);
-	open my $io, "<", \$buf;
-	#bless $io, "IO::Handle";
-	my $val = $cf->read_col($io);
-	is($val, $value, "$test_name: in OK");
+	$io->seek(0,0);
+	$buffer = pack("H*", $encoded);
+	my $read_back = $cf->read_col($io);
+	is($read_back, $value, "$test_name: in OK");
 }

@@ -1,16 +1,16 @@
 
 package Git::DB::ColumnFormat::Null;
 
-use Mouse;
+use Moose;
 with 'Git::DB::ColumnFormat';
 
-sub type_num { 9 };
+use Git::DB::Defines qw(ENCODE_NULL);
 
-sub to_row {
-	my $inv = shift;
-	my $data = shift;
+sub type_num { ENCODE_NULL };
+
+sub write_col {
 	die "can't use a defined value with a null column format"
-		if defined($data);
+		if defined $_[2];
 }
 
 sub read_col {

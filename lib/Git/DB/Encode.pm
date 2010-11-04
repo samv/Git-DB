@@ -17,7 +17,7 @@ use IO::Handle;
 use Git::DB::Defines qw(MAX_INT MAX_NV_INT MANTISSA_BITS MAX_NEG);
 
 use Sub::Exporter -setup => {
-	exports => [qw(encode_str decode_str
+	exports => [qw(encode_str decode_str read_str
 		       encode_int decode_int read_int
 		       encode_uint decode_uint read_uint
 		       encode_float decode_float read_float
@@ -40,6 +40,13 @@ sub encode_str {
 sub decode_str {
 	my $str = shift;
 	decode("utf8", $str);
+}
+
+sub read_str {
+	my $io = shift;
+	my $length = read_uint($io);
+	$io->read( my $buf, $length );
+	$buf;
 }
 
 sub _pack_w {

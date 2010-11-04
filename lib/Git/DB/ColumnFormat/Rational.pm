@@ -1,24 +1,43 @@
 
 package Git::DB::ColumnFormat::Rational;
 
-use Mouse;
+use Moose;
 
 use Git::DB::Encode qw(encode_int read_int encode_uint read_uint);
+use Git::DB::Float qw(float_to_intpair);
+use Git::DB::Defines qw(ENCODE_RATIONAL);
 
-sub type_num { 4 };
+sub type_num { ENCODE_RATIONAL };
 
 use Math::BigRat try => 'GMP';
 
-sub to_row {
+sub write_col {
 	my $inv = shift;
+	my $io = shift;
 	my $rat = shift;
-	if ( blessed $rat ) {
-		encode_int( $rat->numerator ),
-			encode_uint( $rat->denominator );
+	my ($numerator, $denominator);
+	if ( blessed $rat and $rat->can("numerator") ) {
+		$numerator = $rat->numerator;
+		$denominator = $rat->denominator;
+	}
+	elsif ( int($rat) == $rat ) {
+		$numerator = $rat;
+		$denominator = 1;
 	}
 	else {
-		die "must be passed blessed objects for Rational";
+		my ($scale, $mantissa) = float_to_intpair($rat);
+		my ($numerator, $denominator);
+		if ( $scale < 0 ) {
+			$numerator = $mantissa;
+			$denominator = 2**-$scale;
+		}
 	}
+	if ( $denominator < 0 ) {
+		$numerator = -$numerator;
+		$denominator = -$denominator;
+	}
+	print { $io } encode_int( $numerator ),
+		encode_uint( $denominator );
 }
 
 sub read_col {
@@ -26,7 +45,12 @@ sub read_col {
 	my $data = shift;
 	my $numerator = read_int($data);
 	my $denominator = read_uint($data);
-	Math::BigRat->new("$numerator / $denominator");
+	if ( $denominator == 1 ) {
+		return $numerator;
+	}
+	else {
+		Math::BigRat->new("$numerator / $denominator");
+	}
 }
 
 1;

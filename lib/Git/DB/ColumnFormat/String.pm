@@ -1,18 +1,21 @@
 
-package Git::DB::ColumnFormat::Bytes;
+package Git::DB::ColumnFormat::String;
 
-use Mouse;
+use Moose;
 
 use Git::DB::Encode qw(encode_uint read_uint);
 
-sub type_num { 2 };
+use Git::DB::Defines qw(ENCODE_STRING);
+
+sub type_num { ENCODE_STRING };
 
 use bytes;
 
-sub to_row {
+sub write_col {
 	my $inv = shift;
+	my $io = shift;
 	my $data = shift;
-	encode_uint(length($data)), $data;
+	print { $io } encode_uint(length($data)), $data;
 }
 
 sub read_col {
@@ -32,7 +35,7 @@ __END__
 
 =head1 NAME
 
-Git::DB::ColumnFormat::LengthDelimited - data store for strings etc
+Git::DB::ColumnFormat::String - implement string column format
 
 =head1 SYNOPSIS
 

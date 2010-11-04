@@ -1,24 +1,21 @@
 
 package Git::DB::ColumnFormat::False;
 
-use Mouse;
+use Moose;
 
-sub type_num { 5 };
+use Git::DB::Defines qw(ENCODE_FALSE);
 
-sub to_row {
-	my $inv = shift;
-	my $data = shift;
-	die "value true" if $data;
-	"";
+sub type_num { ENCODE_FALSE };
+
+sub write_col {
+	die "value true" if $_[2];
 }
 
 sub read_col {
-	my $inv = shift;
-	my $data = shift;
 	return "";
 }
 
-with 'Git::DB::ColumnFormat::Boolean';
+with 'Git::DB::ColumnFormat';
 
 1;
 
@@ -26,12 +23,13 @@ __END__
 
 =head1 NAME
 
-Git::DB::ColumnFormat::True - Encode a true value.
+Git::DB::ColumnFormat::False - Encode a false value.
 
 =head1 DESCRIPTION
 
-Compact represenation of a true boolean value.  See
-L<Git::DB::ColumnFormat::Boolean>.  This is always restored as '1'.
+Compact represenation of a false boolean value.  See
+L<Git::DB::ColumnFormat::Boolean>.  For perl, due to long-standing
+Boolean convention this is always restored as ''.
 
 =cut
 

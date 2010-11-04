@@ -31,6 +31,23 @@ BEGIN {
 	print "MAX_NV_INT is ".MAX_NV_INT."\n" if DEBUG_DEFINES;
 };
 
+use constant ENCODE_VARINT => 0;
+use constant ENCODE_FLOAT => 1;
+use constant ENCODE_STRING => 2;
+use constant ENCODE_DECIMAL => 3;
+use constant ENCODE_RATIONAL => 4;
+use constant ENCODE_FALSE => 5;
+use constant ENCODE_TRUE => 6;
+use constant ENCODE_LOB => 7;
+#use constant ENCODE_XXX8 => 8;
+use constant ENCODE_NULL => 9;
+use constant ENCODE_EOR => 10;
+use constant ENCODE_ROWLEFT => 11;
+#use constant ENCODE_XXX12 => 12;
+use constant ENCODE_RESET => 13;
+#use constant ENCODE_PUSH => 14;
+#use constant ENCODE_POP => 15;
+
 #  e☠port section
 no strict 'refs';
 our @constants;
@@ -46,6 +63,7 @@ use Sub::Exporter -setup => {
 	groups => {
 		int => [ grep /INT|NEG/, @constants ],
 		float => [ grep /NV|MANTISSA/, @constants ],
+		encode => [ grep /ENCODE/, @constants ],
 	       },
 };
 

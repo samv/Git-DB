@@ -1,24 +1,21 @@
 
 package Git::DB::ColumnFormat::True;
 
-use Mouse;
+use Moose;
 
-sub type_num { 6 };
+use Git::DB::Defines qw(ENCODE_TRUE);
 
-sub to_row {
-	my $inv = shift;
-	my $data = shift;
-	die "value not true" unless $data;
-	"";
+sub type_num { ENCODE_TRUE };
+
+sub write_col {
+	die "value not true" unless $_[2];
 }
 
 sub read_col {
-	my $inv = shift;
-	my $data = shift;
 	return 1;
 }
 
-with 'Git::DB::ColumnFormat::Boolean';
+with 'Git::DB::ColumnFormat';
 
 1;
 

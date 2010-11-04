@@ -1,22 +1,25 @@
 
 package Git::DB::ColumnFormat::Float;
 
-use Mouse;
+use Moose;
 
 use Git::DB::Encode qw(encode_float read_float);
 
-sub type_num { 1 };
+use Git::DB::Defines qw(ENCODE_FLOAT);
 
-sub to_row {
+sub type_num { ENCODE_FLOAT };
+
+sub write_col {
 	my $inv = shift;
+	my $io = shift;
 	my $data = shift;
-	return encode_float($data);
+	print {$io} encode_float($data);
 }
 
 sub read_col {
 	my $inv = shift;
-	my $data = shift;
-	return read_float($data);
+	my $io = shift;
+	return read_float($io);
 }
 
 with 'Git::DB::ColumnFormat';
