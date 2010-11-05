@@ -5,9 +5,9 @@ use Moose;
 
 use Git::DB::Encode qw(encode_uint read_uint);
 
-use Git::DB::Defines qw(ENCODE_STRING);
+use Git::DB::Defines qw(ENCODING_STRING);
 
-sub type_num { ENCODE_STRING };
+sub type_num { ENCODING_STRING };
 
 use bytes;
 

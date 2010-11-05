@@ -4,9 +4,9 @@ package Git::DB::ColumnFormat::Decimal;
 use Moose;
 
 use Git::DB::Encode qw(encode_int read_int);
-use Git::DB::Defines qw(ENCODE_DECIMAL);
+use Git::DB::Defines qw(ENCODING_DECIMAL);
 
-sub type_num { ENCODE_DECIMAL };
+sub type_num { ENCODING_DECIMAL };
 
 sub write_col {
 	my $self = shift;

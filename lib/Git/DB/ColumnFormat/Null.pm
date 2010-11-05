@@ -4,9 +4,9 @@ package Git::DB::ColumnFormat::Null;
 use Moose;
 with 'Git::DB::ColumnFormat';
 
-use Git::DB::Defines qw(ENCODE_NULL);
+use Git::DB::Defines qw(ENCODING_NULL);
 
-sub type_num { ENCODE_NULL };
+sub type_num { ENCODING_NULL };
 
 sub write_col {
 	die "can't use a defined value with a null column format"

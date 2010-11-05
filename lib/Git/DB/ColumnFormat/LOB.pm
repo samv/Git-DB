@@ -8,9 +8,9 @@ use Moose;
 
 use Git::DB::Encode qw(encode_uint read_uint read_str);
 
-use Git::DB::Defines qw(ENCODE_LOB);
+use Git::DB::Defines qw(ENCODING_LOB);
 
-sub type_num { ENCODE_LOB };
+sub type_num { ENCODING_LOB };
 
 use bytes;
 

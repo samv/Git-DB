@@ -5,9 +5,9 @@ use Moose;
 
 use Git::DB::Encode qw(encode_float read_float);
 
-use Git::DB::Defines qw(ENCODE_FLOAT);
+use Git::DB::Defines qw(ENCODING_FLOAT);
 
-sub type_num { ENCODE_FLOAT };
+sub type_num { ENCODING_FLOAT };
 
 sub write_col {
 	my $inv = shift;

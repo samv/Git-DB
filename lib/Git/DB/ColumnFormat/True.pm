@@ -3,9 +3,9 @@ package Git::DB::ColumnFormat::True;
 
 use Moose;
 
-use Git::DB::Defines qw(ENCODE_TRUE);
+use Git::DB::Defines qw(ENCODING_TRUE);
 
-sub type_num { ENCODE_TRUE };
+sub type_num { ENCODING_TRUE };
 
 sub write_col {
 	die "value not true" unless $_[2];

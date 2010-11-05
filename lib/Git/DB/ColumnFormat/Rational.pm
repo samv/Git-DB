@@ -5,9 +5,9 @@ use Moose;
 
 use Git::DB::Encode qw(encode_int read_int encode_uint read_uint);
 use Git::DB::Float qw(float_to_intpair);
-use Git::DB::Defines qw(ENCODE_RATIONAL);
+use Git::DB::Defines qw(ENCODING_RATIONAL);
 
-sub type_num { ENCODE_RATIONAL };
+sub type_num { ENCODING_RATIONAL };
 
 use Math::BigRat try => 'GMP';
 

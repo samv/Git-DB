@@ -4,9 +4,9 @@ package Git::DB::ColumnFormat::VarInt;
 use Moose;
 use Git::DB::Encode qw(encode_int read_int);
 
-use Git::DB::Defines qw(ENCODE_VARINT);
+use Git::DB::Defines qw(ENCODING_VARINT);
 
-sub type_num { ENCODE_VARINT };
+sub type_num { ENCODING_VARINT };
 
 sub write_col {
 	my $inv = shift;
