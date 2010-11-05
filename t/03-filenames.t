@@ -16,6 +16,7 @@ my @NUM_TESTS = (
 	1.234, "1.234",
 	1e23, "1e+23",
 	1.2, "1.2",
+	-0.000016, "-1.6e-05",
 	Math::BigRat->new("123812/7"), qr/^17687\.42/,
 );
 
@@ -84,7 +85,6 @@ sub perl_print_string {
 }
 
 while ( my ($raw, $cooked, $label) = splice @TEXT_TESTS, 0, 3 ) {
-
 	my $safe = perl_print_string($raw);
 	my $fn_form = escape_val($raw);
 	is(perl_print_string($fn_form),
@@ -92,4 +92,46 @@ while ( my ($raw, $cooked, $label) = splice @TEXT_TESTS, 0, 3 ) {
 	my $uncooked = unescape_val($cooked);
 	is(perl_print_string($uncooked),
 	   $safe, "unescape_val: $label ($safe)");
+}
+
+# The type for the primary key of a given table is translated to a set
+# of transform functions, via the types information.
+
+# In this test, we supply pre-mapped lists of functions, and test the
+# marshalling of types to columns.
+
+use utf8;
+my @SPLIT_TESTS =
+	({ scan => [ qw(scan_number scan_text scan_text) ],
+	   print => [ qw(print_number print_text print_text) ],
+	   examples => [
+		   [ "42,foo,bar", 42, "foo", "bar" ],
+		   [ "－1.6e－05,：q!,／， fiddle",
+		     -0.000016, ":q!", "/, fiddle" ],
+	   ]},
+	 { scan => [ qw(scan_number scan_bool) ],
+	   print => [ qw(print_number print_bool) ],
+	   examples => [
+		   [ "－inf,t", 0+"-inf", 1 ],
+		   [ "nan,f", 0+"nan", "" ],
+	   ]},
+    );
+
+for my $test_set ( @SPLIT_TESTS ) {
+	for my $example ( @{ $test_set->{examples} } ) {
+		my $filename = shift @{ $example };
+		my @split = split_row_id_filename(
+			$test_set->{scan},
+			$filename,
+		);
+		my $safe = perl_print_string($filename);
+		is_deeply(\@split, $example, "split ($safe)");
+		my $repacked = make_row_id_filename(
+			$test_set->{print},
+			@$example,
+		);
+		is(perl_print_string($repacked),
+		   perl_print_string($filename),
+		   "repack ($safe)");
+	}
 }

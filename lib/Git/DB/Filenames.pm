@@ -6,6 +6,8 @@ use Sub::Exporter -setup => {
 		       print_text scan_text
 		       print_number scan_number
 		       print_bool scan_bool
+		       split_row_id_filename
+		       make_row_id_filename
 		     )],
 	};
 
@@ -106,5 +108,16 @@ sub scan_bool {
 	 $unescaped eq "f" ? '' : die "can't scan '$unescaped' as bool'");
 }
 
+sub split_row_id_filename {
+	no strict 'refs';
+	my @spec = @{(shift)};
+	map { shift(@spec)->(unescape_val($_)) } split ",", shift;
+}
+
+sub make_row_id_filename {
+	no strict 'refs';
+	my @spec = @{(shift)};
+	join ",", map { escape_val(shift(@spec)->($_)) } @_;
+}
 
 1;
