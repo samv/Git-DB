@@ -6,15 +6,20 @@ an alternate encoding form based on traditional text value rendering.
 
 <h2>The Row Identifier</h2>
 
-The abstract row identifier is the list of values which comprise its
-<i>primary key</i>; details on which attributes this refers to is
-described in the <a href="[%link('design/meta.tt')%]">MetaFormat</a>.
+The <em>abstract</em> row identifier is the list of values which
+comprise its <i>primary key</i>; details on which attributes this
+refers to is described in the <a
+href="[%link('design/meta.tt')%]">MetaFormat</a>.
 
-First a basic standard printing of the values happens.  The details
-depend on the type, but are all relatively well known and standard
-transforms.  The characteristics of functions used for each of these
-uses is given in the <a href="[%link('design/meta.tt')%]#types">types
-catalog</a>.
+The <em>row identifier filename</em> is a utf-8 string constructed as
+follows.  First a basic standard printing of the values happens.  The
+details depend on the type, but are all relatively well known and
+standard representations; <cite>sprintf(3)</cite> and
+<cite>sscanf(3)</cite> should be sufficient here.  The characteristics
+of functions used for each of these uses is given in the <a
+href="[%link('design/meta.tt')%]#types">types catalog</a>.  The
+resulting value has various special characters escaped before it is
+used as filename.
 
 <table border="1">
   <thead>
@@ -26,7 +31,7 @@ catalog</a>.
   </thead>
   <tbody>
     <tr><td rowspan="2"><tt>varint</tt></td><td>1234</td><td><tt>1234</tt></td>
-    <tr><td>-1</td><td><tt>-1</tt></td>
+    <tr><td>-1</td><td><tt>－1</tt></td>
     <tr><td rowspan="3"><tt>float</tt></td><td>1.234</td><td><tt>1.234</tt></td>
     <tr><td>0.0</td><td><tt>0</tt></td>
     <tr><td>10²³</td><td><tt>1e+23</tt></td>
@@ -48,7 +53,9 @@ string values and joining the lot together with commas.
 
 <h2>Escaping Rules</h2>
 
-These rules apply to marshalling out strings.
+These rules apply to marshalling out all values, however they only
+really affect text strings and the unary '-' which may appear in a
+numbers (eg, twice in the value <tt>-5.6e-15</tt>);
 
 <ol>
 
