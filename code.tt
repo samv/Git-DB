@@ -1,6 +1,6 @@
 [% title = "show me the code" %]
 
-<h2>Implementation Status</h2>
+<h2>Perl Implementation Status</h2>
 
 It's not entirely vapourware; see the below table.
 
@@ -16,3 +16,9 @@ It's not entirely vapourware; see the below table.
 
 See <a href="http://github.com/samv/Git-DB">Git-DB on github</a> for
 now.
+
+<h2>C Implementation Status</h2>
+
+It is hoped that a C version can be completed in parallel, basing
+itself on <a href="http://github.com/libgit2/libgit2"><tt>libgit2</tt>
+</a> and therefore being a lot more portable, embeddable etc.
