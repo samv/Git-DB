@@ -89,7 +89,7 @@ while ( my ($raw, $cooked, $label) = splice @TEXT_TESTS, 0, 3 ) {
 	my $fn_form = escape_val($raw);
 	is(perl_print_string($fn_form),
 	   perl_print_string($cooked), "escape_val: $label ($safe)");
-	my $uncooked = unescape_val($raw);
+	my $uncooked = unescape_val($cooked);
 	is(perl_print_string($uncooked),
 	   $safe, "unescape_val: $label ($safe)");
 }
