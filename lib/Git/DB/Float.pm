@@ -14,7 +14,7 @@ use strict;
 use constant DEBUG => 1;
 our $ieee64_bs;
 use POSIX qw(ceil);
-use Git::DB::Defines qw(MANTISSA_BITS MANTISSA_2XXBITS);
+use Git::DB::Defines qw(:float :encode);
 
 sub intpair_to_float {
 	my ($exp, $mant) = @_;

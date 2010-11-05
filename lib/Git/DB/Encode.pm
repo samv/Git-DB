@@ -14,7 +14,7 @@ use Math::BigInt try => "GMP";
 use Scalar::Util qw(blessed);
 use IO::Handle;
 
-use Git::DB::Defines qw(MAX_INT MAX_NV_INT MANTISSA_BITS MAX_NEG);
+use Git::DB::Defines qw(:int :float);
 
 use Sub::Exporter -setup => {
 	exports => [qw(encode_str decode_str read_str
