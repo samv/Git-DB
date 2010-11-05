@@ -21,6 +21,7 @@ use Sub::Exporter -setup => {
 		       encode_int decode_int read_int
 		       encode_uint decode_uint read_uint
 		       encode_float decode_float read_float
+		       encode_decimal
 		     )],
 	};
 
@@ -177,6 +178,18 @@ sub read_float {
 	my $exp = read_int($handle);
 	my $multiplicand = read_int($handle);
 	intpair_to_float($exp, $multiplicand);
+}
+
+sub encode_decimal {
+	my $num = shift;
+	$num="$num";
+	($num =~ s{e\+?(-?\d+)}{});
+	my $scale = $1 || 0;
+	$num =~ s{^(-?\d+)(?:\.(\d+))?$}{$1$2};
+	$scale -= length $2 if defined $2;
+	$num =~ s{(0+$)}{};
+	$scale -= length $1 if length $1;
+	join "", encode_int($scale), encode_int($num);
 }
 
 1;

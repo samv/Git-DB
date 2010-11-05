@@ -3,7 +3,7 @@ package Git::DB::ColumnFormat::Decimal;
 
 use Moose;
 
-use Git::DB::Encode qw(encode_int read_int);
+use Git::DB::Encode qw(encode_decimal read_int);
 use Git::DB::Defines qw(ENCODING_DECIMAL);
 
 sub type_num { ENCODING_DECIMAL };
@@ -12,13 +12,7 @@ sub write_col {
 	my $self = shift;
 	my $io = shift;
 	my $num = shift;
-	# just stringify
-	$num="$num";
-	($num =~ s{e\+?(-?\d+)}{});
-	my $scale = $1 || 0;
-	$num =~ s{^(-?\d+)(?:\.(\d+))?$}{$1$2};
-	$scale -= length $2 if defined $2;
-	print { $io } encode_int($scale), encode_int($num);
+	print { $io } encode_decimal($num);
 }
 
 sub _pow10 {
