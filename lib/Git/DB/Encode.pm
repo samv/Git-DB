@@ -185,10 +185,11 @@ sub encode_decimal {
 	$num="$num";
 	($num =~ s{e\+?(-?\d+)}{});
 	my $scale = $1 || 0;
-	$num =~ s{^(-?\d+)(?:\.(\d+))?$}{$1$2};
+	$num =~ s{^(-?\d+)(?:\.(\d+))?$}{$1.($2||"")}e;
 	$scale -= length $2 if defined $2;
-	$num =~ s{(0+$)}{};
-	$scale -= length $1 if length $1;
+	if ( $num =~ s{(0+)$}{} ) {
+		$scale += length $1;
+	}
 	join "", encode_int($scale), encode_int($num);
 }
 
