@@ -84,8 +84,50 @@ sub float_to_intpair {
 	}
 }
 
+use Scalar::Util qw(blessed);
+
+# this is a function which looks at the numeric value passed, and
+# tries to pick the best encoding format for it, without actually
+# performing the respective encodings.
+sub pick_number_encoding {
+	my $value = shift;
+	if ( blessed $value and $value->can("denominator") ) {
+		return ENCODING_RATIONAL;
+	}
+	elsif ( $value == int($value) and $value < MAX_NV_INT ) {
+		if ( !$value ) {
+			return ENCODING_VARINT;
+		}
+		if ( $value =~ m{0{3,}$} ) {
+			return ENCODING_DECIMAL;
+		}
+		elsif ( int($value/128) == $value/128 ) {
+			return ENCODING_FLOAT;
+		}
+		else {
+			return ENCODING_VARINT;
+		}
+	}
+	else {
+		my $decimal= "".$value;
+		$decimal =~ s{^0+|[\.\-]|0*e.*|0+$}{}g;
+
+		# for some values, such as 65535/128, this still makes
+		# a sub-optimal choice, but it does so whilst
+		# maintaining precision and values like that are
+		# probably still outliers.
+		if ( length $value < MANTISSA_PRECISION-2 ) {
+			return ENCODING_DECIMAL;
+		}
+		else {
+			return ENCODING_FLOAT;
+		}
+	}
+}
+
 use Sub::Exporter -setup => {
-	exports => [qw{float_to_intpair intpair_to_float}],
+	exports => [qw{float_to_intpair intpair_to_float
+		       pick_number_encoding}],
 };
 
 1;

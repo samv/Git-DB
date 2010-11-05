@@ -24,11 +24,13 @@ BEGIN {
 use constant MANTISSA_BITS => $bits;
 use constant MANTISSA_2XXBITS => 2**MANTISSA_BITS;
 use constant MAX_NV_INT => 2**(MANTISSA_BITS-2)-1;
+use constant MANTISSA_PRECISION => int(log(MANTISSA_2XXBITS)/log(10));
 
 BEGIN {
 	print "Float size is ".MANTISSA_BITS."\n" if DEBUG_DEFINES;
 	print "num is ".MANTISSA_2XXBITS."\n" if DEBUG_DEFINES;
 	print "MAX_NV_INT is ".MAX_NV_INT."\n" if DEBUG_DEFINES;
+	print "MANTISSA_PRECISION is ".MANTISSA_PRECISION."\n" if DEBUG_DEFINES;
 };
 
 use constant ENCODING_VARINT => 0;
