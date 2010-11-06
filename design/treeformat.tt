@@ -93,8 +93,9 @@ eg
 <pre>
    role/voter/1 Jones,Bob
    role/voter/2 MacDonald,Ronald
-   role/voter/3 MacGuyver,James
-   role/voter/4 Nelson,Willie
+   role/voter/3 Mace,The
+   role/voter/4 MacGuyver,James
+   role/voter/5 Nelson,Willie
 </pre>
 
 Let's say that a new entry, "Woody Allen" comes along.  We need to
@@ -111,8 +112,9 @@ things happens:
    role/voter/1 Allen,Woody
    role/voter/2 Jones,Bob
    role/voter/3 MacDonald,Ronald
-   role/voter/4 MacGuyver,James
-   role/voter/5 Nelson,Willie
+   role/voter/4 Mace,The
+   role/voter/5 MacGuyver,James
+   role/voter/6 Nelson,Willie
 </pre>
 </li>
 <li>However if it does matter, because either there is an index which
@@ -123,8 +125,9 @@ more efficiently, then it can insert a new entry before:
    role/voter/05 Allen,Woody
    role/voter/1 Jones,Bob
    role/voter/2 MacDonald,Ronald
-   role/voter/3 MacGuyver,James
-   role/voter/4 Nelson,Willie
+   role/voter/3 Mace,The
+   role/voter/4 MacGuyver,James
+   role/voter/5 Nelson,Willie
 </pre>
 This works, of course, because "<tt>05 xxx</tt>" sorts before "<tt>1
 yyy</tt>", regardless of the values of "<tt>xxx</tt>" and
