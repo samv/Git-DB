@@ -3,16 +3,16 @@
 <h2>TreeFormat basics</h2>
 
 The starting point of the design is to use the schema name at the top
-level, table/relation name next, and then within those, a UTF-8
-representation of the value of the primary key(s) of the row (or a
-UUID if there is no primary key) as the filename within the tree for
-the relation.
+level, table/relation name next, and then within those, a zero-padded
+sort number, a space and a UTF-8 representation of the value of the
+primary key(s) of the row (or a UUID if there is no primary key) as
+the filename within the tree for the relation.
 
 eg
 
 <pre>
-   tracker/ticket/1
-   tracker/ticket/2
+   tracker/ticket/1 1
+   tracker/ticket/2 2
 </pre>
 
 The exact mechanism for converting from a value to the above
@@ -30,8 +30,8 @@ equivalent to use of nodes in a B-Tree.  The name of a tree can either
 be a single value or a range.
 
 <pre>
-   tracker/ticket/1-1000/1
-   tracker/ticket/1001-2000/1001
+   tracker/ticket/1 1-1000/1 1
+   tracker/ticket/2 1001-2000/1 1001
 </pre>
 
 If it is a value, it must correspond to an entire key column (and
@@ -40,15 +40,116 @@ there must be subsequent primary key columns).
 The problem of deciding when to divide a large directory, and when to
 "rebalance" the tree, so as to try to ensure an even depth of index,
 are long-standing data management problems which this specification
-will not try to wave a magic wand to make go away.
+will not try to wave a magic wand to make go away.  More on that in
+the below section.
+
+<h2>Sort numbers</h2>
+
+One of the things that this specification tries to ensure is that the
+back-end as a whole has good enough design performance to be used for
+a live database back-end.
+
+As such, the method described above for allowing arbitrary division of
+directories into smaller fragments, makes the structure as a whole a
+B+ tree, or depending on the rebalancing style, a more advanced form
+such as a B* tree.  These types of trees are widely used internally in
+databases to record row locations and for ordered indexes, because
+they are well understood, and generally thought to be about as fast as
+you can get and still allow very large scalability.
+
+In Git DB, the git tree objects are the 'nodes' in the B+ tree, and
+the blobs are the 'leaves'.
+
+However for B+trees to work, a couple of conditions must hold true for
+the nodes:
+
+<ol>
+<li>Nodes should be fast to locate entries in</li>
+<li>Nodes should be fast to scan in order</li>
+</ol>
+
+Typically, the "fan out" of a B+ tree is of the order of about a 100
+in each directory before it is "split" into two or three balanced
+children.  The B* tree performs a partial rebalancing at this point to
+make the neighbours also relatively balanced with each other.
+
+Assuming such a large fan-out, random access needs to be fast, but
+unless the entries in the tree are in order, it is impossible to use
+binary search to locate the item or range you are looking for.
+Hash-based solutions solve the problems, but can't be used for all
+cases.
+
+Unfortunately, there is no way to specify the order of entries in a
+git tree.  They are always sorted by string value.  And only a very
+few types will naturally sort correctly after conversion and escaping.
+
+To solve this problem, the sort number is introduced.  It is designed
+to override the filename, so that the entries will always be stored in
+the correct order.  When writing a tree for the first time, the
+appropriate number of digits are used, zero padded, and starting at 1.
+
+eg
+
+<pre>
+   role/voter/1 Jones,Bob
+   role/voter/2 MacDonald,Ronald
+   role/voter/3 Mace,The
+   role/voter/4 MacGuyver,James
+   role/voter/5 Nelson,Willie
+</pre>
+
+Let's say that a new entry, "Woody Allen" comes along.  We need to
+insert a new number at the beginning.  At this point, one of two
+things happens:
+
+<ul>
+<li>If it makes an implementation simpler, it can renumber all of the
+  entries in that tree.  This can still be fast enough and is simple
+  string operations to enact.  It only affects the tree which is being
+  inserted into, which has to be re-written back to the object
+  database anyway:
+<pre>
+   role/voter/1 Allen,Woody
+   role/voter/2 Jones,Bob
+   role/voter/3 MacDonald,Ronald
+   role/voter/4 Mace,The
+   role/voter/5 MacGuyver,James
+   role/voter/6 Nelson,Willie
+</pre>
+</li>
+<li>However if it does matter, because either there is an index which
+would otherwise have to be updated and recursively moved sub-entries
+around, or perhaps just it is desired to make directories which delta
+more efficiently, then it can insert a new entry before:
+<pre>
+   role/voter/05 Allen,Woody
+   role/voter/1 Jones,Bob
+   role/voter/2 MacDonald,Ronald
+   role/voter/3 Mace,The
+   role/voter/4 MacGuyver,James
+   role/voter/5 Nelson,Willie
+</pre>
+This works, of course, because "<tt>05 xxx</tt>" sorts before "<tt>1
+yyy</tt>", regardless of the values of "<tt>xxx</tt>" and
+"<tt>yyy</tt>".  So, as you can see, there are an infinite number of
+numbers before and after every non-zero number you can summon...
+</li>
+</ul>
+
+If the primary key of the table is a hash or UUID, or its type
+otherwise guarantees that its filename representation matches the sort
+order of the type, then the sort numbers may be safely omitted.  They
+are enabled or disabled in the schema.
 
 <h2>Official row filenames</h2>
 
 As noted in the <a href="[%link('design/filenames.tt')%]">Filename</a>
 standard, the "official" filename of the row is that which is stripped
-of all of these divisions along the way.  This is important for
-heirarchical references to rows, which are always by the "official"
-filename.
+of all of these divisions (and sort numbers) along the way.  This is
+important for heirarchical references to rows, which are always by the
+"official" filename.
+
+
 
 <h2>Row format</h2>
 
