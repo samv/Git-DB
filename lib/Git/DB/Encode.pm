@@ -17,7 +17,7 @@ use IO::Handle;
 use Git::DB::Defines qw(:int :float);
 
 use Sub::Exporter -setup => {
-	exports => [qw(encode_str decode_str read_str
+	exports => [qw(encode_text decode_text read_text
 		       encode_int decode_int read_int
 		       encode_uint decode_uint read_uint
 		       encode_float decode_float read_float
@@ -25,30 +25,41 @@ use Sub::Exporter -setup => {
 		     )],
 	};
 
-# utf-8 or nothing for this module
-sub encode_str {
-	my $str = shift;
-	utf8::upgrade($str);
-	if ( utf8::is_utf8($str) ) {
-		encode("utf8", $str);
-	}
-	else {
-		$str;
-	}
+sub encode_bytes {
+	my $bytes = shift;
+	encode_uint(bytes::length($bytes)).$bytes;
 }
 
-# but always return in utf8
-sub decode_str {
-	my $str = shift;
-	decode("utf8", $str);
+sub decode_bytes {
+	my $bytes = shift;
+	my ($num, $val) = split /(?<=[\0-\177])/, $bytes, 2;
+	decode_uint($num) == length($val) or die;
+	$val;
 }
 
-sub read_str {
+sub read_bytes {
 	my $io = shift;
 	my $length = read_uint($io);
 	$io->read( my $buf, $length );
 	$buf;
 }
+
+sub encode_text {
+	my $text = shift;
+	utf8::upgrade($text);
+	encode_bytes($text);
+}
+
+sub decode_text {
+	my $stream = shift;
+	decode("utf8", decode_bytes($stream));
+}
+
+sub read_text {
+	my $io = shift;
+	decode("utf8", read_bytes($io));
+}
+
 
 sub _pack_w {
 	my $num = shift;
@@ -217,9 +228,9 @@ Git::DB::Encode - encodings for the Git DB format
  my $int = read_int($fh);
 
  # -- Strings --
- my $bytes = encode_str($string);
+ my $bytes = encode_text($string);
 
- my $string = decode_str($bytes);
+ my $string = decode_text($bytes);
 
 =head1 DESCRIPTION
 

@@ -316,21 +316,21 @@ test_encoder
 # test utf8 strings
 use utf8;
 @TESTS = (
-	"" => "",
-	"0x3132333435" => "12345",
-	"0x".("78"x64) => "x" x 64,
-	"0x4672616ec3a7616973" => "Français",
-	"0x4d61cc846f7269" => "Māori",
-	"0xe4b8ade59c8b" => "中國",
+	"0x00" => "",
+	"0x053132333435" => "12345",
+	"0x40".("78"x64) => "x" x 64,
+	"0x094672616ec3a7616973" => "Français",
+	"0x074d61cc846f7269" => "Māori",
+	"0x06e4b8ade59c8b" => "中國",
        );
 
 test_encoder
 	sub {
-		my $x = encode_str($_[0]);
+		my $x = encode_text($_[0]);
 		$x
 	},
 	sub {
-		my $x = decode_str($_[0]);
+		my $x = decode_text($_[0]);
 		$x
 	},
 	@TESTS,
