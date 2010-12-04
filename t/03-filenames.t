@@ -79,7 +79,7 @@ sub perl_print_string {
 	my $raw = shift;
 	(my $perl_form = $raw)
 		=~ s{([^\0-\177])}{"\\x"."{".sprintf("%x",(ord($1)))."}"}eg;
-	$perl_form =~ s{([\0-\037])}{sprintf("\\%.3o",ord($1))}eg;
+	$perl_form =~ s{([\0-\037\177])}{sprintf("\\%.3o",ord($1))}eg;
 	#print STDERR "perl_print_string: $raw => $perl_form\n";
 	return $perl_form;
 }
