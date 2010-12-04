@@ -107,7 +107,7 @@ use POSIX qw(ceil);
 sub balanced_sort_numbers {
 	my $count = shift;
 	my $digits = ceil(log($count*2)/log(10));
-	my $frac = 10**$digits / ($count*1.1);
+	my $frac = 10**$digits / ($count*1.1);  #10% of numbers won't work
 	my $fmt = "%.${digits}d";
 	my $i;
 	return map {
