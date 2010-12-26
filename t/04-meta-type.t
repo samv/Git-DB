@@ -73,4 +73,45 @@ ok(!eval {
 }, "can't use unknown type formats");
 like($@, qr/can't do format 1\b/, "correct error");
 
-#BEGIN { use_ok("Git::DB::Type::Basic") }
+use_ok("Git::DB::Type::Basic");
+
+use Git::DB::Defines qw(:encode);
+
+my $bool = Git::DB::Type->new(type_name => "bool");
+ok($bool, "bool type");
+is($bool->choose(1), ENCODING_TRUE, "is_tf(1)");
+is($bool->choose(0), ENCODING_FALSE, "is_tf(0)");
+is($bool->choose(''), ENCODING_FALSE, "is_tf('')");
+is($bool->choose('0 but true'), ENCODING_TRUE, "is_tf('0 but true')");
+is($bool->print(1), 't', "bool - print - true");
+is($bool->print(0), 'f', "bool - print - false");
+is($bool->scan('t'), 1, "bool - scan - true");
+is($bool->scan('f'), '', "bool - scan - false");
+
+my $int = Git::DB::Type->new(type_name => "integer");
+ok($int, "int type");
+is($int->choose(1), ENCODING_VARINT, "dummy choose() for integer");
+is($int->print(1), '1', "integer - print - 1");
+is($int->print(0), '0', "integer - print - 0");
+is($int->print(-5), '-5', "integer - print - -5");
+is($int->scan('1'), 1, "integer - scan - 1");
+is($int->scan('0'), 0, "integer - scan - 0");
+is($int->scan('-5'), -5, "integer - scan - -5");
+
+my $float = Git::DB::Type->new(type_name => "float");
+ok($float, "float type");
+is($float->print(1.1), '1.1', "float - print - 1.1");
+is($float->scan("1.1"), 1.1, "float - scan - 1e50");
+is($float->print(1e50), '1e+50', "float - print - 1e50");
+is($float->scan("1e+50"), 1e50, "float - scan - 1e50");
+
+my $decimal = Git::DB::Type->new(type_name => "decimal");
+ok($decimal, "decimal type");
+my $rat = Git::DB::Type->new(type_name => "rational");
+ok($rat, "rational type");
+my $num = Git::DB::Type->new(type_name => "numeric");
+ok($num, "numeric type");
+my $text = Git::DB::Type->new(type_name => "text");
+ok($text, "text type");
+my $bytes = Git::DB::Type->new(type_name => "bytes");
+ok($bytes, "bytes type");

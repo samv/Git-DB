@@ -89,7 +89,7 @@ use Scalar::Util qw(blessed);
 # this is a function which looks at the numeric value passed, and
 # tries to pick the best encoding format for it, without actually
 # performing the respective encodings.
-sub pick_number_encoding {
+sub pick_numeric_encoding {
 	my $value = shift;
 	if ( blessed $value and $value->can("denominator") ) {
 		return ENCODING_RATIONAL;
@@ -127,7 +127,7 @@ sub pick_number_encoding {
 
 use Sub::Exporter -setup => {
 	exports => [qw{float_to_intpair intpair_to_float
-		       pick_number_encoding}],
+		       pick_numeric_encoding}],
 };
 
 1;

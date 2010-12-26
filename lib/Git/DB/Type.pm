@@ -4,7 +4,7 @@ package Git::DB::Type;
 use Moose;
 
 use Sub::Exporter -setup => {
-	exports => [ qw(register_type) ],
+	exports => [ qw(register_type get_func) ],
 };
 
 has 'type_name' =>
@@ -16,15 +16,23 @@ has 'type_name' =>
 has 'type_formats' =>
 	is => "ro",
 	isa => "Int",
+	required => 1,
+	lazy => 1,
+	default => \&_def_fmt,
 	;
 
 has 'choose_func' =>
 	is => "ro",
 	isa => "Maybe[Str]",
 	lazy => 1,
-	default => sub { _def_func($_[0], "choose_func", "has_choose_func") },
-	predicate => "has_choose_func",
+	default => sub { _def_func($_[0], "choose_func", "_has_choose_func") },
+	predicate => "_has_choose_func",
 	;
+
+sub has_choose_func {
+	my $self = shift;
+	$self->_has_choose_func && $self->choose_func;
+}
 
 has 'dump_func' =>
 	is => "ro",
@@ -83,12 +91,13 @@ sub BUILD {
 	}
 	elsif ( ref $type_def eq "SCALAR" ) {
 		# chicken and egg case.
-		return;
+		undef($type_def);
 	}
 
 	for my $func ( FUNCS ) {
 		my $func_func = "${func}_func";
 		if ( my $proposed_func_name = $self->$func_func ) {
+			next unless $type_def;
 			my $supposed_func_name = $type_def->$func_func;
 			if ( $proposed_func_name ne $supposed_func_name ) {
 				die "'$proposed_func_name' set for $func_func, but I only allow '$supposed_func_name' for type '$proposed_type_name'";
@@ -96,8 +105,10 @@ sub BUILD {
 		}
 	}
 
-	my $formats = $self->type_formats;
+	return unless $type_def;
+
 	my $def_formats = $type_def->type_formats;
+	my $formats = $self->type_formats // $def_formats;
 	if ( my $unknown = $formats & (~$def_formats) ) {
 		my $bitwise = unpack("B*", pack("N", $unknown));
 		my $bad_bit = length($bitwise) - index($bitwise, "1") - 1;
@@ -122,12 +133,29 @@ sub _def_func {
 	my $pred = shift;
 	my $def = $VALID_TYPES{$self->type_name};
 	if ( !$def or ref $def eq "SCALAR" ) {
-		die "'$what' ?";
+		# initial definition of a type
+		if ( $pred ) {
+			return;
+		}
+		else {
+			die "what about '$what' in ".$self->type_name." ?";
+		}
 	}
-	if ( $pred and !$def->$pred ) {
-		return;
+	else {
+		if ( $pred and !$def->$pred ) {
+			return;
+		}
+		$def->$what;
 	}
-	$def->$what;
+}
+
+sub _def_fmt {
+	my $self = shift;
+	my $def = $VALID_TYPES{$self->type_name};
+	if ( !$def or ref $def eq "SCALAR" ) {
+		die "what about 'type_format' ?";
+	}
+	return $def->type_formats;
 }
 
 no strict 'refs';
@@ -160,8 +188,35 @@ sub register_type {
 
 sub get_func {
 	my $pkg = shift if UNIVERSAL::isa($_[0], __PACKAGE__);
-	my $func_name = shift;
+	my $func_name = shift or return undef;
 	\&{"Git::DB::Func::$func_name"};
+}
+
+sub choose {
+	my $self = shift;
+	if ( $self->has_choose_func ) {
+		get_func($self->choose_func)->(@_);
+	}
+	else {
+		my $fmt = $self->type_formats;
+		my $i = 0;
+		while ( !( $fmt & 1 ) ) {
+			$fmt >>= 1;
+			$i++;
+		}
+		$i;
+	}
+}
+
+BEGIN {
+	for my $func ( FUNCS ) {
+		next if $func eq "choose";
+		my $func_func = "${func}_func";
+		*$func = sub {
+			my $self = shift;
+			get_func($self->$func_func)->(@_);
+		};
+	}
 }
 
 1;
