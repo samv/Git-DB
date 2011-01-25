@@ -2,7 +2,10 @@
 package Git::DB::Attr;
 
 use Moose; # -traits => ["NaturalKey", "Constraint"];
+use Scalar::Util qw(reftype);
 
+# these are actually backref columns from its relationship with class;
+# officially RO
 has 'class' =>
 	is => "rw",
 	isa => "Git::DB::Class",
@@ -10,11 +13,11 @@ has 'class' =>
 	writer => "_set_class",
 	;
 
-# this is actually a backref column from its relationship with class
 has 'index' =>
 	is => "rw",
 	isa => "Int",
 	writer => "_set_index",
+	required => 1,
 	;
 
 #__PACKAGE__->meta->keys(qw(class index));
@@ -46,29 +49,23 @@ has 'deleted' =>
 	isa => "Bool",
 	;
 
-# some types have a scale/length and a precision which can be set.
-has 'scale' =>
-	is => "ro",
-	isa => "Int",
-	;
+# this might belong in Git::DB::Meta::Attr in principle, but to be
+# pragmatic it's probably a useful protocol for associating with
+# non-Moose classes, too.
 
-has 'precision' =>
-	is => "ro",
-	isa => "Int",
-	;
-
-sub fetch_value {
+sub get_value {
 	my $self = shift;
 	my $object = shift;
 	my $name = $self->name;
-	if ( my $coderef = $object->can("save_".$name) ) {
+	if ( my $coderef = $object->can("gidb_get_".$name) ) {
 		$coderef->($object);
 	}
-	elsif ( $object->can($name) ) {
-		$coderef->$name;
+	elsif ( $coderef = $object->can($name) ) {
+		$coderef->($object);
 	}
 	elsif ( $object->can("meta") and
 			$object->meta->has_attribute($name) ) {
+		$DB::single = 1;
 		$object->meta->get_attribute($name)->get_value($object);
 	}
 	elsif ( reftype $object eq "HASH" ) {
@@ -79,12 +76,40 @@ sub fetch_value {
 	}
 }
 
-sub encode_attr {
-	my $self = shift;
-	my $rel_index = shift;
-	my $value = shift;
+use Git::DB::Type qw(get_func);
 
-	my $type = $self->type;
+# the 'read' function assumes that we're building a constructor
+# argument list.
+sub read {
+	my $self = shift;
+	my $io = shift;
+	my $type = shift;
+	($self->name => scalar($self->type->read($io, $type)));
+}
+
+sub scan {
+	my $self = shift;
+	
+}
+
+BEGIN {
+	no strict 'refs';
+	# we don't use 'handles' on the type slot, because the
+	# functionality is slightly different; foo_func returns the
+	# actual coderef, and ->foo() takes the object and gets the
+	# value from the slot to pass to the actual function.
+	for my $func ( Git::DB::Type::FUNCS ) {
+		my $func_func = "${func}_func";
+		*$func_func = sub {
+			get_func($_[0]->type->$func_func);
+		};
+		*$func = sub {
+			my $self = shift;
+			my $object = shift;
+			$self->type->$func( $self->get_value($object) );
+		}
+			unless defined &$func;
+	}
 }
 
 # pg_attrdef: specifies default values...
@@ -95,7 +120,7 @@ __END__
 
 =head1 NAME
 
-Git::DB::Column - a class(table) property(column) in a Git::DB
+Git::DB::Attr - a class(table) attribute(column) in a Git::DB
 
 =head1 SYNOPSIS
 

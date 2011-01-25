@@ -2,9 +2,10 @@
 package Git::DB::Type;
 
 use Moose;
+use Carp;
 
 use Sub::Exporter -setup => {
-	exports => [ qw(register_type get_func) ],
+	exports => [ qw(register_type get_type get_func) ],
 };
 
 has 'type_name' =>
@@ -184,6 +185,13 @@ sub register_type {
 	my $type = $pkg->new( @opts );
 	push @VALID_TYPES, $type;
 	$VALID_TYPES{$type_name} = $type;
+}
+
+sub get_type {
+	my $pkg = shift if UNIVERSAL::isa($_[0], __PACKAGE__);
+	my $type_name = shift;
+	return $VALID_TYPES{$type_name}
+		or carp "no registered type '$type_name'";
 }
 
 sub get_func {
