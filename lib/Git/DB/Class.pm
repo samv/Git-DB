@@ -4,6 +4,7 @@ package Git::DB::Class;
 # corresponding to pg_class from postgres
 
 use Moose;
+use Git::DB::Encode qw(encode_int encode_uint);
 #use MooseX::NaturalKey;
 
 has 'schema' =>
@@ -83,26 +84,65 @@ sub BUILD {
 	}
 }
 
-# convert an object to a list of encoded field values
-# TODO: not all columns may need to be stored, if the primary key was
-# already in the path
+# convert an object to a list of encoded field values if a keychain is
+# provided, it specifies how much of the primary key should be written
+# out.  Returns a list of encoded strings, ready for writing.
 sub encode_object {
 	my $self = shift;
 	my $object = shift;
+	my $chain;
+	if ( @_ ) {
+		$chain = shift;
+	}
+	elsif ( $self->primary_key ) {
+		$chain = $self->primary_key->chain;
+	}
 
 	my @encoded;
-	my $last_col = 0;
-	for my $index ( 0 .. $self->num_attr-1 ) {
+	my $expected_col = 0;
+	my $encode_column = sub {
+		my $index = shift;
 		my $attr = $self->get_attr($index);
-		next if $attr->deleted;
-		push @encoded, $attr->encode_value(
-			($index - $last_col),
-			$attr->fetch_value($object),
-		       );
-		$last_col = $index;
+		return if !$attr or $attr->deleted;
+
+		my $value = $attr->get_value($object);
+
+		# get the column format - $value will often be ignored
+		my $cf_num = $attr->type->choose($value);
+
+		# relative index number
+		my $rel_idx = ($index - $expected_col);
+
+		# 'write' the column header
+		push @encoded, encode_int( $rel_idx * 16 + $cf_num );
+
+		# and the data
+		push @encoded, $attr->dump( $object );
+
+		$expected_col = $index+1;
+	};
+
+	my @skip;
+	if ( $self->primary_key ) {
+		for my $att ( $self->primary_key->attr ) {
+			@skip[$att->index] = 1;
+		}
 	}
+	while ( $chain ) {
+		my $index = $chain->attr->index;
+		$encode_column->($index);
+		$chain = $chain->next;
+	}
+	for my $index ( 0 .. $self->num_attr-1 ) {
+		next if $skip[$index];
+		$encode_column->($index);
+	}
+	return @encoded;
 }
 
+# read an object from an IO stream.  Returns a list of constructor
+# arguments for a new object; combine with any already known scanned
+# values
 sub read_object {
 	my $self = shift;
 
