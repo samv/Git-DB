@@ -3,8 +3,7 @@
 use strict;
 BEGIN { binmode STDOUT, ":utf8"; };
 use Test::More qw(no_plan);
-use lib "t";
-use TestEncoder;
+use t::TestEncoder;
 
 # part 1.  Encoding of data types
 

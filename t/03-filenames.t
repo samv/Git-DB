@@ -9,6 +9,7 @@ BEGIN{ use_ok("Git::DB::Filenames", ":all") }
 use Git::DB::Defines qw/MANTISSA_BITS/;
 use Math::BigRat;
 use Encode;
+use t::TestEncoder qw(perl_print_string);
 
 my @NUM_TESTS = (
 	1234, "1234",
@@ -74,15 +75,6 @@ my @TEXT_TESTS = (
 	"\x{ff25}", "\\\x{ff25}", "Fullwidth form",
 	"\x{244a}", "\\\x{244a}", "Unicode escape character",
 );
-
-sub perl_print_string {
-	my $raw = shift;
-	(my $perl_form = $raw)
-		=~ s{([^\0-\177])}{"\\x"."{".sprintf("%x",(ord($1)))."}"}eg;
-	$perl_form =~ s{([\0-\037\177])}{sprintf("\\%.3o",ord($1))}eg;
-	#print STDERR "perl_print_string: $raw => $perl_form\n";
-	return $perl_form;
-}
 
 while ( my ($raw, $cooked, $label) = splice @TEXT_TESTS, 0, 3 ) {
 	my $safe = perl_print_string($raw);

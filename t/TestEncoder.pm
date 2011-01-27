@@ -1,7 +1,7 @@
 
-package TestEncoder;
+package t::TestEncoder;
 
-use base qw(Exporter);BEGIN { @EXPORT=(qw(test_encoder)) }
+use base qw(Exporter);BEGIN { @EXPORT=(qw(test_encoder perl_print_string)) }
 use strict;
 
 # eevil prototypes
@@ -37,6 +37,15 @@ sub test_encoder(&&@) {
 			"decode - $test_name test $num (0x$hex_digits)",
 		       );
 	}
+}
+
+sub perl_print_string {
+	my $raw = shift;
+	(my $perl_form = $raw)
+		=~ s{([^\0-\177])}{"\\x"."{".sprintf("%x",(ord($1)))."}"}eg;
+	$perl_form =~ s{([\0-\037\177])}{sprintf("\\%.3o",ord($1))}eg;
+	#print STDERR "perl_print_string: $raw => $perl_form\n";
+	return $perl_form;
 }
 
 1;
