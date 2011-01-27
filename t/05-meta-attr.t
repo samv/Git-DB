@@ -47,7 +47,10 @@ is( $attr->get_value( $custom ), "marshalled xxz",
 {
 	package moosey;
 	use Moose;
-	# fixme: this doesn't prove that we used the accessor
+
+	# fixme: this doesn't prove that we didn't just fetch the slot
+	# from the HashRef, unless we use an ArrayRef-backed instance
+	# type.
 	has 'blah' => isa => "Str", accessor => "cheese";
 }
 my $moosey = moosey->new(blah => "xyx");

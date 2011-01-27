@@ -161,7 +161,7 @@ my @TESTS = (
 
 	# A Mersenne Prime, discovered November 3, 1961 by Hurwitz,
 	# using the IBM 7090 (this 1281 bit number is stored in 184
-	# bytes)
+	# bytes - real ASN.1 BER would use 162)
 	"0x80".("ff"x(int((1281-7)/7)))."7f" => $two**1281-1,
 
        );
