@@ -65,7 +65,6 @@ sub get_value {
 	}
 	elsif ( $object->can("meta") and
 			$object->meta->has_attribute($name) ) {
-		$DB::single = 1;
 		$object->meta->get_attribute($name)->get_value($object);
 	}
 	elsif ( reftype $object eq "HASH" ) {
