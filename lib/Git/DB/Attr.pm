@@ -14,9 +14,14 @@ has 'class' =>
 	;
 
 has 'index' =>
-	is => "rw",
+	is => "ro",
 	isa => "Int",
-	writer => "_set_index",
+	lazy => 1,
+	default => sub {
+		my $self = shift;
+		my $class = $self->class;
+		$class->attr_index($self);
+	},
 	required => 1,
 	;
 

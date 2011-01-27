@@ -49,8 +49,23 @@ has 'attr' =>
 	handles => {
 		get_attr => "get",
 		num_attr => "count",
+		set_attr => "set",
 	},
 	;
+
+# helper method for making attr->index
+sub attr_index {
+	my $self = shift;
+	my $attr = shift;
+	my ($i, $num) = (0, $self->num_attr);
+	while ( $i < $num ) {
+		my $x = $self->get_attr($i);
+		if ( $x == $attr ) {
+			return $i;
+		}
+	}
+	return undef;
+}
 
 # convert an object to a list of encoded field values
 # TODO: not all columns may need to be stored, if the primary key was

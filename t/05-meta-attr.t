@@ -16,7 +16,6 @@ my $class = Mock::Git::DB::Class->new;
 
 my $attr = Git::DB::Attr->new(
 	class => $class,
-	index => 0,
 	name => "blah",
 	type => get_type("text"),
 );
