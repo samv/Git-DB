@@ -110,7 +110,7 @@ register_type "text" => {
 	scan => FUNC("scan_text"),
 	cmp => FUNC("cmp_text"),
 	read => FUNC("read_text"),
-	dump => FUNC("dump_text"),
+	dump => FUNC("encode_text"),
 };
 
 sub print_bytes_hex {
@@ -130,7 +130,7 @@ register_type "bytes" => {
 	scan => FUNC("scan_bytes_hex"),
 	cmp => FUNC("cmp_text"),
 	read => FUNC("read_bytes"),
-	dump => FUNC("dump_bytes"),
+	dump => FUNC("encode_bytes"),
 };
 
 1;

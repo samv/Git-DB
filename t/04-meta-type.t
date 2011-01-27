@@ -13,8 +13,8 @@ register_type(
 	"word" => {
 		formats => 0b100,
 		read => [ "read_word" => sub { $_[0] } ],
-		dump => [ "dump_word" => sub { print $_[0] } ],
-		print => [ "print_word" => sub { print $_[0] } ],
+		dump => [ "dump_word" => sub { $_[0] } ],
+		print => [ "print_word" => sub { $_[0] } ],
 		scan => [ "scan_word" => sub { $_[0] } ],
 		cmp => [ "cmp_word" => sub { $_[0] cmp $_[1] } ],
 	},
@@ -33,8 +33,8 @@ register_type(
 	"sentence" => {
 		formats => 0b101,
 		read => [ "read_sentence" => sub { $_[0] } ],
-		dump => [ "dump_sentence" => sub { print $_[0] } ],
-		print => [ "print_sentence" => sub { print $_[0] } ],
+		dump => [ "dump_sentence" => sub { $_[0] } ],
+		print => [ "print_sentence" => sub { $_[0] } ],
 		scan => [ "scan_sentence" => sub { $_[0] } ],
 		cmp => [ "cmp_sentence" => sub { $_[0] cmp $_[1] } ],
 	},
