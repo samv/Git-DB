@@ -7,8 +7,10 @@ use Moose;
 #use MooseX::NaturalKey;
 
 has 'schema' =>
-	is => "ro",
+	is => "rw",
 	isa => "Git::DB::Schema",
+	writer => "_set_schema",
+	weak_ref => 1,
 	;
 
 # the index uniquely identifies the class.  We don't use a UUID or
@@ -49,7 +51,6 @@ has 'attr' =>
 	handles => {
 		get_attr => "get",
 		num_attr => "count",
-		set_attr => "set",
 	},
 	;
 
@@ -63,8 +64,23 @@ sub attr_index {
 		if ( $x == $attr ) {
 			return $i;
 		}
+		$i++;
 	}
 	return undef;
+}
+
+sub BUILD {
+	my $self = shift;
+	my $pkey = $self->primary_key;
+	if ( $pkey ) {
+		$pkey->_set_class($self);
+	}
+	my ($i, $num) = (0, $self->num_attr);
+	while ( $i < $num ) {
+		my $x = $self->get_attr($i);
+		$x->_set_class($self);
+		$i++;
+	}
 }
 
 # convert an object to a list of encoded field values

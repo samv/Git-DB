@@ -7,8 +7,10 @@ use Moose;
 
 # it belongs to a class
 has 'class' =>
-	is => "ro",
+	is => "rw",
 	isa => "Git::DB::Class",
+	writer => "_set_class",
+	weak_ref => 1,
 	;
 
 # it has a unique name (or index, really)

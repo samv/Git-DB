@@ -9,8 +9,8 @@ use Scalar::Util qw(reftype);
 has 'class' =>
 	is => "rw",
 	isa => "Git::DB::Class",
-	required => 1,
 	writer => "_set_class",
+	weak_ref => 1,
 	;
 
 has 'index' =>
