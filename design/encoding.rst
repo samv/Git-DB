@@ -13,8 +13,7 @@ Encoding Unsigned Integers
 
 .. figure:: ../files/varuint.png
    :figwidth: 25em
-   :alt: diagram showing binary representation of several unsigned
-         integers
+   :alt: diagram showing binary representation of several unsigned integers
    :align: right
 
    **Figure 1.** variable-length unsigned integer encoding; used
@@ -162,8 +161,7 @@ slightly larger than the machine format, just so long as all platforms
 can read and write them.
 
 .. figure:: ../files/floats.png
-   :alt: diagram showing floating point unpacking of various single
-         precision floating point numbers
+   :alt: diagram showing floating point unpacking of various single precision floating point numbers
    :figwidth: 25em
    :align: right
 
