@@ -1,21 +1,23 @@
-[% title = "Transactions: recording changes" %]
+===============================
+Transactions: recording changes
+===============================
 
 Snapshot states of the database correspond precisely with commits.
 
-Transactions have a <b>base commit</b>, that corresponds to the
-'parent' in the git commit.  They have a <b>tree</b> which corresponds
-to the data as described in <a href="[% link('design/treeformat.tt')
-%]">TreeFormat</a>, including a <a href="[% link('design/meta.tt')
-%]">MetaFormat</a>-compliant <tt>meta/</tt> directory.
+Transactions have a *base commit*, that corresponds to the 'parent' in
+the git commit.  They have a *tree* which corresponds to the data as
+described in TreeFormat_, including a MetaFormat_\ -compliant
+``meta/`` directory.
 
 If two transactions operate in isolation, then there may also be
-commits which merge their state.  This will be a <b>merge commit</b>,
+commits which merge their state.  This will be a *merge commit*,
 and may include the results of application-specific conflict merging
 (BASE operation).
 
-<h2>Implementing Isolation Levels: the transaction in progress</h2>
+Implementing Isolation Levels: the transaction in progress
+==========================================================
 
-<b>warning:</b> this section is a foray into what might and might not
+*warning:* this section is a foray into what might and might not
 be possible to achieve easily in terms of transaction isolation using
 the assumptions made and is generally highly speculative.
 
@@ -34,10 +36,11 @@ involve writing a merge commit, or forcing a ROLLBACK if this is not
 possible.
 
 Which parts of this process are locked, and which are negotiated over
-a quorum of participants are all relevant questions to the <a href="[%
-link('design/distribution.tt') %]">distribution</a> layer.
+a quorum of participants are all relevant questions to the
+`distribution layer`_.
 
-<h3>Isolation Levels</h3>
+Isolation Levels
+-------------------
 
 As far as I'm aware, there are no real definitions of what acceptable
 behaviour is when there are multiple actors on the database running on
@@ -51,7 +54,8 @@ as expected.
 To assist in debugging this process, all transactions will log the
 isolation level that they used in the commit log.
 
-<h4>READ UNCOMMITTED</h4>
+READ UNCOMMITTED
+^^^^^^^^^^^^^^^^^^^^^^
 
 In this mode, transactions are supposed to be able to see results
 which are in progress by other transactions, before they are
@@ -71,7 +75,8 @@ outweigh the speed benefits from using a single index.  But for some
 
 applications it may be useful.
 
-<h4>READ COMMITTED</h4>
+READ COMMITTED
+^^^^^^^^^^^^^^^^^^^^^^
 
 Here, the private index is used to collect writes as above - but reads
 happen from the shared index, which is updated when transactions are
@@ -100,11 +105,12 @@ This mode is recommended for single-master systems, where dealing with
 rollback is particularly inconvenient - and the occasional failure of
 a writer due to the above corner cases is acceptable.
 
-<h4>REPEATABLE READ</h4>
+REPEATABLE READ
+^^^^^^^^^^^^^^^^^^^^^^
 
 In this mode, the private index also caches information on which rows
 have been returned - partially or in full, but not aggregated -
-relative to the <b>base commit</b>.  As private information is available
+relative to the *base commit*.  As private information is available
 on which objects were read, starting at this level you will see
 information put in the commit object, indicating which objects were
 read from.
@@ -112,7 +118,9 @@ read from.
 The locking protocol will insert entries like this into the commit
 record:
 
-<pre>Locks: /foobar/1015,1050,1329,1950</pre>
+..
+
+    Locks: /foobar/1015,1050,1329,1950
 
 This would indicate that four rows were read, but not updated - in the
 'foobar' class (actually, the class which maps to the '/foobar'
@@ -122,7 +130,9 @@ for the READ COMMITTED level).
 
 The protocol also allows for ranges to be specified;
 
-<pre>Locks: /foobar/1000-1019</pre>
+..
+
+    Locks: /foobar/1000-1019
 
 This isolation level will emit rows such as this, if the entire range
 of legal values were returned; it is just a short-hand notation.
@@ -133,7 +143,8 @@ listed in read locks for the commits being merged in matched changed
 rows in this transaction; and that no read locks in our transaction
 match changed rows in the transactions being merged.
 
-<h4>SERIALIZABLE</h4>
+SERIALIZABLE
+^^^^^^^^^^^^^^^^^^^^^^
 
 This level solves the problem of "phantom rows".  This is a
 requirement that extends beyond simple recording of read and write
@@ -143,7 +154,9 @@ that were not present.
 What this means is that if a query is issued - searching over a range
 of primary keys - that range of rows are locked.
 
-<pre>Locks: /foobar/1000-2000</pre>
+..
+
+     Locks: /foobar/1000-2000
 
 This doesn't mean that 1,001 rows were returned - it just means that
 there was a search by range of primary keys, with the range specified
@@ -163,10 +176,20 @@ therefore scales to distributed writers well.  With the addition of a
 quorum/voting system, 2N+1 nodes of equal trust can even form a useful
 multi-master system.
 
-<h2>Distributed isolation level</h2>
+Distributed isolation level
+=================================
 
-All row ID ranges <em>read</em> or <em>queried</em> are listed in the
+All row ID ranges *read* or *queried* are listed in the
 commit text, not just rows locked for update.
 
 It is an open question whether this is truly a new isolation level, or
 merely a distributed implementation of SERIALIZABLE.
+
+.. _TreeFormat:
+   /design/treeformat
+
+.. _MetaFormat:
+   /design/metaformat
+
+.. _distribution layer:
+   /design/distribution

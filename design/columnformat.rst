@@ -1,0 +1,240 @@
+===========================
+ColumnFormat: value packing
+===========================
+
+Column Format Basics
+====================
+
+The basic idea is taken from Google's `Protocol Buffers`_.  Columns
+are indexed by number, starting from 0.  Each column in the row is
+introduced with a variable-length signed integer, encoded as per the
+`Encoding rules`_, encoding the column number and the encoding type of
+the value which follows.
+
+The lowest four bits of this number are interpreted as an enumerated
+type indicator for the value which follows; this is enough to scan the
+row into columns without a schema, though not enough to interpret the
+values fully.
+
+The remaining top bits of the decoded integer indicate the column
+number.  This is a relative number added to the next expected column.
+The number is relative to avoid two-byte sequences as much as
+possible, leave more room for type bits in the normal case and to
+hopefully improve compression ratios over absolute column numbering.
+
+.. figure:: /images/columnformat.png
+   :figwidth: 85%
+   :alt: diagram showing binary representation of a two-column row
+
+   **Figure 1.** an example byte sequence, encoding ``(42, "42")``
+
+The column offset must be added to the next expected column.  If this
+is '0' then it means that the column which appears is the next column.
+A number such as '2' means that there were two NULL columns (or
+columns dropped before this row was written) in between the last
+column read and this one.
+
+A negative number means that the columns are appearing out of order;
+for example, the primary key was not set to the first defined columns
+in the original schema.  These situations should be rare and hopefully
+may be excluded by some implementations and remain generally
+interoperable.
+
+A completely different, more human readable encoding is used for
+converting primary key column values to filenames for referring to
+them.  This is described in the next level, Filenames_.
+
+Column types
+============
+
+The meaning of the 4-bit type field is given below.  Some of these
+come from ProtocolBuffer.
+
+.. list-table:: GitDB Column Types
+   :widths: 10 5 10 30 10 10
+   :header-rows: 1
+
+   * - type bits
+     - ASCII
+     - type name
+     - description
+     - follows
+     - formulae (Numerics)
+
+   * - 0000
+     - ␀
+     - ``varint``
+     - Integer
+     - ``varint`` *N*
+     - *N*
+   * - 0001
+     - ␁
+     - ``float``
+     - Floating Point
+     - ``varint`` *E*, *M*
+     - *M* × 2\ :super:`*E*`
+   * - 0010
+     - ␂
+     - ``string``
+     - Text or Binary data
+     - ``varuint`` *L*, *L* bytes of data
+   * - 0011
+     - ␃
+     - ``decimal``
+     - Decimal Numbers
+     - ``varint`` *E*, *M*
+     - *M* × 10\ :super:`*E*`
+   .. greyed out, along with some others
+   * - 0100
+     - ␄
+     - ``rational``
+     - Rational Numbers (Fractions)
+     - ``varint`` *N*, ``varuint`` *D*
+     - *N* ÷ *D*
+   * - 0101
+     - ␅
+     - ``false``
+     - Boolean (false)
+     - none
+   * - 0110
+     - ␆
+     - ``true``
+     - Boolean (true)
+     - none
+   * - 0111
+     - ␇
+     - ``lob``
+     - Large Object - oversized value
+     - ``varuint`` *L*, *L* utf-8 bytes of filename
+   * - 1000
+     - ␈
+     - -
+     - reserved
+   * - 1001
+     - ␉
+     - ``null``
+     - explicit/resetting NULL
+     - none
+   * - 1010
+     - ␊
+     - ``eor``
+     - Row divider in row pages
+     - none (next row)
+   * - 1011
+     - ␋
+     - ``rowleft``
+     - For fast scanning of pages by primary key
+     - ``varuint`` *L* (bytes of rest of row, excluding ``eor``)
+   * - 1100
+     - ␌
+     - -
+     - reserved
+   * - 1101
+     - ␍
+     - ``reset``
+     - Reset column index to 0 (or offset)
+   * - 1110
+     - ␎
+     - ``push``
+     - Reserved for arrays and nested types
+     - a new row
+   * - 1111
+     - ␏
+     - ``pop``
+     - Reserved for arrays and nested types
+     - remainder of row
+
+The ASCII column reminds you what ASCII control character you will see
+if you end up directly inspecting heap contents (and the column offset
+is 0).
+
+Boolean values
+--------------
+
+There are two types assigned to booleans, effectively squeezing the
+value into the type code header.
+
+Some standard types will have functions which decide on the
+appropriate encoding based on the value; booleans are one of them.
+
+Streaming features
+------------------
+
+As in ProtocolBuffer, well formed rows from two sources can be merged
+by string concatenation, except using the ASCII carriage return (CR)
+character between them, which encodes a 'Reset' column.  Normally it
+is not necessary to encode NULL column values; leaving them out is
+equivalent, but in the context of combining rows this may be useful.
+Explicit NULL values should never appear in stored rows or pages; it
+is reserved for stream use in situations where it is required.
+
+Otherwise, a stream looks like a continuous data page; see the next
+section.
+
+Page feature types
+------------------
+
+Two types are added for paged rows - blobs which contain multiple
+rows.  Paging, as well as facilitating streaming, allows for "table
+compression" to work, useful for improving OLAP disk space use and
+scan requirements.  Some implementations may find it appropriate to
+omit all support for row paging.  It is described more in the <a
+href="[%link('design/treeformat.tt')%]">TreeFormat section</a>.
+
+First, there is the ``eor`` marker, which allows for delimiting
+rows in a page.
+
+Secondly, there is the ``rowleft`` type which appears after the
+primary key columns, to allow faster scanning by primary key in pages.
+Instead of decoding all columns on the way to the next row, the next
+primary key can be immediately located.  The ``rowleft`` type
+encodes a ``varuint`` which is the length of the data columns in
+bytes; skipping that many bytes forward should land you on an
+``eor`` marker.
+
+Large Objects (LOBs)
+--------------------
+
+For larger column values, they may have their data saved in their own
+blob instead of stored in the page using the 'string' code.
+
+Postgres calls this feature "toast" tables.
+
+The value is a string, a filename.  The filename is stored in the git
+tree, and a reference counting back-reference to the row will be
+required to be able to effectively manage that.
+
+Arrays and Nested Types
+-----------------------
+
+Some attributes are arrays; others are structured value types.  This
+is different to a foreign key; they are non-relational entities, which
+are only accessible from the parent object.  They let you avoid joins
+when the values stored are true value types, but being non-relational
+you cannot place unique constraints on them, or refer to them as
+discrete entities.  They also let you get many of the benefits of
+document stores, but with much stronger type checking along the way.
+
+Postgres has this sort of functionality built into it, and it works
+quite well.  For now, ``push`` and ``pop`` are merely
+reserved.
+
+Schema changes
+--------------
+
+When columns are added, they get a new number, and, when they are
+deleted, the numbers are not re-used.  This is done so that
+frequently, schema modifications do not require major changes to the
+table data.
+
+Lazy schema change operations might not mop up all of the columns
+which no longer exist; cleaning this up is akin to a VACUUM operation.
+
+.. _Protocol Buffers::
+   http://code.google.com/p/protobuf/
+
+.. _Encoding Rules::
+   /design/encoding
+
+.. _Filenames::
+   /design/filenames

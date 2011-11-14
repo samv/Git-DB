@@ -1,10 +1,13 @@
-[% title = "Distribution: sharing data" %]
+==========================
+Distribution: sharing data
+==========================
 
 Disclaimer: a lot of the information on this page is the result of the
 author's own knowledge and experience and should currently be counted
 as expert opinion grade but not yet proven or formally described.
 
-<h2>git db replication</h2>
+git db replication
+====================
 
 git db as a standard is relatively neutral to how the data is shared.
 Actually, git itself solves a number of the mechanical aspect of
@@ -27,13 +30,14 @@ tolerance to network Partitions (implying that systems must all be on
 the same network).
 
 The git db should support all of these styles of replication, through
-<i>configuration</i> - not necessarily settings in a config file or
-dialog box, but how the application is configured to use which
-facility of the git db.  Mixed modes are possible, but in general more
-restrictive systems will not be able to share information with less
-restrictive systems.
+*configuration* - not necessarily settings in a config file or dialog
+box, but how the application is configured to use which facility of
+the git db.  Mixed modes are possible, but in general more restrictive
+systems will not be able to share information with less restrictive
+systems.
 
-<h3>Single Master Replication</h3>
+Single Master Replication
+===============================
 
 In this mode, there is a single node which is the only one allowed to
 do updates.
@@ -52,7 +56,8 @@ updates does not change, there are no conflicts to resolve.
 This case matches the majority of traditional replication systems out
 there.
 
-<h3>Strict Multi-Master Replication</h3>
+Strict Multi-Master Replication
+===============================
 
 This mode of replication is appropriate for systems where the list of
 changes going into the system are known accurately, and there must be
@@ -74,7 +79,8 @@ Examples of systems that work like this are clustered ACID databases
 (eg Oracle) and the transaction support in earlier versions of
 CouchDB.
 
-<h3>Lax Multi-Master Replication</h3>
+Lax Multi-Master Replication
+============================
 
 This mode of replication is similar to Multi-Master, but several
 requirements are relaxed.  It is assumed that any two conflicting
@@ -85,7 +91,8 @@ This approach matches the replication approach of many
 stored-procedure based database replication systems, such as Bucardo.
 Also, current versions of CouchDB.
 
-<h3>Democratic Computing</h3>
+Democratic Computing
+====================
 
 This is the proposed label for a cluster of multi-master nodes, where
 no node is trusted fully but every node is trusted equally; a voting
@@ -94,19 +101,20 @@ Additionally, it may be possible to relax strict requirements about
 knowing the input requests - answers to these questions should be
 available once more research is completed.
 
-<h3>Partitioning of Data</h3>
+Partitioning of Data
+====================
 
-The system of <a href="link('design/treeformat.tt')#division">dividing
-tables</a> can be used to take large sets of data and partition them
-in either custom ways when using a primary key, or randomly when using
-a UUID or a hash for the primary key.
+The system of `dividing tables`_ can be used to take large sets of
+data and partition them in either custom ways when using a primary
+key, or randomly when using a UUID or a hash for the primary key.
 
 As the full data set is not required when computing results involving
 the partitioned chunks - just the SHA1 sums - nodes with incomplete
 information can compute some limited results as if they had the full
 set.
 
-<h3>Distributed Result Processing using Map/Reduce</h3>
+Distributed Result Processing using Map/Reduce
+==============================================
 
 Map/Reduce is where a problem is chunked up into parts, and then
 farmed out to many nodes, which all compute a part calculation ("map")
@@ -120,7 +128,8 @@ allowing for what are effectively long-running transactions.  Update
 jobs could potentially work incrementally at little extra incurred
 cost.
 
-<h3>Sharding</h3>
+Sharding
+========
 
 Sharding is another form of scaling, for very large data sets.
 
@@ -131,3 +140,6 @@ However once this infrastructure is available, the partitioning
 facility described above goes hand-in-hand with sharding.  Nodes can
 be masters of their own shard, and hand the condensed summary SHA1 to
 other nodes for their results.
+
+.. _dividing tables:
+   /design/treeformat
