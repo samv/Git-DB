@@ -186,10 +186,10 @@ It is an open question whether this is truly a new isolation level, or
 merely a distributed implementation of SERIALIZABLE.
 
 .. _TreeFormat:
-   /design/treeformat
+   ./treeformat.rst
 
 .. _MetaFormat:
-   /design/metaformat
+   ./metaformat.rst
 
 .. _distribution layer:
-   /design/distribution
+   ./distribution.rst

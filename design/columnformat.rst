@@ -22,7 +22,7 @@ The number is relative to avoid two-byte sequences as much as
 possible, leave more room for type bits in the normal case and to
 hopefully improve compression ratios over absolute column numbering.
 
-.. figure:: /images/columnformat.png
+.. figure:: ../files/columnformat.png
    :figwidth: 85%
    :alt: diagram showing binary representation of a two-column row
 
@@ -178,8 +178,8 @@ Two types are added for paged rows - blobs which contain multiple
 rows.  Paging, as well as facilitating streaming, allows for "table
 compression" to work, useful for improving OLAP disk space use and
 scan requirements.  Some implementations may find it appropriate to
-omit all support for row paging.  It is described more in the <a
-href="[%link('design/treeformat.tt')%]">TreeFormat section</a>.
+omit all support for row paging.  It is described more in the
+TreeFormat_ section.
 
 First, there is the ``eor`` marker, which allows for delimiting
 rows in a page.
@@ -230,11 +230,14 @@ table data.
 Lazy schema change operations might not mop up all of the columns
 which no longer exist; cleaning this up is akin to a VACUUM operation.
 
-.. _Protocol Buffers::
+.. _Protocol Buffers:
    http://code.google.com/p/protobuf/
 
-.. _Encoding Rules::
-   /design/encoding
+.. _Encoding Rules:
+   ./encoding.rst
 
-.. _Filenames::
-   /design/filenames
+.. _Filenames:
+   ./filenames.rst
+
+.. _TreeFormat:
+   ./treeformat.rst

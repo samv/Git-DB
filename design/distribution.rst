@@ -142,4 +142,4 @@ be masters of their own shard, and hand the condensed summary SHA1 to
 other nodes for their results.
 
 .. _dividing tables:
-   /design/treeformat
+   ./treeformat.rst

@@ -206,10 +206,10 @@ Sorting for numeric types will be by the decimal version of the
 number, ie the value.  Strings will be sorted by the *unescaped* form.
 
 .. _TreeFormat:
-   /design/treeformat
+   ./treeformat.rst
 
 .. _MetaFormat:
-   /design/meta
+   ./meta.rst
 
 .. _types catalog:
-   /design/meta.tt#types
+   ./meta.rst#types

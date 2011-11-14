@@ -11,7 +11,7 @@ possible to interpret the values to a type.
 Encoding Unsigned Integers
 ==========================
 
-.. figure:: /files/varuint.png
+.. figure:: ../files/varuint.png
    :figwidth: 25em
    :alt: diagram showing binary representation of several unsigned
          integers
@@ -43,7 +43,7 @@ Encoding Signed Integers
 In various places, it is possible to encode a number which may be
 negative.
 
-.. figure:: /files/varint.png
+.. figure:: ../files/varint.png
    :alt: diagram showing binary representation of several signed integers
    :figwidth: 25em
 
@@ -161,7 +161,7 @@ slightly different.  It doesn't matter a lot if the stored size is
 slightly larger than the machine format, just so long as all platforms
 can read and write them.
 
-.. figure:: /files/floats.png
+.. figure:: ../files/floats.png
    :alt: diagram showing floating point unpacking of various single
          precision floating point numbers
    :figwidth: 25em
@@ -318,7 +318,7 @@ number 0.2 (base 10) will be a recurring number expressed in binary
 (0.001100110011...) and cannot be converted exactly to an integer
 times a power of two.
 
-.. figure:: /files/decimaletc.png
+.. figure:: ../files/decimaletc.png
    :alt: diagram showing the value 0.2 encoded in various styles
    :figwidth: 25em
 
@@ -377,7 +377,7 @@ the denominator is an unsigned one.  The denominator may not be zero.
 Encoding strings
 ================
 
-.. figure:: /files/text.png
+.. figure:: ../files/text.png
    :figwidth: 20em
    :align: right
    :alt: diagram showing the string Māori encoded in various styles
@@ -397,13 +397,13 @@ string, or text.
    http://code.google.com/apis/protocolbuffers/docs/encoding.html
 
 .. _ColumnFormat:
-   /design/columnformat
+   ./columnformat.rst
 
 .. _MetaFormat:
-   /design/meta
+   ./meta.rst
 
 .. _standard types:
-   /design/meta#types
+   ./meta.rst#types
 
 .. _Wikipedia IEEE Float Page:
     http://en.wikipedia.org/wiki/Ieee_float#Basic_formats

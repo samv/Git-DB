@@ -193,7 +193,7 @@ because it wins you relatively little and slows updates down
 tremendously.
 
 .. _Filename layer:
-   /design/filenames
+   ./filenames.rst
 
 .. _ColumnFormat:
-   /design/columnformat
+   ./columnformat.rst
