@@ -80,7 +80,7 @@ come from ProtocolBuffer.
      - ``float``
      - Floating Point
      - ``varint`` *E*, *M*
-     - :math:`M \times 2^{E}&`
+     - :literal:`M \times 2^{E}&`
 
    * - 0010
      - **␂**
@@ -94,14 +94,14 @@ come from ProtocolBuffer.
      - ``decimal``
      - Decimal Numbers
      - ``varint`` *E*, *M*
-     - :math:`M \times 10^{E}`
+     - :literal:`M \times 10^{E}`
 
    * - 0100
      - **␄**
      - ``rational``
      - Rational Numbers (Fractions)
      - ``varint`` *N*, ``varuint`` *D*
-     - :math:`M \div D`
+     - :literal:`M \div D`
 
    * - 0101
      - **␅**
@@ -123,9 +123,10 @@ come from ProtocolBuffer.
      - \-
    * - 1000
      - **␈**
-     - \-
-     - reserved
-     - \-
+     - *List<>*
+     - begin list of homogenous values
+     - type *T*, ``varuint`` *N*, values
+       *V*:subscript:`1`..\ *V*\ :subscript:`N`, ``pop``
      - \-
    * - 1001
      - **␉**
@@ -159,15 +160,16 @@ come from ProtocolBuffer.
      - \-
    * - 1110
      - **␎**
-     - ``push``
-     - Reserved for arrays and nested types
-     - a new row
+     - *Tuple<>*
+     - begin list of non-homogenous values
+     - type *T*\ :subscript:`1`, value *V*\ :subscript:`1`, ...  type
+       *T*\ :subscript:`x`, value *V*\ :subscript:`x`, ``pop``
      - \-
    * - 1111
      - **␏**
      - ``pop``
-     - Reserved for arrays and nested types
-     - remainder of row
+     - End list
+     - *previous context resumed*
      - \-
 
 The ASCII column reminds you what ASCII control character you will see
@@ -224,26 +226,75 @@ Large Objects (LOBs)
 For larger column values, they may have their data saved in their own
 blob instead of stored in the page using the 'string' code.
 
-Postgres calls this feature "toast" tables.
+Postgres calls this feature "toast" tables.  Some implementations will
+get away without implementing this.
 
-The value is a string, a filename.  The filename is stored in the git
-tree, and a reference counting back-reference to the row will be
-required to be able to effectively manage that.
+The value of the column is a string, a filename.  The filename is
+stored in the git tree, and a reference counting back-reference to the
+row (a la GiST index entry in Postgres) will be required to be able to
+effectively manage that.
+
+.. array-nested:
 
 Arrays and Nested Types
 -----------------------
 
-Some attributes are arrays; others are structured value types.  This
-is different to a foreign key; they are non-relational entities, which
-are only accessible from the parent object.  They let you avoid joins
-when the values stored are true value types, but being non-relational
-you cannot place unique constraints on them, or refer to them as
-discrete entities.  They also let you get many of the benefits of
-document stores, but with much stronger type checking along the way.
+While these concepts are not in every database (Postgres being the
+shining exception of course), it was clear during early development of
+this standard, and also from the design of projects such as Avro_ that
+this is actually a fairly fundamental feature.  It's certainly
+fundamental in document store systems, which are sometimes limited to
+just arrays, hashes, strings and numbers yet still very useful.
 
-Postgres has this sort of functionality built into it, and it works
-quite well.  For now, ``push`` and ``pop`` are merely
-reserved.
+Boolean encoding types are not permitted in these types in any use
+case where the column type byte may be omitted.  Arrays of booleans
+can be represented as raw data blobs in the meantime.
+
+Encoding Arrays
+^^^^^^^^^^^^^^^
+
+With arrays, the values must all be of the same encoding type.  The
+first ``varint`` to follow is a type specifier for the values,
+specified in exactly the same way as a column encoding; no offset
+should be specified.  For a multi-dimensional array, this may specify
+the *List<>* type again.  After the type comes a ``varuint``, which is
+the number of values expected.  The values appear directly afterwards.
+
+While it is not technically necessary, the ``pop`` column specifier is
+to be found at the end of the list of values.
+
+Encoding Tuples
+^^^^^^^^^^^^^^^
+
+Tuples are permitted where the type of a column is recorded as a
+record type in the store's ``meta`` columns (see MetaFormat_).  They
+are exactly the same thing as Postgres' compound types.
+
+Whenever a tuple is used as a type, the *Tuple<>* introduction column
+type appears, followed by more columns (numbered beginning with column
+0), followed by the ``pop`` column psuedo-type.
+
+Arrays of Tuples
+^^^^^^^^^^^^^^^^
+
+If the type of an array is *Tuple<>*, then a list of types is
+expected, terminated by a ``pop``.  If the list is empty, then each
+item in the array is a full (embedded) row, with each of its columns
+introduced with an encoding ``varint`` and a value, just like encoding
+a regular embedded Tuple.  If however there is a list of types, then
+this defines the list for each item in the entire array, and just the
+values can be listed.  This precludes individual items in the array
+having ``NULL`` values.
+
+For example, an array of (string, float) - able to encode a map from
+string keys to floating point values - can be encoded as:
+
+  *List<>* *Tuple<>* ``string`` ``float`` ``pop`` *N* *K*\
+  :subscript:`1` *V*\ :subscript:`1` ..  *K*\ :subscript:`N` *V*\
+  :subscript:`N` ``pop``
+
+This represents a complete overhead of as few as 7 bytes for the map,
+with values encoded as directly as can be after that.
 
 Schema changes
 --------------
@@ -267,3 +318,9 @@ which no longer exist; cleaning this up is akin to a VACUUM operation.
 
 .. _TreeFormat:
    ./treeformat.html
+
+.. _Avro:
+   http://avro.apache.org/
+
+.. _MetaFormat:
+   ./metaformat.html

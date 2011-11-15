@@ -1,0 +1,32 @@
+<html>
+  <head>
+    <title></title>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+    <link type="text/css" rel="stylesheet" href="<% path_to_root %>gitdb.css">
+  </head>
+<body>
+  <div id="sitelogo">
+    <a href="<% path_to_root %>/index.html">
+    <img id="logo" src="<% path_to_root %>files/gitdb-logo.png" border="0" />
+    <div id="titlebox">
+    <span id="site_title">GitDB</span>
+    </div>
+    </a>
+  </div><!-- id="sitelogo" -->
+  <div id="navbar">
+    <div class="menuItem">
+      <a href="<% path_to_root %>/design/index.html" class="menu">Design</a>
+    </div>
+    <div class="menuItem">
+      <a href="<% path_to_root %>/code.html" class="menu">Code</a>
+     <div style="clear: both"></div>
+  </div><!-- id="navbar" -->
+  <div id="body">
+    <% body %>
+  </div><!-- id="body" -->
+  <div id="footer" style="clear: both">
+   <hr />
+   <a href="<% path_to_root %>/copyright.html">copyright info</a> |
+   <a href="<% path_to_root %>/map.html">site map</a>
+  </div><!-- id="footer" -->
+</body>

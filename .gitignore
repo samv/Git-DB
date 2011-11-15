@@ -6,3 +6,5 @@
 *.rss
 *.atom
 /var
+log.txt
+*.pyc
