@@ -1,3 +1,8 @@
+..
+
+  restindex
+  /restindex
+
 ===============================
 Transactions: recording changes
 ===============================
@@ -186,10 +191,10 @@ It is an open question whether this is truly a new isolation level, or
 merely a distributed implementation of SERIALIZABLE.
 
 .. _TreeFormat:
-   ./treeformat.rst
+   ./treeformat.html
 
 .. _MetaFormat:
-   ./metaformat.rst
+   ./metaformat.html
 
 .. _distribution layer:
-   ./distribution.rst
+   ./distribution.html

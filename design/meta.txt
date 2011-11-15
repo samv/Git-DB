@@ -1,18 +1,22 @@
+..
+
+   restindex
+   /restindex
 
 =====================================
 MetaFormat: specifying data structure
 =====================================
 
 There is a special schema in the git db store which represents the
-schema of the tables itself; these are identified with the
-``meta.`` schema name.  Optionally there are rows in the schema
-which represent the schema of the ``meta.`` store itself.
+schema of the tables itself; these are identified with the ``meta.``
+schema name.  Optionally there are rows in the schema which represent
+the schema of the ``meta.`` store itself.
 
 Meta Tables
 ===========
 
-As the intrinsic storage building block, the ``meta.` Tables
-have the following restrictions;
+As the intrinsic storage building block, the ``meta.`` Tables have the
+following restrictions;
 
 **column types**
 
@@ -61,7 +65,7 @@ expect to operate on the data structure.
 The "Schema" or "Namespace" table
 =================================
 
-..
+::
 
   # a schema is like a namespace; it's what you connect to.
   meta.schema:
@@ -79,7 +83,7 @@ The "Schema" or "Namespace" table
 The "Class" or "Table" table
 ============================
 
-..
+::
 
   # a class essentially describes a table
   meta.class:
@@ -131,7 +135,9 @@ The "Class" or "Table" table
           references meta.class (ns_url, ns_rev, class_index)
 
 The "Attributes" or "Columns" table
-================================
+===================================
+
+::
 
   # this table records the list of attributes/columns of a
   # class/table.
@@ -177,7 +183,7 @@ database will be fully arbitrary length throughout.
 KEYS & KEY CONSTRAINTS
 ======================
 
-..
+::
 
   # the 'key' table describes unique and foreign key constraints as
   # well as listing recommended indexes (stored=false)
@@ -223,7 +229,7 @@ KEYS & KEY CONSTRAINTS
 Types
 =====
 
-..
+::
 
   # meta.type: this is basically a compatibility table and is optional
   # if using only predefined types.  'Functions' here are strings;

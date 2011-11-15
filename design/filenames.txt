@@ -1,3 +1,8 @@
+..
+
+  restindex
+  /restindex
+
 =================================
 Filenames: locating packed values
 =================================
@@ -24,21 +29,21 @@ various special characters escaped before it is used as filename.
 ==================   ==================  ==================
 type name            example value       filename form
 ==================   ==================  ==================
-``varint``              1234               ``1234``
-                          -1               ``－1``
-``float``                  1.234           ``1.234``
-                           0.0             ``0``
-                          10²³             ``1e+23``
-``string``             "1234"              ``1234``
-                       "\0"                ``␀``
-                       "foo-bar"           ``foo－bar``
-                       "foo/bar"           ``foo／bar``
-                       "foo\\bar"          ``foo＼bar``
-                       "foo＼bar"          ``foo\＼bar``
-``decimal``                1.20           ``1.2``
-``rational``          123812/7            ``17687.42``
-``bool``                true              ``t``
-                       false              ``f``
+``varint``           1234                ``1234``
+                     -1                  ``－1``
+``float``            1.234               ``1.234``
+                     0.0                 ``0``
+                     10²³                ``1e+23``
+``string``           "1234"              ``1234``
+                     "\0"                ``␀``
+                     "foo-bar"           ``foo－bar``
+                     "foo/bar"           ``foo／bar``
+                     "foo\\bar"          ``foo＼bar``
+                     "foo＼bar"          ``foo\＼bar``
+``decimal``          1.20                ``1.2``
+``rational``         123812/7            ``17687.42``
+``bool``             true                ``t``
+                     false               ``f``
 ==================   ==================  ==================
 
 The Row Filename refers to the result of the escaping, and all of the
@@ -147,17 +152,16 @@ i. On *case-insensitive filesystems*, such as FAT, NTFS and Mac's HFS
    one called "``bob``".
 
 ii. On filesystems that *fold* either case or unicode normalization
-   forms.  For instance, when the program tries to write a file called
-   "``bob``", but the file created is later shown as "``BOB``".  The
-   unicode normalization issue is similar but less well known; it is
-   where a filename is written such as
-   "``Ma``\ *<U+304>*\ ``ori``" (NKD - decomposed), but
-   when later read back is returned as
-   "``M``\ *<U+101>*\ ``ori``" (NKC - composed).</li>
+    forms.  For instance, when the program tries to write a file
+    called "``bob``", but the file created is later shown as
+    "``BOB``".  The unicode normalization issue is similar but less
+    well known; it is where a filename is written such as "``Ma``\
+    *<U+304>*\ ``ori``" (NKD - decomposed), but when later read back
+    is returned as "``M``\ *<U+101>*\ ``ori``" (NKC - composed).</li>
 
 iii. On filesystems which *prohibit characters*.  On most UNIX systems
-   the list of prohibited characters is very short.  For instance,
-   just the NUL character and "``/``", the directory separator.
+     the list of prohibited characters is very short.  For instance,
+     just the NUL character and "``/``", the directory separator.
 
 Of these problems, the prohibited characters case is easily solved; so
 long as unicode is allowed in filenames, they can be escaped as per
@@ -206,10 +210,10 @@ Sorting for numeric types will be by the decimal version of the
 number, ie the value.  Strings will be sorted by the *unescaped* form.
 
 .. _TreeFormat:
-   ./treeformat.rst
+   ./treeformat.html
 
 .. _MetaFormat:
-   ./meta.rst
+   ./meta.html
 
 .. _types catalog:
-   ./meta.rst#types
+   ./meta.html#types

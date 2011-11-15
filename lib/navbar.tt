@@ -1,7 +1,0 @@
-[% FOR x = navlinks %]
-<div class="menuItem">
-  <a href="[% link(x.href) %]" class="menu">[% x.title | html %]</a>
-</div>
-[% END %]
-
-<div style="clear: both"></div>

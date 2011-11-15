@@ -1,3 +1,8 @@
+.. -*- rst -*- mode please, emacs!
+
+  restindex
+  /restindex
+
 ===============================
 Encoding: value types to binary
 ===============================
@@ -12,6 +17,7 @@ Encoding Unsigned Integers
 ==========================
 
 .. figure:: ../files/varuint.png
+   :width: 20em
    :figwidth: 25em
    :alt: diagram showing binary representation of several unsigned integers
    :align: right
@@ -43,11 +49,13 @@ In various places, it is possible to encode a number which may be
 negative.
 
 .. figure:: ../files/varint.png
-   :alt: diagram showing binary representation of several signed integers
+   :width: 20em
    :figwidth: 25em
+   :alt: diagram showing binary representation of several signed integers
+   :align: right
 
-  **Figure 2.** The variable-length signed integer encoding used by
-  this design.  The sign bit is highlighted in green.
+   **Figure 2.** The variable-length signed integer encoding used by
+   this design.  The sign bit is highlighted in green.
 
 Perl's built-in function does not permit storing negative numbers, and
 in Google's `ProtocolBuffers Encoding documentation`_, it is written
@@ -112,10 +120,10 @@ storing two variable length, signed integers.
      - Formula
      - Description
    * - float
-     - *N* × 2\ :super:`*M*`
+     - *N* × 2\ :superscript:`*M*`
      - Floating point: general purpose, "real" numbers
    * - decimal
-     - *N* × 10\ :super:`*M*`
+     - *N* × 10\ :superscript:`*M*`
      - Decimal precision values (eg money or IEEE decimal formats)
    * - rational
      - N ÷ M
@@ -162,11 +170,12 @@ can read and write them.
 
 .. figure:: ../files/floats.png
    :alt: diagram showing floating point unpacking of various single precision floating point numbers
+   :width: 20em
    :figwidth: 25em
    :align: right
 
    **Figure 3.** How various single-precision floating-point values
-    are converted to two integers for encoding
+   are converted to two integers for encoding
 
 To understand the solution used in git db, it helps to understand how
 floating point formats work.  The `Wikipedia IEEE Float Page`_ is at
@@ -187,13 +196,13 @@ it.
 
 The essence of the floating point encoding is to take these two
 numbers from the float, adjust them so that they are in terms of *N* ×
-2\ :super:`*M*`\, and then store those.  In terms of converting from
+2\ :superscript:`*M*`\, and then store those.  In terms of converting from
 IEEE 754 formats, this means subtracting a *bias* for the exponent,
 and usually putting a 1 at the front of the mantissa.  The reason for
 this is that the only value which does not start with a 1 is 0, which
 is considered a special case.
 
-Once you have expressed the number as *N* × 2\ :super:`*M*`, it can
+Once you have expressed the number as *N* × 2\ :superscript:`*M*`, it can
 then be *reduced* - while *N* is even, you can halve
 it and subtract one from *M*.  Because of this, some floats
 end up encoding to a sequence smaller than the native float, but this
@@ -265,7 +274,7 @@ language, ignoring the exception cases which result in ``mantissa ==
    num = mantissa * (2 ** exp)
 
 Note, the difficulties around this format is not really down to the
-storage format; *N* × 2\ :super:`*M*` is very simple and it is the
+storage format; *N* × 2\ :superscript:`*M*` is very simple and it is the
 IEEE 754 format which is (justifiably) more complicated.
 
 This simplicity/space trade-off is quantified in the below table:
@@ -318,29 +327,31 @@ times a power of two.
 
 .. figure:: ../files/decimaletc.png
    :alt: diagram showing the value 0.2 encoded in various styles
+   :width: 20em
    :figwidth: 25em
+   :align: right
 
    **Figure 4.** How the various encodings store "0.2"; the 'float'
    encoding assumes a binary64 source platform.  You can see the
    reciprocal repeating itself through the digits, and the effect of
    ieee 754 rounding rules on the final bit.
 
-205 × 2\ :super:`-10`, the closest representation available in
+205 × 2\ :superscript:`-10`, the closest representation available in
 binary16, is 0.200 - not bad for 16 bits.  In float format, at the
 same precision, you're looking at 3 bytes of storage space.  Unpacked
 on a double precision platform, it will render as 0.2001953125.
 
-3355443 × 2\ :super:`-24`, for single precision, encodes to
+3355443 × 2\ :superscript:`-24`, for single precision, encodes to
 5 bytes.  In double precision, which most machines will use (and gcc
 can emulate on platforms which don't support it natively), you end up
-with 3602879701896397 × 2\ :super:`-54`, taking a whopping 9
+with 3602879701896397 × 2\ :superscript:`-54`, taking a whopping 9
 bytes to encode.
 
 For the die-hard 8087 80-bit format,
-3689348814741910323 × 2\ :super:`-64`, encoding in 10 bytes,
+3689348814741910323 × 2\ :superscript:`-64`, encoding in 10 bytes,
 is actually the same size as the original float.  If you happened to
 find yourself on some machine with the ieee128 format,
-1038459371706965525706099265844019 × 2\ :super:`-112`
+1038459371706965525706099265844019 × 2\ :superscript:`-112`
 encodes to an 18 byte sequence.
 
 This highlights a point; much extra space is used for precision which
@@ -353,7 +364,7 @@ then to store the value using the decimal encoding instead.
 
 If an implementation does decide that "0.2" is a decimal, and not a
 floating point value, it can store it as
-2 × 10\ :super:`-1`, which is only 2 bytes and fully precise
+2 × 10\ :superscript:`-1`, which is only 2 bytes and fully precise
 on all floating point platforms.
 
 Rational Representation
@@ -362,7 +373,7 @@ Rational Representation
 This format can store the set of rational numbers, and is included as
 alongside the other two-integer formats it is trivial to decode and
 infinitely expands the precisely representable numeric values.  While
-*N × 2\ :super:`M`* is an infinite set, there is another
+*N × 2\ :superscript:`M`* is an infinite set, there is another
 infinite set of other precise numeric values as well.  Sure, there are
 useful irrationals one could precisely encode like
 (₁₂√2)&#x2075; - a major 3rd - but `4/3 is usually
@@ -376,14 +387,15 @@ Encoding strings
 ================
 
 .. figure:: ../files/text.png
+   :width: 17em
    :figwidth: 20em
    :align: right
    :alt: diagram showing the string Māori encoded in various styles
 
-  **Figure 5.** how the NFD representation of the string "Māori" is
-    encoded.  UTF-8 multi-byte sequences are similar to the
-    ``varuint`` encoding, but use the top bit to indicate that the
-    byte is a part of a multi-byte sequence.
+   **Figure 5.** how the NFD representation of the string "Māori" is
+   encoded.  UTF-8 multi-byte sequences are similar to the ``varuint``
+   encoding, but use the top bit to indicate that the byte is a part
+   of a multi-byte sequence.
 
 These are encoded with a variable length unsigned integer, followed by
 a quantity of bytes.  Neither the encoding nor the column format has
@@ -395,13 +407,13 @@ string, or text.
    http://code.google.com/apis/protocolbuffers/docs/encoding.html
 
 .. _ColumnFormat:
-   ./columnformat.rst
+   ./columnformat.html
 
 .. _MetaFormat:
-   ./meta.rst
+   ./meta.html
 
 .. _standard types:
-   ./meta.rst#types
+   ./meta.html#types
 
 .. _Wikipedia IEEE Float Page:
     http://en.wikipedia.org/wiki/Ieee_float#Basic_formats

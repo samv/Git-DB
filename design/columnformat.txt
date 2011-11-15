@@ -1,3 +1,8 @@
+..
+
+  restindex
+  /restindex
+
 ===========================
 ColumnFormat: value packing
 ===========================
@@ -23,8 +28,10 @@ possible, leave more room for type bits in the normal case and to
 hopefully improve compression ratios over absolute column numbering.
 
 .. figure:: ../files/columnformat.png
-   :figwidth: 85%
+   :width: 85%
+   :figwidth: 80%
    :alt: diagram showing binary representation of a two-column row
+   :align: center
 
    **Figure 1.** an example byte sequence, encoding ``(42, "42")``
 
@@ -62,87 +69,106 @@ come from ProtocolBuffer.
      - formulae (Numerics)
 
    * - 0000
-     - ␀
+     - **␀**
      - ``varint``
      - Integer
      - ``varint`` *N*
      - *N*
+
    * - 0001
-     - ␁
+     - **␁**
      - ``float``
      - Floating Point
      - ``varint`` *E*, *M*
-     - *M* × 2\ :super:`*E*`
+     - :math:`M \times 2^{E}&`
+
    * - 0010
-     - ␂
+     - **␂**
      - ``string``
      - Text or Binary data
      - ``varuint`` *L*, *L* bytes of data
+     - \-
+
    * - 0011
-     - ␃
+     - **␃**
      - ``decimal``
      - Decimal Numbers
      - ``varint`` *E*, *M*
-     - *M* × 10\ :super:`*E*`
-   .. greyed out, along with some others
+     - :math:`M \times 10^{E}`
+
    * - 0100
-     - ␄
+     - **␄**
      - ``rational``
      - Rational Numbers (Fractions)
      - ``varint`` *N*, ``varuint`` *D*
-     - *N* ÷ *D*
+     - :math:`M \div D`
+
    * - 0101
-     - ␅
+     - **␅**
      - ``false``
      - Boolean (false)
      - none
+     - \-
    * - 0110
-     - ␆
+     - **␆**
      - ``true``
      - Boolean (true)
      - none
+     - \-
    * - 0111
-     - ␇
+     - **␇**
      - ``lob``
      - Large Object - oversized value
      - ``varuint`` *L*, *L* utf-8 bytes of filename
+     - \-
    * - 1000
-     - ␈
-     - -
+     - **␈**
+     - \-
      - reserved
+     - \-
+     - \-
    * - 1001
-     - ␉
+     - **␉**
      - ``null``
      - explicit/resetting NULL
      - none
+     - \-
    * - 1010
-     - ␊
+     - **␊**
      - ``eor``
      - Row divider in row pages
      - none (next row)
+     - \-
    * - 1011
-     - ␋
+     - **␋**
      - ``rowleft``
      - For fast scanning of pages by primary key
      - ``varuint`` *L* (bytes of rest of row, excluding ``eor``)
+     - \-
    * - 1100
-     - ␌
-     - -
+     - **␌**
+     - \-
      - reserved
+     - \-
+     - \-
    * - 1101
-     - ␍
+     - **␍**
      - ``reset``
      - Reset column index to 0 (or offset)
+     - \-
+     - \-
    * - 1110
-     - ␎
+     - **␎**
      - ``push``
      - Reserved for arrays and nested types
      - a new row
+     - \-
    * - 1111
-     - ␏
+     - **␏**
      - ``pop``
      - Reserved for arrays and nested types
      - remainder of row
+     - \-
 
 The ASCII column reminds you what ASCII control character you will see
 if you end up directly inspecting heap contents (and the column offset
@@ -234,10 +260,10 @@ which no longer exist; cleaning this up is akin to a VACUUM operation.
    http://code.google.com/p/protobuf/
 
 .. _Encoding Rules:
-   ./encoding.rst
+   ./encoding.html
 
 .. _Filenames:
-   ./filenames.rst
+   ./filenames.html
 
 .. _TreeFormat:
-   ./treeformat.rst
+   ./treeformat.html
