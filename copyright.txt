@@ -1,0 +1,16 @@
+..
+
+  restindex
+  /restindex
+
+Copyright Statement
+
+All Content Copyright (c) 2009-2011, Sam Vilain.  All Rights Reserved.
+My words are free; you may copy them subject to the terms of the
+Creative Commons Attribution Share-Alike License.
+
+Below follows the Creative Commons Attribution Share-Alike license.
+Trolls take particular note of clause 2.7.
+
+.. include:: licenses/CC-Attribution-ShareAlike.txt
+   :literal:

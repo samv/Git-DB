@@ -1,0 +1,25 @@
+..
+
+  restindex
+  /restindex
+
+=============
+introduction
+=============
+
+git db is an experimental research project, aiming to combine a number
+of emergent technologies to enable a new platform of social-networking
+building, buzzword-coining computing.
+
+Seriously though, its essence is a hybrid/relational data store, built
+to run on top of the git source control management system.  For more
+information on its design, see the `design page`_.
+
+There is also a list of `features excluded from the first
+specification`_.  If you get lost, my apologies.
+
+.. _design page:
+   design/index.html
+
+.. _features excluded from the first specification:
+   todo.html

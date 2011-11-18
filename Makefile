@@ -1,6 +1,6 @@
 
 templates:
-	maint/update-templates.pl
+	echo | r2w.py
 
 check:
 	rsync --exclude .svn --exclude .git --exclude Makefile --exclude .publish* -ruav `cat .publish_target`/. .
