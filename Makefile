@@ -1,13 +1,13 @@
 
 templates:
-	echo | r2w.py
+	r2w.py
 
 check:
 	rsync --exclude .svn --exclude .git --exclude Makefile --exclude .publish* -ruav `cat .publish_target`/. .
 	git status
 
 clean:
-	maint/update-templates.pl -d
+	find . -name \*.txt -print | sed 's/.txt$$/.html/' | while read fn; do [ -f "$$fn" ] && rm "$$fn"; done
 
 committed:
 	if git diff-files --name-status | grep '.'; then /bin/false; else :; fi

@@ -20,119 +20,150 @@ following restrictions;
 
 **column types**
 
-    All columns *must* be defined in terms of primitive types; arrays
-    and nested types are not permitted.  Instead, in this version of
-    git db they are implemented using the traditional, relational
-    approach using foreign keys and suchlike, called **slave tables**
-    in this specification (see below).
+    All columns *must* be defined in terms of types from the standard
+    type library.
 
 **keys**
 
     All tables in ``meta.`` space *must* have a primary key.  Primary
-    key columns must come first.  Keys are simple (ie, not functional)
-    and unconditional (ie, not partial), unless one of the columns in
-    the key is marked NULL.
+    key columns must come first.
 
-    **Foreign key** constraints are present and *must* reference
-    another table's primary key.
-    
 **unique constraints**
 
-    Non-primary unique constraints *may* be implemented in terms of
-    foreign key constraints to specially named tables.  These are
-    effectively *indexes* and exist in regular databases but are not
-    normally referencable.
+    Non-primary unique constraints are specified in terms of foreign
+    key constraints to specially named tables.  In a regular database
+    these tables are hidden (but you can see them in Postgres, if you
+    directly inspect the catalog).
     
-Note that tables with a name after the ``:`` is a **slave
-table** or **link table**; they are tables which always have a
-foreign key relationship with the table they are slave to.
-
-Sometimes, these are used for 1 to many relationships between
-items. In later versions, arrays may be used for this purpose instead.
-
-In other cases, they simply express constraints/proofs.  To help the
-parts of it which express constraints and proofs slink into the
-shadows cast by the lines which actually define interesting columns,
-the interesting ones are shown in **bold**.  Currently that means
-lines which define attributes, which are not merely columns used for
-foreign keys in a slave table.
-
 This is being presented like this in order to satisfy the
-*bootstrapping* requirement of the schema; it should be able to
-store itself, including all of the relevant constraints that you would
+*bootstrapping* requirement of the schema; it should be able to store
+itself, including all of the relevant constraints that you would
 expect to operate on the data structure.
 
 The "Schema" or "Namespace" table
 =================================
 
+The schema table defines local names of the schemas used.  This
+controls the path where the data lives in the top level of the
+repository.  It also allows for schema revisioning.  The repository
+revision is a ``num``, which can be any number; integer, decimal,
+float etc.
+
 ::
 
-  # a schema is like a namespace; it's what you connect to.
   meta.schema:
     ns_url text not null
     ns_rev num not null
     primary key (ns_url, ns_rev)
-    ns_name str not null**
-    unique key (ns_name)
+    ns_name str not null
+    foreign key (ns_name) references :ns_name_idx
  
-  # this table is the schema name index.
   meta.schema:ns_name_idx
     ns_name str not null
     primary key (ns_name)
 
-The "Class" or "Table" table
-============================
+Specified in a more Avro-like JSON syntax, that would be:
 
 ::
 
-  # a class essentially describes a table
-  meta.class:
-    **ns_url text not null**
-    **ns_rev num not null**
-    foreign key (ns_url, ns_rev)
-            references meta.schema
-    **class_index int not null**
-    primary key (ns_url, ns_rev, class_index)
-    **class_name text not null**
-    unique key (ns_url, ns_rev, class_name)
+   { "name": "schema",
+     "type": "tuple",
+     "fields": [
+        { "name": "ns_url", "type": "string", "required": 1 },
+        { "name": "ns_rev", "type": "num", "required": 1 },
+        { "name": "ns_name", "type": "string", "required": 1 },
+     ],
+     "keys": [
+        { "primary": "1",
+          "fields": [ "ns_url", "ns_rev" ] },
+        { "unique": "1",
+          "fields": [ "ns_name" ],
+         },
+     ],
+   }
 
-  # this enforces the unique key above^ and is optional in the store
-  meta.class:nameidx
-    ns_url text not null
-    ns_rev num not null
-    class_name not null
-    primary key (ns_url, ns_rev, class_name)
-    class_index int not null
-    foreign key (ns_url, ns_rev, class_index)
-            references meta.class
+The values, for the ``meta`` schema, are:
 
-  # only one revision of the schema may actually have tables at any
-  # given time.  Also enforces that no two tables can have the same
-  # name, and lets you figure out which class the filesystem paths
-  # relate to.
-  meta.class:ns_name_class_name
-    ns_name not null
-    foreign key (ns_name) references meta.schema:ns_name_idx
-    class_name not null
-    primary key (schema_name, class_name)
-    ns_url text not null
-    ns_rev num not null
-    class_index int not null
-    foreign key (ns_url, ns_rev, class_index)
-            references meta.class
+::
 
-  # superclass heirarchy.  whole table is primary key! (link table)
-  # many RDBMSes don't have this concept, but it's like postgres'
-  # INHERITS option to CREATE TABLE
-  meta.class:super
-    **ns_url text not null**
-    **ns_rev num not null**
-    **class_index int not null**
-    foreign key (ns_url, ns_rev, class_index)
-            references meta.class
-    **superclass_index int not null**
-    foreign key (ns_url, ns_rev, superclass_index)
-          references meta.class (ns_url, ns_rev, class_index)
+   [ "http://github.com/samv/Git-DB", 0.1, "meta" ]
+
+Which would be encoded as:
+
+::
+
+  00000000  021d 6874 7470 3a2f 2f67 6974 6875 622e  ␂␝http://github.
+  00000010  636f 6d2f 7361 6d76 2f47 6974 2d44 4203  com/samv/Git-DB␃
+  00000020  7f01 0204 6d65 7461                      ␡␁␂␄meta
+
+
+The "Tuple" table
+=================
+
+The "paths" table defines which schemas are active at which paths
+within the git tree.  Multiple versions of the same schema can be
+deployed, but they have to have unique ns_name's.
+
+::
+
+   { "name": "tuple",
+     "type": "tuple",
+     "fields": [
+        { "name": "ns_url", "type": "string", "required": 1 },
+        { "name": "ns_rev", "type": "num", "required": 1 },
+        { "name": "tuple_index", "type": "int", "required": 1 },
+        { "name": "tuple_name", "type": "string", "required": 1 },
+     ],
+     "keys": [
+        { "primary": "1",
+          "fields": [ "ns_url", "ns_rev", "tuple_index" ],
+        },
+        { "foreign": "1",
+          "fields": [ "ns_url", "ns_rev" ],
+          "references": {
+              "ns_name": "meta",
+              "tuple_name": "schema",
+          }
+        },
+        { "unique": "1",
+          "fields": [ "ns_url", "ns_rev", "tuple_name" ],
+        },
+     ],
+   },
+
+The "Store" table
+=================
+
+The tuple table defines types, but they do not necessarily "deploy"
+them.  Tuples can be defined merely for use within other parts of the
+schema, so this extra table connects tuples with TreeFormat_ trees.
+
+The "path" field is actually optional, the default will be
+``/ns_name/tuple_name`` but this is provided as an extra flexibility.
+The only fixed path is therefore ``/.meta`` 
+
+::
+
+   { "name": "store",
+     "type": "tuple",
+     "fields": [
+        { "name": "ns_name", "type": "string", "required": 1 },
+        { "name": "tuple_name", "type": "string", "required": 1 },
+        { "name": "ns_url", "type": "string", "required": 1 },
+        { "name": "ns_rev", "type": "num", "required": 1 },
+        { "name": "tuple_index", "type": "int", "required": 1 },
+        { "name": "path", "type": "string", "required": 0 },
+     ],
+     "keys": [
+        { "primary": "1",
+          "fields": [ "ns_name", "tuple_name" ],
+        },
+        { "foreign": "1",
+          "fields": [ "ns_url", "ns_rev", "tuple_index" ],
+          "references": "meta.class",
+        },
+     ],
+   },
 
 The "Attributes" or "Columns" table
 ===================================
@@ -144,14 +175,14 @@ The "Attributes" or "Columns" table
   meta.attr:
     **ns_url text not null**
     **ns_rev num not null**
-    **class_index int not null**
-    foreign key (ns_url, ns_rev, class_index)
+    **tuple_index int not null**
+    foreign key (ns_url, ns_rev, tuple_index)
             references meta.class
     **attr_index int not null**
-    primary key (ns_url, ns_rev, class_index, attr_index)
+    primary key (ns_url, ns_rev, tuple_index, attr_index)
     # if attr_name is null, the column is deleted.
     **attr_name text null**
-    unique key (ns_url, ns_rev, class_index, attr_name)
+    unique key (ns_url, ns_rev, tuple_index, attr_name)
     **attr_type text not null**
     foreign key (ns_url, ns_rev, attr_type) references meta.type
          (ns_url, ns_rev, type_name)
@@ -165,12 +196,15 @@ The "Attributes" or "Columns" table
   meta.attr:attr_name_idx
     ns_url text not null
     ns_rev num not null
-    class_index int not null
+    tuple_index int not null
     name text not null
-    primary key (ns_url, ns_rev, class_index, name)
+    primary key (ns_url, ns_rev, tuple_index, name)
     attr_index int not null
-    foreign key (ns_url, ns_rev, class_index, attr_index)
+    foreign key (ns_url, ns_rev, tuple_index, attr_index)
             references meta.attr
+
+In Avro-like syntax:
+
 
 Precision/scale modifiers, such as ``VARCHAR(2)`` etc are not
 supported directly; they're something of a bodge when proper
@@ -190,11 +224,11 @@ KEYS & KEY CONSTRAINTS
   meta.key:
     **ns_url text not null**
     **ns_rev num not null**
-    **class_index int not null**
-    foreign key (ns_url, ns_rev, class_index)
+    **tuple_index int not null**
+    foreign key (ns_url, ns_rev, tuple_index)
             references meta.class
     **key_name text not null**
-    primary key (ns_url, ns_rev, class_index, key_name)
+    primary key (ns_url, ns_rev, tuple_index, key_name)
     **key_unique bool not null**
     **key_primary bool not null**
     **key_stored bool not null**
@@ -208,21 +242,21 @@ KEYS & KEY CONSTRAINTS
   meta.key:attr
     **ns_url text not null**
     **ns_rev num not null**
-    **class_index int not null**
+    **tuple_index int not null**
     **key_name text not null**
-    foreign key (ns_url, ns_rev, class_index, key_name)
+    foreign key (ns_url, ns_rev, tuple_index, key_name)
             references meta.key
     **key_pos int not null**
-    primary key (ns_url, ns_rev, class_index, name, key_pos)
+    primary key (ns_url, ns_rev, tuple_index, name, key_pos)
     attr_index int not null
-    foreign key (ns_url, ns_rev, class_index, attr_index)
+    foreign key (ns_url, ns_rev, tuple_index, attr_index)
             references meta.attr
-    foreign_class_index int null
-    foreign key (ns_url, ns_rev, foreign_class_index)
-            references meta.class (ns_url, ns_rev, class_index)
+    foreign_tuple_index int null
+    foreign key (ns_url, ns_rev, foreign_tuple_index)
+            references meta.class (ns_url, ns_rev, tuple_index)
     foreign_attr_index int null
-    foreign key (ns_url, ns_rev, foreign_class_index, foreign_attr_index)
-            references meta.attr (ns_url, ns_rev, class_index, attr_index)
+    foreign key (ns_url, ns_rev, foreign_tuple_index, foreign_attr_index)
+            references meta.attr (ns_url, ns_rev, tuple_index, attr_index)
 
 .. _types:
 
@@ -407,3 +441,6 @@ implementation.  Most are very simple.
 
 If a ``type_name`` is used in the schema, but not listed in
 ``meta.types``, then the above definitions are used.
+
+.. _TreeFormat:
+   ./treeformat.html
