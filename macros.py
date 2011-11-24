@@ -1,11 +1,5 @@
 # macros.py
 
-# Subversion Details
-# $LastChangedDate: 2006-08-13 23:53:30 +0100 (Sun, 13 Aug 2006) $
-# $LastChangedBy: fuzzyman $
-# $HeadURL: http://svn.rest2web.python-hosting.com/trunk/macros.py $
-# $LastChangedRevision: 202 $
-
 # User macros for rest2web 
 # http://www.voidspace.org.uk/python/rest2web
 
@@ -40,5 +34,4 @@ def set_uservalues(n, u):
 acronyms = {
     'usb': 'Universal Serial Bus', 
     'YAGNI': 'You Aint Gonna Need It',
-    
 }

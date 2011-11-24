@@ -373,12 +373,10 @@ Rational Representation
 This format can store the set of rational numbers, and is included as
 alongside the other two-integer formats it is trivial to decode and
 infinitely expands the precisely representable numeric values.  While
-*N × 2\ :superscript:`M`* is an infinite set, there is another
+*N* × 2\ :superscript:`M` is an infinite set, there is another
 infinite set of other precise numeric values as well.  Sure, there are
-useful irrationals one could precisely encode like
-(₁₂√2)&#x2075; - a major 3rd - but `4/3 is usually
-close enough to a third to tune a guitar
-<http://www.ehow.com/how_2187418_tune-guitar-using-harmonics.html>`
+useful irrationals one could precisely encode like (₁₂√2)⁵ - a major
+3rd - but `4/3 is usually close enough to a third to tune a guitar`_.
 
 In this format the numerator is a signed variable length integer, and
 the denominator is an unsigned one.  The denominator may not be zero.
@@ -418,3 +416,5 @@ string, or text.
 .. _Wikipedia IEEE Float Page:
     http://en.wikipedia.org/wiki/Ieee_float#Basic_formats
 
+.. _4/3 is usually close enough to a third to tune a guitar:
+   http://www.ehow.com/how_2187418_tune-guitar-using-harmonics.html

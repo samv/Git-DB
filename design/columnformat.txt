@@ -80,7 +80,7 @@ come from ProtocolBuffer.
      - ``float``
      - Floating Point
      - ``varint`` *E*, *M*
-     - :math:`M \times 2^{E}&`
+     - :literal:`M \times 2^{E}&`
 
    * - 0010
      - **␂**
@@ -94,14 +94,14 @@ come from ProtocolBuffer.
      - ``decimal``
      - Decimal Numbers
      - ``varint`` *E*, *M*
-     - :math:`M \times 10^{E}`
+     - :literal:`M \times 10^{E}`
 
    * - 0100
      - **␄**
      - ``rational``
      - Rational Numbers (Fractions)
      - ``varint`` *N*, ``varuint`` *D*
-     - :math:`M \div D`
+     - :literal:`M \div D`
 
    * - 0101
      - **␅**
@@ -123,9 +123,10 @@ come from ProtocolBuffer.
      - \-
    * - 1000
      - **␈**
-     - \-
-     - reserved
-     - \-
+     - *List<>*
+     - begin list of homogenous values
+     - type *T*, ``varuint`` *N*, values
+       *V*:subscript:`1`..\ *V*\ :subscript:`N`, ``pop``
      - \-
    * - 1001
      - **␉**
@@ -159,15 +160,16 @@ come from ProtocolBuffer.
      - \-
    * - 1110
      - **␎**
-     - ``push``
-     - Reserved for arrays and nested types
-     - a new row
+     - *Tuple<>*
+     - begin list of non-homogenous values
+     - type *T*\ :subscript:`1`, value *V*\ :subscript:`1`, ...  type
+       *T*\ :subscript:`x`, value *V*\ :subscript:`x`, ``pop``
      - \-
    * - 1111
      - **␏**
      - ``pop``
-     - Reserved for arrays and nested types
-     - remainder of row
+     - End list
+     - *previous context resumed*
      - \-
 
 The ASCII column reminds you what ASCII control character you will see
@@ -176,6 +178,14 @@ is 0).
 
 Boolean values
 --------------
+
+.. figure:: ../files/boolean.png
+   :width: 50%
+   :figwidth: 80%
+   :alt: f = 0 000 00101, t = 0 000 0110, 1 byte each
+   :align: right
+
+   **Figure 2.** Encodings for true and false
 
 There are two types assigned to booleans, effectively squeezing the
 value into the type code header.
@@ -197,14 +207,36 @@ is reserved for stream use in situations where it is required.
 Otherwise, a stream looks like a continuous data page; see the next
 section.
 
+.. figure:: ../files/column-reset.png
+   :width: 100%
+   :figwidth: 90%
+   :alt:
+      0 010 0000 - type, column 2 (010), varint (0000)
+      0 1010110  - column 2 value, -42
+      0 000 0001 - type, column 3 (2+1+000), string (0001)
+      0 0000001  -  column 3 value - string length, 1 byte
+      01011000 - column 3 value - string contents, "X"
+      0 000 1101 - column reset (1101) to N-1; 0 (000) => -1
+      0 000 0000 - type, column 0 (-1+1+000), varint (0000)
+      0 0101010 - column 0 value, 42
+      0 000 0010 - type, column 1 (0+1+000), string (0000)
+      0 0000010 - column 1 value - string length, 2 bytes
+      001100100 00110010 - column 1 value - string contents, "42"
+   :align: center
+
+   **Figure 3.** Column 2 and 3 can be sent before columns 0 and 1, by
+   making the first emitted column have a column number of 2,
+   following the extra columns with a column reset pseudo-type, and
+   then the example from Figure 1, verbatim.
+
 Page feature types
 ------------------
 
 Two types are added for paged rows - blobs which contain multiple
 rows.  Paging, as well as facilitating streaming, allows for "table
 compression" to work, useful for improving OLAP disk space use and
-scan requirements.  Some implementations may find it appropriate to
-omit all support for row paging.  It is described more in the
+scan requirements.  **Some implementations may find it appropriate to
+omit all support for row paging** - it is described more in the
 TreeFormat_ section.
 
 First, there is the ``eor`` marker, which allows for delimiting
@@ -224,26 +256,110 @@ Large Objects (LOBs)
 For larger column values, they may have their data saved in their own
 blob instead of stored in the page using the 'string' code.
 
-Postgres calls this feature "toast" tables.
+Postgres calls this feature "toast" tables.  **Some implementations will
+get away without implementing this**.
 
-The value is a string, a filename.  The filename is stored in the git
-tree, and a reference counting back-reference to the row will be
-required to be able to effectively manage that.
+The value of the column is a string, a filename.  The filename is
+stored in the git tree, and a reference counting back-reference to the
+row (a la GiST index entry in Postgres) will be required to be able to
+effectively manage that.
+
+.. array-nested:
 
 Arrays and Nested Types
 -----------------------
 
-Some attributes are arrays; others are structured value types.  This
-is different to a foreign key; they are non-relational entities, which
-are only accessible from the parent object.  They let you avoid joins
-when the values stored are true value types, but being non-relational
-you cannot place unique constraints on them, or refer to them as
-discrete entities.  They also let you get many of the benefits of
-document stores, but with much stronger type checking along the way.
+While these concepts are not in every database (Postgres being the
+shining exception of course), it was clear during early development of
+this standard, and also from the design of projects such as Avro_ that
+this is actually a fairly fundamental feature.  It's certainly
+fundamental in document store systems, which are sometimes limited to
+just arrays, hashes, strings and numbers yet still very useful.
 
-Postgres has this sort of functionality built into it, and it works
-quite well.  For now, ``push`` and ``pop`` are merely
-reserved.
+Boolean encoding types are not permitted in these types in any use
+case where the column type byte may be omitted.  Arrays of booleans
+can be represented as raw data blobs in the meantime.
+
+Encoding Arrays
+^^^^^^^^^^^^^^^
+
+.. figure:: ../files/array.png
+   :width: 50%
+   :figwidth: 90%
+   :alt: tbc
+   :align: right
+
+   **Figure 4.** the column contains a 17-member list of ``varint``
+   values.
+
+With arrays, the values must all be of the same encoding type.  The
+first ``varint`` to follow is a type specifier for the values,
+specified in exactly the same way as a column encoding; no offset
+should be specified.  For a multi-dimensional array, this may specify
+the *List<>* type again.  After the type comes a ``varuint``, which is
+the number of values expected.  The values appear directly afterwards.
+
+While it is not technically necessary, the ``pop`` column specifier is
+to be found at the end of the list of values.
+
+Encoding Tuples
+^^^^^^^^^^^^^^^
+
+.. figure:: ../files/tuple.png
+   :width: 50%
+   :figwidth: 90%
+   :alt: tbc
+   :align: right
+
+   **Figure 5.** the column contains the tuple (17, "X")
+
+Tuples are permitted where the type of a column is recorded as a
+record type in the store's ``meta`` columns (see MetaFormat_).  They
+are exactly the same thing as Postgres' compound types.
+
+Whenever a tuple is used as a type, the *Tuple<>* introduction column
+type appears, followed by more columns (numbered beginning with column
+0), followed by the ``pop`` column psuedo-type.
+
+Arrays of Tuples
+^^^^^^^^^^^^^^^^
+
+If the type of an array is *Tuple<>*, then a list of types is
+expected, terminated by a ``pop``.  If the list is empty, then each
+item in the array is a full (embedded) row, with each of its columns
+introduced with an encoding ``varint`` and a value, just like encoding
+a regular embedded Tuple.  If however there is a list of types, then
+this defines the list for each item in the entire array, and just the
+values can be listed.  This precludes individual items in the array
+having ``NULL`` values.
+
+For example, an array of (string, float) - able to encode a map from
+string keys to floating point values - can be encoded as:
+
+  *List<>* *Tuple<>* ``string`` ``float`` ``pop`` *N* *K*\
+  :subscript:`1` *V*\ :subscript:`1` ... *K*\ :subscript:`N` *V*\
+  :subscript:`N` ``pop``
+
+This represents a complete overhead of as few as 7 bytes for the map,
+with values encoded as directly as can be after that.
+
+If the tuples are not homogenous, then the list of types can be empty.
+One example of this is that some rows contain NULL for some data.
+Another is that row data is directly transferred from another source
+in this column without re-parsing.
+
+  *List<>* *Tuple<>* ``pop`` *N*
+
+  ``string`` *K*\ :subscript:`1` ``float`` *V*\
+  :subscript:`1` ``eor``
+
+  ``string`` *K*\ :subscript:`2` ``float`` *V*\
+  :subscript:`2` ``eor``
+
+  ``string`` *K*\ :subscript:`N` ``float`` *V*\
+  :subscript:`N` ``pop``
+
+
 
 Schema changes
 --------------
@@ -267,3 +383,9 @@ which no longer exist; cleaning this up is akin to a VACUUM operation.
 
 .. _TreeFormat:
    ./treeformat.html
+
+.. _Avro:
+   http://avro.apache.org/
+
+.. _MetaFormat:
+   ./metaformat.html

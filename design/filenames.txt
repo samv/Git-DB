@@ -30,20 +30,20 @@ various special characters escaped before it is used as filename.
 type name            example value       filename form
 ==================   ==================  ==================
 ``varint``           1234                ``1234``
-                     -1                  ``－1``
+\                    -1                  ``－1``
 ``float``            1.234               ``1.234``
-                     0.0                 ``0``
-                     10²³                ``1e+23``
+\                    0.0                 ``0``
+\                    10²³                ``1e+23``
 ``string``           "1234"              ``1234``
-                     "\0"                ``␀``
-                     "foo-bar"           ``foo－bar``
-                     "foo/bar"           ``foo／bar``
-                     "foo\\bar"          ``foo＼bar``
-                     "foo＼bar"          ``foo\＼bar``
+\                    "\0"                ``␀``
+\                    "foo-bar"           ``foo－bar``
+\                    "foo/bar"           ``foo／bar``
+\                    "foo\\bar"          ``foo＼bar``
+\                    "foo＼bar"          ``foo\＼bar``
 ``decimal``          1.20                ``1.2``
 ``rational``         123812/7            ``17687.42``
 ``bool``             true                ``t``
-                     false               ``f``
+\                    false               ``f``
 ==================   ==================  ==================
 
 The Row Filename refers to the result of the escaping, and all of the
@@ -169,10 +169,9 @@ above.
 
 The other two problems are harder to work around.  Really though, an
 implementation of this standard that works with a checkout is making
-life hard for itself.  The only real reason for doing so is
-implementations cobbled-together using raw git plumbing.  So, if doing
-this you might have to see how the plumbing you are using addresses
-this problem when dealing with source code.
+life hard for itself.  Being able to check out the store as a
+repository and look around at it is really intended more as a
+debugging tool.
 
 With the exception of omitted columns, the filenames are really just
 informational, and helping you find the actual data which will be
