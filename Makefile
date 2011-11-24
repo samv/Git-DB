@@ -1,6 +1,6 @@
 
 templates:
-	r2w.py
+	r2w
 
 check:
 	rsync --exclude .svn --exclude .git --exclude Makefile --exclude .publish* -ruav `cat .publish_target`/. .
