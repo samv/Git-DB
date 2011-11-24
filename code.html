@@ -1,67 +1,181 @@
-<html>
-  <head><title>git db - show me the code</title>
-<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
-<link type="text/css" rel="stylesheet" href="gitdb.css">
-
-  </head>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+    <title>show me the code</title>
+    <link rel="stylesheet" href="gitdb.css" type="text/css" />
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO8859-1" />
+    <meta name="description" content="gitdb - decentralized, replicating transactional store" />
+    <meta name="author" content="Sam Vilain" />
+    <meta name="copyright" content="&copy; 2009-2011 Sam Vilain" />
+    <meta name="keywords" content="gitdb, Git-DB, database, decentralized, transactional, ACID, git, avro, thrift, IDL, Protocol Buffers,
+    " />
+</head>
 <body>
-  <div id="sitelogo">	<a href="index.html">
-	  <img id="logo" src="files/gitdb-logo.png" border="0" />
-	  <div id="titlebox">
-	  <span id="site_title">git db</span>
-<span id="site_strapline">decentralized data storage in git</span>
-      	  </div>
-	</a>
+  <div id="sitelogo">
+    <a href="index.html">
+      <img id="logo" src="files/gitdb-logo.png" border="0" />
+      <div id="titlebox">
+        <span id="site_title">git db</span>
+        <span id="site_strapline">decentralized data storage in git</span>
+      </div>
+    </a>
+  </div>
 
-  </div><!-- id="sitelogo" -->
   <div id="navbar">
-<div class="menuItem">
-  <a href="index.html" class="menu">Home</a>
-</div>
+    <div class="menuItem">
+      <a href="design/index.html" class="menu">Design</a>
+    </div>
+    <div class="menuItem">
+      <a href="code.html" class="menu">Code</a>
+    </div>
+  <div id="breadcrumbs">
+    <ul>
+      <li><a href="index.html">Index</a></li>
+<li>&gt;</li>
+<li>show me the code</li>
 
-<div class="menuItem">
-  <a href="err/404.html" class="menu">Blog</a>
-</div>
-
-<div class="menuItem">
-  <a href="design.html" class="menu">Design</a>
-</div>
-
-<div class="menuItem">
-  <a href="code.html" class="menu">Code</a>
-</div>
-
-
-<div style="clear: both"></div>
-
+    </ul>
+  </div>
   </div><!-- id="navbar" -->
+
+
   <div id="body">
-
-  <h1 id="title">show me the code</h1>
-
-<p><h2>Perl Implementation Status</h2>
-<p>It's not entirely vapourware; see the below table.
-
-<pre>
-                        Spec   Code   Tested  See
-  1. Encodings:         done    yes    yes    lib/Git/DB/Encode.pm
-  2. Row Packaging:     done    yes    yes    lib/Git/DB/ColumnFormat.pm
-  3. Filename format:   done    yes    yes    lib/Git/DB/Filenames.pm
-  4. Filesystem:          -      -      -     various POD references
-  5. metamodel:        rev. 1    -      -     lib/Git/DB/Tables.pod
-  6. TX model:         started   -      -     lib/Git/DB/Tx.pm
-</pre>
-<p>See <a href="http://github.com/samv/Git-DB">Git-DB on github</a> for
-now.
-<p><h2>C Implementation Status</h2>
+    <div class="document" id="show-me-the-code">
+<h1 class="title">show me the code</h1>
+<p>This project is planned as something of an <a class="reference external" href="http://acmeism.org/">Acmeist</a> project, with
+implementations in several languages planned.</p>
+<div class="section" id="perl-implementation-status">
+<h1>Perl Implementation Status</h1>
+<p>The Perl implementation is mostly to sketch out the ideas.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="6%" />
+<col width="24%" />
+<col width="12%" />
+<col width="6%" />
+<col width="10%" />
+<col width="42%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Lvl</th>
+<th class="head">Name</th>
+<th class="head">Spec</th>
+<th class="head">Code</th>
+<th class="head">Tested</th>
+<th class="head">See</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td><ol class="first last arabic simple">
+<li></li>
+</ol>
+</td>
+<td>Encodings:</td>
+<td>done</td>
+<td>yes</td>
+<td>yes</td>
+<td>lib/Git/DB/Encode.pm</td>
+</tr>
+<tr><td><ol class="first last arabic simple" start="2">
+<li></li>
+</ol>
+</td>
+<td>Row Packaging:</td>
+<td>done</td>
+<td>yes</td>
+<td>yes</td>
+<td>lib/Git/DB/ColumnFormat.pm</td>
+</tr>
+<tr><td><ol class="first last arabic simple" start="3">
+<li></li>
+</ol>
+</td>
+<td>Filename format:</td>
+<td>done</td>
+<td>yes</td>
+<td>yes</td>
+<td>lib/Git/DB/Filenames.pm</td>
+</tr>
+<tr><td><ol class="first last arabic simple" start="4">
+<li></li>
+</ol>
+</td>
+<td>Filesystem:</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>various POD references</td>
+</tr>
+<tr><td><ol class="first last arabic simple" start="5">
+<li></li>
+</ol>
+</td>
+<td>metamodel:</td>
+<td>rev. 1</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>lib/Git/DB/Tables.pod</td>
+</tr>
+<tr><td><ol class="first last arabic simple" start="6">
+<li></li>
+</ol>
+</td>
+<td>TX model:</td>
+<td>started</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td><ul class="first last simple">
+<li></li>
+</ul>
+</td>
+<td>lib/Git/DB/Tx.pm</td>
+</tr>
+</tbody>
+</table>
+<p>See <a class="reference external" href="http://github.com/samv/Git-DB">Git-DB on github</a> for
+now.</p>
+</div>
+<div class="section" id="c-implementation-status">
+<h1>C Implementation Status</h1>
 <p>It is hoped that a C version can be completed in parallel, basing
-itself on <a href="http://github.com/libgit2/libgit2"><tt>libgit2</tt>
-</a> and therefore being a lot more portable, embeddable etc.
+itself on <a class="reference external" href="http://github.com/libgit2/libgit2">libgit2</a> and therefore being a lot more portable, embeddable
+etc.  This will be key for, eg, integrating with SQLite etc.</p>
+</div>
+<div class="section" id="javascript-status">
+<h1>Javascript Status</h1>
+<p>Not started.</p>
+</div>
+<div class="section" id="python-status">
+<h1>Python Status</h1>
+<p>This refers to the <a class="reference external" href="http://django-rest-framework.org/">Django REST framework</a> as well as a &quot;second pass&quot;
+of the Perl implementation in a more strict language/</p>
+</div>
+</div>
 
-  </div><!-- id="body" -->
-  <div id="footer">   <hr />
+  </div>
+
+  <div id="footer" style="clear: both">
+   <hr />
    <a href="copyright.html">copyright info</a> |
    <a href="map.html">site map</a>
+  </div>
 
-  </div><!-- id="footer" -->
 </body>
+</html>

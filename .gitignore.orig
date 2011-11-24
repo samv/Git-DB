@@ -1,0 +1,14 @@
+.publish_target
+*.html
+*.css
+*.php
+*.stamp
+*.rss
+*.atom
+/var
+<<<<<<< HEAD
+/log.txt
+=======
+log.txt
+>>>>>>> 8b5d7b2370c5227e71ea6cb824d295dc02109a9b
+*.pyc

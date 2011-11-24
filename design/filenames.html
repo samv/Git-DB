@@ -1,250 +1,318 @@
-<html>
-  <head><title>git db - Filenames: locating packed values</title>
-<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
-<link type="text/css" rel="stylesheet" href="../gitdb.css">
-
-  </head>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+    <title>Filenames: locating packed values</title>
+    <link rel="stylesheet" href="../gitdb.css" type="text/css" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="description" content="gitdb - decentralized, replicating transactional store" />
+    <meta name="author" content="Sam Vilain" />
+    <meta name="copyright" content="&copy; 2009-2011 Sam Vilain" />
+    <meta name="keywords" content="gitdb, Git-DB, database, decentralized, transactional, ACID, git, avro, thrift, IDL, Protocol Buffers,
+    " />
+</head>
 <body>
-  <div id="sitelogo">	<a href="../index.html">
-	  <img id="logo" src="../files/gitdb-logo.png" border="0" />
-	  <div id="titlebox">
-	  <span id="site_title">git db</span>
-<span id="site_strapline">decentralized data storage in git</span>
-      	  </div>
-	</a>
+  <div id="sitelogo">
+    <a href="../index.html">
+      <img id="logo" src="../files/gitdb-logo.png" border="0" />
+      <div id="titlebox">
+        <span id="site_title">git db</span>
+        <span id="site_strapline">decentralized data storage in git</span>
+      </div>
+    </a>
+  </div>
 
-  </div><!-- id="sitelogo" -->
   <div id="navbar">
-<div class="menuItem">
-  <a href="../index.html" class="menu">Home</a>
-</div>
+    <div class="menuItem">
+      <a href="../design/index.html" class="menu">Design</a>
+    </div>
+    <div class="menuItem">
+      <a href="../code.html" class="menu">Code</a>
+    </div>
+  <div id="breadcrumbs">
+    <ul>
+      <li><a href="../index.html">Index</a></li>
+<li>&gt;</li>
+<li><a href="index.html">Design</a></li>
+<li>&gt;</li>
+<li>Filenames: locating packed values</li>
 
-<div class="menuItem">
-  <a href="../err/404.html" class="menu">Blog</a>
-</div>
-
-<div class="menuItem">
-  <a href="../design.html" class="menu">Design</a>
-</div>
-
-<div class="menuItem">
-  <a href="../code.html" class="menu">Code</a>
-</div>
-
-
-<div style="clear: both"></div>
-
+    </ul>
+  </div>
   </div><!-- id="navbar" -->
+
+
   <div id="body">
-
-  <h1 id="title">Filenames: locating packed values</h1>
-
-<p>The filename standard is the first level of the <a
-href="../design/treeformat.html">TreeFormat</a>; it specifies
-an alternate encoding form based on traditional text value rendering.
-<p><h2>The Row Identifier</h2>
-<p>The <em>abstract</em> row identifier is the list of values which
-comprise its <i>primary key</i>; details on which attributes this
-refers to is described in the <a
-href="../design/meta.html">MetaFormat</a>.
+    <div class="document" id="filenames-locating-packed-values">
+<h1 class="title">Filenames: locating packed values</h1>
+<p>The filename standard is the first level of the
+<a class="reference external" href="./treeformat.html">TreeFormat</a>; it specifies
+an alternate encoding form based on traditional text value rendering.</p>
+<div class="section" id="the-row-identifier">
+<h1>The Row Identifier</h1>
+<p>The <em>abstract</em> row identifier is the list of values which comprise its
+<em>primary key</em>; details on which attributes this refers to is described
+in the <a class="reference external" href="./meta.html">MetaFormat</a>.</p>
 <p>The <em>row identifier filename</em> is a utf-8 string constructed as
 follows.  First a basic standard printing of the values happens.  The
 details depend on the type, but are all relatively well known and
-standard representations; <cite>sprintf(3)</cite> and
-<cite>sscanf(3)</cite> should be sufficient here.  The characteristics
-of functions used for each of these uses is given in the <a
-href="../design/meta.html#types">types catalog</a>.  The
-resulting value has various special characters escaped before it is
-used as filename.
-<p><table border="1">
-  <thead>
-    <tr>
-      <th>type name</th>
-      <th>eg value</th>
-      <th>filename form</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr><td rowspan="2"><tt>varint</tt></td><td>1234</td><td><tt>1234</tt></td>
-    <tr><td>-1</td><td><tt>－1</tt></td>
-    <tr><td rowspan="3"><tt>float</tt></td><td>1.234</td><td><tt>1.234</tt></td>
-    <tr><td>0.0</td><td><tt>0</tt></td>
-    <tr><td>10²³</td><td><tt>1e+23</tt></td>
-    <tr><td rowspan="6"><tt>string</tt></td><td>"1234"</td><td><tt>1234</tt></td>
-    <tr><td>"\0"</td><td><tt>␀</tt></td>
-    <tr><td>"foo-bar"</td><td><tt>foo&#xff0d;bar</tt></td>
-    <tr><td>"foo/bar"</td><td><tt>foo&#xff0f;bar</tt></td>
-    <tr><td>"foo\\bar"</td><td><tt>foo&#xff3c;bar</tt></td>
-    <tr><td>"foo&#xff3c;bar"</td><td><tt>foo\&#xff3c;bar</tt></td>
-    <tr><td rowspan="1"><tt>decimal</tt></td><td>1.20</td><td><tt>1.2</tt></td>
-    <tr><td rowspan="1"><tt>rational</tt></td><td>123812/7</td><td><tt>17687.42</tt></td>
-    <tr><td rowspan="2"><tt>bool</tt></td><td>true</td><td><tt>t</tt></td>
-    <tr><td>false</td><td><tt>f</tt></td>
-  </tbody>
+standard representations; <cite>sprintf(3)</cite> and <cite>sscanf(3)</cite> should be
+sufficient here.  The characteristics of functions used for each of
+these uses is given in the <a class="reference external" href="./meta.html#types">types catalog</a>.  The resulting value has
+various special characters escaped before it is used as filename.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">type name</th>
+<th class="head">example value</th>
+<th class="head">filename form</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td><tt class="docutils literal">varint</tt></td>
+<td>1234</td>
+<td><tt class="docutils literal">1234</tt></td>
+</tr>
+<tr><td></td>
+<td>-1</td>
+<td><tt class="docutils literal">－1</tt></td>
+</tr>
+<tr><td><tt class="docutils literal">float</tt></td>
+<td>1.234</td>
+<td><tt class="docutils literal">1.234</tt></td>
+</tr>
+<tr><td></td>
+<td>0.0</td>
+<td><tt class="docutils literal">0</tt></td>
+</tr>
+<tr><td></td>
+<td>10²³</td>
+<td><tt class="docutils literal">1e+23</tt></td>
+</tr>
+<tr><td><tt class="docutils literal">string</tt></td>
+<td>&quot;1234&quot;</td>
+<td><tt class="docutils literal">1234</tt></td>
+</tr>
+<tr><td></td>
+<td>&quot;0&quot;</td>
+<td><tt class="docutils literal">␀</tt></td>
+</tr>
+<tr><td></td>
+<td>&quot;foo-bar&quot;</td>
+<td><tt class="docutils literal">foo－bar</tt></td>
+</tr>
+<tr><td></td>
+<td>&quot;foo/bar&quot;</td>
+<td><tt class="docutils literal">foo／bar</tt></td>
+</tr>
+<tr><td></td>
+<td>&quot;foo\bar&quot;</td>
+<td><tt class="docutils literal">foo＼bar</tt></td>
+</tr>
+<tr><td></td>
+<td>&quot;foo＼bar&quot;</td>
+<td><tt class="docutils literal"><span class="pre">foo\＼bar</span></tt></td>
+</tr>
+<tr><td><tt class="docutils literal">decimal</tt></td>
+<td>1.20</td>
+<td><tt class="docutils literal">1.2</tt></td>
+</tr>
+<tr><td><tt class="docutils literal">rational</tt></td>
+<td>123812/7</td>
+<td><tt class="docutils literal">17687.42</tt></td>
+</tr>
+<tr><td><tt class="docutils literal">bool</tt></td>
+<td>true</td>
+<td><tt class="docutils literal">t</tt></td>
+</tr>
+<tr><td></td>
+<td>false</td>
+<td><tt class="docutils literal">f</tt></td>
+</tr>
+</tbody>
 </table>
 <p>The Row Filename refers to the result of the escaping, and all of the
-string values and joining the lot together with commas.
-<p><h2>Escaping Rules</h2>
+string values and joining the lot together with commas.</p>
+</div>
+<div class="section" id="escaping-rules">
+<h1>Escaping Rules</h1>
 <p>These rules apply to marshalling out all values, however they only
 really affect text strings and the unary '-' which may appear in a
-numbers (eg, twice in the value <tt>-5.6e-15</tt>);
-<p><ol>
-<p><li>Any reserved or otherwise problematic ASCII punctuation character
+numbers (eg, twice in the value <tt class="docutils literal"><span class="pre">-5.6e-15</span></tt>);</p>
+<ol class="arabic">
+<li><p class="first">Any reserved or otherwise problematic ASCII punctuation character
 is converted to its fullwidth form, by adding 0xFEE0 to their
 codepoint value.  This list of characters minimally includes the
-colon, the comma, and the ASCII whorlygig characters:
-
-<pre>- \ | / : ,</pre>
-<p>On marshall in, <em>all</em> of the characters in the full-width plane
-are always converted back to their ASCII versions, by subtracting
-0xFEE0 from their codepoint value.
+colon, the comma, and the ASCII whorlygig characters:</p>
+<!-- beware of the Ohm: -->
+<!--  -->
+<blockquote>
+<ul class="simple">
+<li>| / : ,</li>
+</ul>
+</blockquote>
+<p>On marshall in, <em>all</em> of the characters in the full-width plane are
+always converted back to their ASCII versions, by subtracting
+0xFEE0 from their codepoint value.</p>
 <p>If a particular implementation is restricted further, it may escape
-more than these core characters, but this is not required.
-<p><li>ASCII control characters are converted to their Unicode page 0x24
-equivalents, by adding 0x2400 to their codepoint value.  On marshall
-in, the reverse transform is applied.
-<p><li>One outlier (\177 or U+007F, the delete character) fits neither
-rules, because the appropriate Unicode escape character is in an odd
-place.  Instead that one gets replaced with U+2421.
-<p><li>All characters which could be interpreted as substitution escapes
-as per the above rules can be escaped by a fall-back escaping rule.
-Two characters may be used, one of which is the regular backblash
-(U+002F REVERSE SOLIDUS), and the other another unicode backslash
-character.  Again, for those implementations for which a real
-backslash is problematic, the is a Unicode alternative, U+244A.</ol>
-<p><table border="1">
-  <thead>
-    <tr>
-      <th>Rule</th>
-      <th>Range name</th>
-      <th>examples</th>
-      <th>input range</th>
-      <th>output format</th>
-      <th>output range</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>1</td>
-      <td>ASCII punctuation</td>
-      <td><tt>, / | \ - :</tt></td>
-      <td>U+0020-U+007E</td>
-      <td><tt>，／｜＼－：</tt></td>
-      <td>U+FF00-U+FF5E</td>
-    </tr>
-    <tr>
-      <td>2</td>
-      <td>ASCII control</td>
-      <td>(not printable)</td>
-      <td>U+0000-U+001F</td>
-      <td><tt>␀, ␇, ␈</tt> etc</td>
-      <td>U+2400-U+241F</td>
-    </tr>
-    <tr>
-      <td>3</td>
-      <td>ASCII delete</td>
-      <td>(unprintable)</td>
-      <td>U+007F</td>
-      <td><tt>␡</tt></td>
-      <td>U+2421</td>
-    </tr>
-    <tr>
-      <td rowspan="3">4</td>
-      <td>Fullwidth forms</td>
-      <td><tt>，／｜＼－：</tt></td>
-      <td>U+FF00-U+FF5F</td>
-      <td><tt>\， \／ \｜ \＼ \－ \：</tt><br />
-        or <tt>⑊， ⑊／ ⑊｜ ⑊＼ ⑊－ ⑊：</tt></td>
-      <td>U+002F, original char<br />
-        or U+244A, original char
-        </td>
-    </tr>
-    <tr>
-      <td>ASCII control representations</td>
-      <td><tt>␀, ␇, ␈</tt> etc</td>
-      <td>U+2400-U+2421</td>
-      <td><tt>\␀ \␇ \␈</tt><br />
-        or <tt>⑊␀ ⑊␇ ⑊␈</tt>
-      </td>
-      <td>U+002F, char<br />
-        or U+244A, char
-        </td>
-    </tr>
-    <tr>
-      <td>unicode escape character</td>
-      <td><tt>⑊</tt></td>
-      <td>U+244A</td>
-      <td><tt>\⑊</tt><br/>
-        or <tt>⑊⑊</tt></td>
-      <td>U+002F, U+244A<br />
-        or U+244A, U+244A</td>
-    </tr>
-  </tbody>
+more than these core characters, but this is not required.</p>
+</li>
+<li><p class="first">ASCII control characters are converted to their Unicode page 0x24
+equivalents, by adding 0x2400 to their codepoint value.  On
+marshall in, the reverse transform is applied.</p>
+</li>
+<li><p class="first">One outlier (177 or U+007F, the delete character) fits neither
+rules, because the appropriate Unicode escape character is in an
+odd place.  Instead that one gets replaced with U+2421.</p>
+</li>
+<li><p class="first">All characters which could be interpreted as substitution escapes
+as per the above rules can be escaped by a fall-back escaping
+rule. Two characters may be used, one of which is the regular
+backblash (<tt class="docutils literal">U+002F REVERSE SOLIDUS</tt>), and the other another
+unicode backslash character.  Again, for those implementations for
+which a real backslash is problematic, the is a Unicode
+alternative, U+244A.</p>
+</li>
+</ol>
+<table border="1" class="docutils">
+<colgroup>
+<col width="17%" />
+<col width="17%" />
+<col width="17%" />
+<col width="17%" />
+<col width="17%" />
+<col width="17%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Rule</th>
+<th class="head">Range name</th>
+<th class="head">examples</th>
+<th class="head">input range</th>
+<th class="head">output format</th>
+<th class="head">output range</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>1</td>
+<td>ASCII punctuation</td>
+<td><tt class="docutils literal">, / | \ - :</tt></td>
+<td>U+0020-U+007E</td>
+<td><tt class="docutils literal"><span class="pre">，／｜＼－：</span></tt></td>
+<td>U+FF00-U+FF5E</td>
+</tr>
+<tr><td>2</td>
+<td>ASCII control</td>
+<td>(not printable)</td>
+<td>U+0000-U+001F</td>
+<td><tt class="docutils literal">␀, ␇, ␈</tt> etc</td>
+<td>U+2400-U+241F</td>
+</tr>
+<tr><td>3</td>
+<td>ASCII delete</td>
+<td>(unprintable)</td>
+<td>U+007F</td>
+<td><tt class="docutils literal">␡</tt></td>
+<td>U+2421</td>
+</tr>
+<tr><td>4a</td>
+<td>Fullwidth forms</td>
+<td><tt class="docutils literal"><span class="pre">，／｜＼－：</span></tt></td>
+<td>U+FF00-U+FF5F</td>
+<td><tt class="docutils literal">\， \／ \｜ \＼ \－ \：</tt>
+or <tt class="docutils literal">⑊， ⑊／ ⑊｜ ⑊＼ ⑊－ ⑊：</tt></td>
+<td>U+002F, original char
+or U+244A, original char</td>
+</tr>
+<tr><td>4b</td>
+<td>ASCII control representations</td>
+<td><tt class="docutils literal">␀, ␇, ␈</tt> etc</td>
+<td>U+2400-U+2421</td>
+<td><tt class="docutils literal">\␀ \␇ \␈</tt>
+or <tt class="docutils literal">⑊␀ ⑊␇ ⑊␈</tt></td>
+<td><dl class="first last docutils">
+<dt>U+002F, char</dt>
+<dd>or U+244A, char</dd>
+</dl>
+</td>
+</tr>
+<tr><td>4c</td>
+<td>unicode escape character</td>
+<td><tt class="docutils literal">⑊</tt></td>
+<td>U+244A</td>
+<td><tt class="docutils literal">\⑊</tt> or <tt class="docutils literal">⑊⑊</tt></td>
+<td>U+002F, U+244A or U+244A, U+244A</td>
+</tr>
+</tbody>
 </table>
-<p><h2>Checkouts on non-UNIX and MacOS filesystems</h2>
+</div>
+<div class="section" id="checkouts-on-non-unix-and-macos-filesystems">
+<h1>Checkouts on non-UNIX and MacOS filesystems</h1>
 <p>There are a number of issues with using 'git checkout' of the contents
-of a git db repository on various filesystems;
-<p><ul>
-<p><li>On <em>case-insensitive filesystems</em>, such as FAT, NTFS and
-  Mac's HFS, when there are two keys which differ only in case and end
-  up in the same directory.  Eg, one file called "<tt>Bob</tt>" and
-  one called "<tt>bob</tt>".</li>
-<p><li>On filesystems that <em>fold</em> either case or unicode
-  normalization forms.  For instance, when the program tries to write
-  a file called "<tt>bob</tt>", but the file created is later shown as
-  "<tt>BOB</tt>".  The unicode normalization issue is similar but less
-  well known; it is where a filename is written such as
-  "<tt>Ma</tt><var>&lt;U+304&gt;</var><tt>ori</tt>" (NKD -
-  decomposed), but when later read back is returned as
-  "<tt>M</tt><var>&lt;U+101&gt;</var><tt>ori</tt>" (NKC -
-  composed).</li>
-<p><li>On filesystems which <em>prohibit characters</em>.  On most UNIX
-  systems the list of prohibited characters is very short.  For
-  instance, just the NUL character and "<tt>/</tt>", the directory
-  separator.</li>
-<p></ul>
+of a git db repository on various filesystems;</p>
+<ol class="lowerroman simple">
+<li>On <em>case-insensitive filesystems</em>, such as FAT, NTFS and Mac's HFS
+(sometimes), when there are two keys which differ only in case and
+end up in the same directory.  Eg, one file called &quot;<tt class="docutils literal">Bob</tt>&quot; and
+one called &quot;<tt class="docutils literal">bob</tt>&quot;.</li>
+<li>On filesystems that <em>fold</em> either case or unicode normalization
+forms.  For instance, when the program tries to write a file
+called &quot;<tt class="docutils literal">bob</tt>&quot;, but the file created is later shown as
+&quot;<tt class="docutils literal">BOB</tt>&quot;.  The unicode normalization issue is similar but less
+well known; it is where a filename is written such as &quot;<tt class="docutils literal">Ma</tt><em>&lt;U+304&gt;</em><tt class="docutils literal">ori</tt>&quot; (NKD - decomposed), but when later read back
+is returned as &quot;<tt class="docutils literal">M</tt><em>&lt;U+101&gt;</em><tt class="docutils literal">ori</tt>&quot; (NKC - composed).&lt;/li&gt;</li>
+<li>On filesystems which <em>prohibit characters</em>.  On most UNIX systems
+the list of prohibited characters is very short.  For instance,
+just the NUL character and &quot;<tt class="docutils literal">/</tt>&quot;, the directory separator.</li>
+</ol>
 <p>Of these problems, the prohibited characters case is easily solved; so
 long as unicode is allowed in filenames, they can be escaped as per
-above.
+above.</p>
 <p>The other two problems are harder to work around.  Really though, an
 implementation of this standard that works with a checkout is making
-life hard for itself.  The only real reason for doing so is
-implementations cobbled-together using raw git plumbing.  So, if doing
-this you might have to see how the plumbing you are using addresses
-this problem when dealing with source code.
+life hard for itself.  Being able to check out the store as a
+repository and look around at it is really intended more as a
+debugging tool.</p>
 <p>With the exception of omitted columns, the filenames are really just
 informational, and helping you find the actual data which will be
 inside the blobs they refer to.  So, the other workaround for systems
-like this is to full scan when in doubt.  It's slower, but it works.
-<p><h2>Ranges</h2>
+like this is to full scan when in doubt.  It's slower, but it works.</p>
+</div>
+<div class="section" id="ranges">
+<h1>Ranges</h1>
 <p>If a range of values is required to be specified, these are separated
-by a "-"; ranges can cover multiple columns, eg
-
-<pre>
-  1,1-5,50
-  5,52-9,2
-</pre>
+by a <tt class="docutils literal">-</tt>; ranges can cover multiple columns, eg</p>
+<!--  -->
+<blockquote>
+1,1-5,50
+5,52-9,2</blockquote>
 <p>Ranges may appear when using paged rows, or breaking up large
-directories.  See the <a
-href="../design/treeformat.html"]>TreeFormat</a> for more
-information.
-<p><h2>Sorting and Collation</h2>
+directories.  See the <a class="reference external" href="./treeformat.html">TreeFormat</a> for more information.</p>
+</div>
+<div class="section" id="sorting-and-collation">
+<h1>Sorting and Collation</h1>
 <p>Filenames are always sorted using the natural sort order of the
 primary key, key by key.  This means that all tables are stored in
 primary key order.  If you don't like that, key using a hash function,
 UUID or some other surrogate (even a sequence) as a primary key and
-ignore the 'real' primary key in your application.
+ignore the 'real' primary key in your application.</p>
 <p>Initially all text string sorting and collation must be performed in
 the C locale; future versions or types will address this problem in a
-locale-aware fashion.
+locale-aware fashion.</p>
 <p>Sorting for numeric types will be by the decimal version of the
-number, ie the value.  Strings will be sorted by the
-<em>unescaped</em> form.
+number, ie the value.  Strings will be sorted by the <em>unescaped</em> form.</p>
+</div>
+</div>
 
-  </div><!-- id="body" -->
-  <div id="footer">   <hr />
+  </div>
+
+  <div id="footer" style="clear: both">
+   <hr />
    <a href="../copyright.html">copyright info</a> |
    <a href="../map.html">site map</a>
+  </div>
 
-  </div><!-- id="footer" -->
 </body>
+</html>

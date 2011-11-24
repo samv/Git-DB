@@ -1,150 +1,174 @@
-<html>
-  <head><title>git db - Distribution: sharing data</title>
-<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
-<link type="text/css" rel="stylesheet" href="../gitdb.css">
-
-  </head>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+    <title>Distribution: sharing data</title>
+    <link rel="stylesheet" href="../gitdb.css" type="text/css" />
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO8859-1" />
+    <meta name="description" content="gitdb - decentralized, replicating transactional store" />
+    <meta name="author" content="Sam Vilain" />
+    <meta name="copyright" content="&copy; 2009-2011 Sam Vilain" />
+    <meta name="keywords" content="gitdb, Git-DB, database, decentralized, transactional, ACID, git, avro, thrift, IDL, Protocol Buffers,
+    " />
+</head>
 <body>
-  <div id="sitelogo">	<a href="../index.html">
-	  <img id="logo" src="../files/gitdb-logo.png" border="0" />
-	  <div id="titlebox">
-	  <span id="site_title">git db</span>
-<span id="site_strapline">decentralized data storage in git</span>
-      	  </div>
-	</a>
+  <div id="sitelogo">
+    <a href="../index.html">
+      <img id="logo" src="../files/gitdb-logo.png" border="0" />
+      <div id="titlebox">
+        <span id="site_title">git db</span>
+        <span id="site_strapline">decentralized data storage in git</span>
+      </div>
+    </a>
+  </div>
 
-  </div><!-- id="sitelogo" -->
   <div id="navbar">
-<div class="menuItem">
-  <a href="../index.html" class="menu">Home</a>
-</div>
+    <div class="menuItem">
+      <a href="../design/index.html" class="menu">Design</a>
+    </div>
+    <div class="menuItem">
+      <a href="../code.html" class="menu">Code</a>
+    </div>
+  <div id="breadcrumbs">
+    <ul>
+      <li><a href="../index.html">Index</a></li>
+<li>&gt;</li>
+<li><a href="index.html">Design</a></li>
+<li>&gt;</li>
+<li>Distribution: sharing data</li>
 
-<div class="menuItem">
-  <a href="../err/404.html" class="menu">Blog</a>
-</div>
-
-<div class="menuItem">
-  <a href="../design.html" class="menu">Design</a>
-</div>
-
-<div class="menuItem">
-  <a href="../code.html" class="menu">Code</a>
-</div>
-
-
-<div style="clear: both"></div>
-
+    </ul>
+  </div>
   </div><!-- id="navbar" -->
+
+
   <div id="body">
-
-  <h1 id="title">Distribution: sharing data</h1>
-
+    <div class="document" id="distribution-sharing-data">
+<h1 class="title">Distribution: sharing data</h1>
 <p>Disclaimer: a lot of the information on this page is the result of the
 author's own knowledge and experience and should currently be counted
-as expert opinion grade but not yet proven or formally described.
-<p><h2>git db replication</h2>
+as expert opinion grade but not yet proven or formally described.</p>
+<div class="section" id="git-db-replication">
+<h1>git db replication</h1>
 <p>git db as a standard is relatively neutral to how the data is shared.
 Actually, git itself solves a number of the mechanical aspect of
 distribution problems.  The question frequently becomes, which version
-is considered the "master"?
+is considered the &quot;master&quot;?</p>
 <p>The answer to this depends a lot on what the objectives of the program
 are.  There are problems which distributing may help solve, such as
 scaling to truly massive sets of data, extra computing power to
 service a lot of requests, or resilience in the face of disasters.
 There are compromises to be made, such as whether results must be
-guaranteed or whether a "best effort" approach is acceptable.
+guaranteed or whether a &quot;best effort&quot; approach is acceptable.</p>
 <p>The CAP theorem describes these trade-offs; sacrificing Consistency to
 allow tolerance to network Partitions and supply high Availability -
-BASE systems fall into this category - or whether Consistency (the "C"
+BASE systems fall into this category - or whether Consistency (the &quot;C&quot;
 in ACID) must be maintained, at the expense of either Availability
 (distributed systems which shut down when there is a partition), or
 tolerance to network Partitions (implying that systems must all be on
-the same network).
+the same network).</p>
 <p>The git db should support all of these styles of replication, through
-<i>configuration</i> - not necessarily settings in a config file or
-dialog box, but how the application is configured to use which
-facility of the git db.  Mixed modes are possible, but in general more
-restrictive systems will not be able to share information with less
-restrictive systems.
-<p><h3>Single Master Replication</h3>
+<em>configuration</em> - not necessarily settings in a config file or dialog
+box, but how the application is configured to use which facility of
+the git db.  Mixed modes are possible, but in general more restrictive
+systems will not be able to share information with less restrictive
+systems.</p>
+</div>
+<div class="section" id="single-master-replication">
+<h1>Single Master Replication</h1>
 <p>In this mode, there is a single node which is the only one allowed to
-do updates.
-<p>An example of application here is "decentralised social networks";
+do updates.</p>
+<p>An example of application here is &quot;decentralised social networks&quot;;
 holding the databases that people collaboratively edit with each
 other, be it a friends list or a photo collection catalogue.  Yet,
 many other nodes have an interest in receiving the information.  Each
 person is the master of their own database, and everyone else's
 versions are comments or suggestions and are not automatically
-promoted to be the master.
+promoted to be the master.</p>
 <p>This is the easiest mode to support; assuming that the single node for
-updates does not change, there are no conflicts to resolve.
+updates does not change, there are no conflicts to resolve.</p>
 <p>This case matches the majority of traditional replication systems out
-there.
-<p><h3>Strict Multi-Master Replication</h3>
+there.</p>
+</div>
+<div class="section" id="strict-multi-master-replication">
+<h1>Strict Multi-Master Replication</h1>
 <p>This mode of replication is appropriate for systems where the list of
 changes going into the system are known accurately, and there must be
-no conflicting answers.
+no conflicting answers.</p>
 <p>In this case, the nodes must always return the same result and be
 Consistent.  Overall, the system must behave as an ACID system;
 transactions must be able to be applied serially and obtain equivalent
 results.  To achieve this, a system called 2 Phase Commit is generally
-employed, where commits which are "ready" to apply are voted on by
+employed, where commits which are &quot;ready&quot; to apply are voted on by
 participating nodes and the real result moves forward once there is
-agreement.
+agreement.</p>
 <p>The system may provide geographical dispersion guarantees on returned
 answers, limiting performance but making the system very robust to
-localized disasters.  Non-repudiating systems may take this form.
+localized disasters.  Non-repudiating systems may take this form.</p>
 <p>Examples of systems that work like this are clustered ACID databases
 (eg Oracle) and the transaction support in earlier versions of
-CouchDB.
-<p><h3>Lax Multi-Master Replication</h3>
+CouchDB.</p>
+</div>
+<div class="section" id="lax-multi-master-replication">
+<h1>Lax Multi-Master Replication</h1>
 <p>This mode of replication is similar to Multi-Master, but several
 requirements are relaxed.  It is assumed that any two conflicting
-updates can be resolved - called "eventual consistency" (the E in the
-bacronym BASE).  More than one node may produce valid updates.
+updates can be resolved - called &quot;eventual consistency&quot; (the E in the
+bacronym BASE).  More than one node may produce valid updates.</p>
 <p>This approach matches the replication approach of many
 stored-procedure based database replication systems, such as Bucardo.
-Also, current versions of CouchDB.
-<p><h3>Democratic Computing</h3>
+Also, current versions of CouchDB.</p>
+</div>
+<div class="section" id="democratic-computing">
+<h1>Democratic Computing</h1>
 <p>This is the proposed label for a cluster of multi-master nodes, where
 no node is trusted fully but every node is trusted equally; a voting
 system is used to resolve possible conflicts and auditing is possible.
 Additionally, it may be possible to relax strict requirements about
 knowing the input requests - answers to these questions should be
-available once more research is completed.
-<p><h3>Partitioning of Data</h3>
-<p>The system of <a href="link('design/treeformat.tt')#division">dividing
-tables</a> can be used to take large sets of data and partition them
-in either custom ways when using a primary key, or randomly when using
-a UUID or a hash for the primary key.
+available once more research is completed.</p>
+</div>
+<div class="section" id="partitioning-of-data">
+<h1>Partitioning of Data</h1>
+<p>The system of <a class="reference external" href="./treeformat.html">dividing tables</a> can be used to take large sets of
+data and partition them in either custom ways when using a primary
+key, or randomly when using a UUID or a hash for the primary key.</p>
 <p>As the full data set is not required when computing results involving
 the partitioned chunks - just the SHA1 sums - nodes with incomplete
 information can compute some limited results as if they had the full
-set.
-<p><h3>Distributed Result Processing using Map/Reduce</h3>
+set.</p>
+</div>
+<div class="section" id="distributed-result-processing-using-map-reduce">
+<h1>Distributed Result Processing using Map/Reduce</h1>
 <p>Map/Reduce is where a problem is chunked up into parts, and then
-farmed out to many nodes, which all compute a part calculation ("map")
-and then the result is condensed into a result ("reduce").
+farmed out to many nodes, which all compute a part calculation (&quot;map&quot;)
+and then the result is condensed into a result (&quot;reduce&quot;).</p>
 <p>In the framework of git db, there are many facilities to allow this to
 occur.  The commit id represents a known, immutable database state and
 already solves many of the problems encountered by mutable state
 systems.  Nodes can process their result in terms of that commit ID,
 allowing for what are effectively long-running transactions.  Update
 jobs could potentially work incrementally at little extra incurred
-cost.
-<p><h3>Sharding</h3>
-<p>Sharding is another form of scaling, for very large data sets.
+cost.</p>
+</div>
+<div class="section" id="sharding">
+<h1>Sharding</h1>
+<p>Sharding is another form of scaling, for very large data sets.</p>
 <p>Implementing this in git db will require backing the actual object
-storage layer to a distributed system, not simple local git.
+storage layer to a distributed system, not simple local git.</p>
 <p>However once this infrastructure is available, the partitioning
 facility described above goes hand-in-hand with sharding.  Nodes can
 be masters of their own shard, and hand the condensed summary SHA1 to
-other nodes for their results.
+other nodes for their results.</p>
+</div>
+</div>
 
-  </div><!-- id="body" -->
-  <div id="footer">   <hr />
+  </div>
+
+  <div id="footer" style="clear: both">
+   <hr />
    <a href="../copyright.html">copyright info</a> |
    <a href="../map.html">site map</a>
+  </div>
 
-  </div><!-- id="footer" -->
 </body>
+</html>

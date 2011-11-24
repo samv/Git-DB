@@ -1,278 +1,373 @@
-<html>
-  <head><title>git db - ColumnFormat: value packing</title>
-<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
-<link type="text/css" rel="stylesheet" href="../gitdb.css">
-
-  </head>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+    <title>ColumnFormat: value packing</title>
+    <link rel="stylesheet" href="../gitdb.css" type="text/css" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="description" content="gitdb - decentralized, replicating transactional store" />
+    <meta name="author" content="Sam Vilain" />
+    <meta name="copyright" content="&copy; 2009-2011 Sam Vilain" />
+    <meta name="keywords" content="gitdb, Git-DB, database, decentralized, transactional, ACID, git, avro, thrift, IDL, Protocol Buffers,
+    " />
+</head>
 <body>
-  <div id="sitelogo">	<a href="../index.html">
-	  <img id="logo" src="../files/gitdb-logo.png" border="0" />
-	  <div id="titlebox">
-	  <span id="site_title">git db</span>
-<span id="site_strapline">decentralized data storage in git</span>
-      	  </div>
-	</a>
+  <div id="sitelogo">
+    <a href="../index.html">
+      <img id="logo" src="../files/gitdb-logo.png" border="0" />
+      <div id="titlebox">
+        <span id="site_title">git db</span>
+        <span id="site_strapline">decentralized data storage in git</span>
+      </div>
+    </a>
+  </div>
 
-  </div><!-- id="sitelogo" -->
   <div id="navbar">
-<div class="menuItem">
-  <a href="../index.html" class="menu">Home</a>
-</div>
+    <div class="menuItem">
+      <a href="../design/index.html" class="menu">Design</a>
+    </div>
+    <div class="menuItem">
+      <a href="../code.html" class="menu">Code</a>
+    </div>
+  <div id="breadcrumbs">
+    <ul>
+      <li><a href="../index.html">Index</a></li>
+<li>&gt;</li>
+<li><a href="index.html">Design</a></li>
+<li>&gt;</li>
+<li>ColumnFormat: value packing</li>
 
-<div class="menuItem">
-  <a href="../err/404.html" class="menu">Blog</a>
-</div>
-
-<div class="menuItem">
-  <a href="../design.html" class="menu">Design</a>
-</div>
-
-<div class="menuItem">
-  <a href="../code.html" class="menu">Code</a>
-</div>
-
-
-<div style="clear: both"></div>
-
+    </ul>
+  </div>
   </div><!-- id="navbar" -->
+
+
   <div id="body">
-
-  <h1 id="title">ColumnFormat: value packing</h1>
-
-<p><h2>Column Format Basics</h2>
-<p>The basic idea is taken from Google's ProtocolBuffers.  Columns are
-indexed by number, starting from 0.  Each column in the row is
+    <div class="document" id="columnformat-value-packing">
+<h1 class="title">ColumnFormat: value packing</h1>
+<div class="section" id="column-format-basics">
+<h1>Column Format Basics</h1>
+<p>The basic idea is taken from Google's <a class="reference external" href="http://code.google.com/p/protobuf/">Protocol Buffers</a>.  Columns
+are indexed by number, starting from 0.  Each column in the row is
 introduced with a variable-length signed integer, encoded as per the
-<a href="../design/encoding.html">Encoding rules</a>, encoding
-the column number and the encoding type of the value which follows.
+<a class="reference external" href="./encoding.html">Encoding rules</a>, encoding the column number and the encoding type of
+the value which follows.</p>
 <p>The lowest four bits of this number are interpreted as an enumerated
 type indicator for the value which follows; this is enough to scan the
 row into columns without a schema, though not enough to interpret the
-values fully.
+values fully.</p>
 <p>The remaining top bits of the decoded integer indicate the column
 number.  This is a relative number added to the next expected column.
 The number is relative to avoid two-byte sequences as much as
 possible, leave more room for type bits in the normal case and to
-hopefully improve compression ratios over absolute column numbering.
-<p><div style="text-align: center; width: 85%; padding: 0.5em">
-  <img src="../files/columnformat.png" alt="diagram showing binary representation of a two-column row"  style="width: 50em; padding: 0.3em" /><br />
-  <i><b>Figure 1.</b> an example byte sequence, encoding (42,
-    "42")</i>
+hopefully improve compression ratios over absolute column numbering.</p>
+<div class="figure align-center" style="width: 80%">
+<img alt="diagram showing binary representation of a two-column row" src="../files/columnformat.png" style="width: 85%;" />
+<p class="caption"><strong>Figure 1.</strong> an example byte sequence, encoding <tt class="docutils literal">(42, &quot;42&quot;)</tt></p>
 </div>
 <p>The column offset must be added to the next expected column.  If this
 is '0' then it means that the column which appears is the next column.
 A number such as '2' means that there were two NULL columns (or
 columns dropped before this row was written) in between the last
-column read and this one.
+column read and this one.</p>
 <p>A negative number means that the columns are appearing out of order;
 for example, the primary key was not set to the first defined columns
 in the original schema.  These situations should be rare and hopefully
 may be excluded by some implementations and remain generally
-interoperable.
+interoperable.</p>
 <p>A completely different, more human readable encoding is used for
 converting primary key column values to filenames for referring to
-them.  This is described in the next level, <a
-href="../design/filenames.html">Filenames</a>.
-<p><h2>Column types</h2>
+them.  This is described in the next level, <a class="reference external" href="./filenames.html">Filenames</a>.</p>
+</div>
+<div class="section" id="column-types">
+<h1>Column types</h1>
 <p>The meaning of the 4-bit type field is given below.  Some of these
-come from ProtocolBuffer.
-<p>As the standard is still in early RFC stage, less important encoding
-types are encoded in <span style="color: grey">grey</span>; if the
-important types can be reduced to 8 or fewer then the width of the
-type field could be reduced to 3 as in ProtocolBuffers, but it is
-thought that the current split allows for good extensibility and is
-well huffmanized as it is.
-<p><table>
-  <thead>
-    <tr>
-      <th>type bits</th>
-      <th>ASCII</th>
-      <th>type name</th>
-      <th>description</th>
-      <th>follows</th>
-      <th>formulae (Numerics)</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>0000</td>
-      <td><span style="font-size: x-large">&#x2400;</span></td>
-      <td><tt>varint</tt></td>
-      <td>Integer</td>
-      <td><tt>varint</tt> <var>N</var></td>
-      <td><var>N</var></td>
-    </tr>
-    <tr>
-      <td>0001</td>
-      <td><span style="font-size: x-large">&#x2401;</span></td>
-      <td><tt>float</tt></td>
-      <td>Floating Point</td>
-      <td><tt>varint</tt> <var>E</var>, <var>M</var></td>
-      <td><var><var>M</var>&nbsp;×&nbsp;2<sup><var>E</var></sup></var></td>
-    </tr>
-    <tr>
-      <td>0010</td>
-      <td><span style="font-size: x-large">&#x2402;</span></td>
-      <td><tt>string</tt></td>
-      <td>Text or Binary data</td>
-      <td><tt>varuint</tt> <var>L</var>, <var>L</var> bytes of data</td>
-    </tr>
-    <tr>
-      <td>0011</td>
-      <td><span style="font-size: x-large">&#x2403;</span></td>
-      <td><tt>decimal</tt></td>
-      <td>Decimal Numbers</td>
-      <td><tt>varint</tt> <var>E</var>, <var>M</var></td>
-      <td><var><var>M</var>&nbsp;×&nbsp;10<sup><var>E</var></sup></var></td>
-    </tr>
-    <tr style="color: grey">
-      <td>0100</td>
-      <td><span style="font-size: x-large">&#x2404;</span></td>
-      <td><tt>rational</tt></td>
-      <td>Rational Numbers (Fractions)</td>
-      <td><tt>varint</tt> <var>N</var>, <tt>varuint</tt> D</td>
-      <td><var><var>N</var>&nbsp;÷&nbsp;D</var></td>
-    </tr>
-    <tr>
-      <td>0101</td>
-      <td><span style="font-size: x-large">&#x2405;</span></td>
-      <td><tt>false</tt></td>
-      <td>Boolean (false)</td>
-      <td>none</td>
-    </tr>
-    <tr>
-      <td>0110</td>
-      <td><span style="font-size: x-large">&#x2406;</span></td>
-      <td><tt>true</tt></td>
-      <td>Boolean (true)</td>
-      <td>none</td>
-    </tr>
-    <tr>
-      <td>0111</td>
-      <td><span style="font-size: x-large">&#x2407;</span></td>
-      <td><tt>lob</tt></td>
-      <td>Large Object - oversized value</td>
-      <td><tt>varuint</tt> <var>L</var>, <var>L</var> utf-8 bytes of filename</td>
-    </tr>
-    <tr style="color: grey">
-      <td>1000</td>
-      <td><span style="font-size: x-large">&#x2408;</span></td>
-      <td>-</td>
-      <td>reserved</td>
-    </tr>
-    <tr>
-      <td>1001</td>
-      <td><span style="font-size: x-large">&#x2409;</span></td>
-      <td><tt>null</tt></td>
-      <td>explicit/resetting NULL</td>
-      <td>none</td>
-    </tr>
-    <tr>
-      <td>1010</td>
-      <td><span style="font-size: x-large">&#x240a;</span></td>
-      <td><tt>eor</tt></td>
-      <td>Row divider in row pages</td>
-      <td>none (next row)</td>
-    </tr>
-    <tr style="color: grey">
-      <td>1011</td>
-      <td><span style="font-size: x-large">&#x240b;</span></td>
-      <td><tt>rowleft</tt></td>
-      <td>For fast scanning of pages by primary key</td>
-      <td><tt>varuint</tt> <var>L</var> (bytes of rest of row, excluding <tt>eor</tt>)</td>
-    </tr>
-    <tr style="color: grey">
-      <td>1100</td>
-      <td><span style="font-size: x-large">&#x240c;</span></td>
-      <td>-</td>
-      <td>reserved</td>
-    </tr>
-    <tr>
-      <td>1101</td>
-      <td><span style="font-size: x-large">&#x240d;</span></td>
-      <td><tt>reset</tt></td>
-      <td>Reset column index to 0 (or offset)</td>
-    </tr>
-    <tr style="color: grey">
-      <td>1110</td>
-      <td><span style="font-size: x-large">&#x240e;</span></td>
-      <td><tt>push</tt></td>
-      <td>Reserved for arrays and nested types</td>
-      <td>a new row</td>
-    </tr>
-    <tr style="color: grey">
-      <td>1111</td>
-      <td><span style="font-size: x-large">&#x240f;</span></td>
-      <td><tt>pop</tt></td>
-      <td>Reserved for arrays and nested types</td>
-      <td>remainder of row</td>
-    </tr>
-  </tbody>
+come from ProtocolBuffer.</p>
+<table border="1" class="docutils">
+<caption>GitDB Column Types</caption>
+<colgroup>
+<col width="13%" />
+<col width="7%" />
+<col width="13%" />
+<col width="40%" />
+<col width="13%" />
+<col width="13%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">type bits</th>
+<th class="head">ASCII</th>
+<th class="head">type name</th>
+<th class="head">description</th>
+<th class="head">follows</th>
+<th class="head">formulae (Numerics)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td>0000</td>
+<td><strong>␀</strong></td>
+<td><tt class="docutils literal">varint</tt></td>
+<td>Integer</td>
+<td><tt class="docutils literal">varint</tt> <em>N</em></td>
+<td><em>N</em></td>
+</tr>
+<tr><td>0001</td>
+<td><strong>␁</strong></td>
+<td><tt class="docutils literal">float</tt></td>
+<td>Floating Point</td>
+<td><tt class="docutils literal">varint</tt> <em>E</em>, <em>M</em></td>
+<td><tt class="docutils literal">M times <span class="pre">2^{E}&amp;</span></tt></td>
+</tr>
+<tr><td>0010</td>
+<td><strong>␂</strong></td>
+<td><tt class="docutils literal">string</tt></td>
+<td>Text or Binary data</td>
+<td><tt class="docutils literal">varuint</tt> <em>L</em>, <em>L</em> bytes of data</td>
+<td>-</td>
+</tr>
+<tr><td>0011</td>
+<td><strong>␃</strong></td>
+<td><tt class="docutils literal">decimal</tt></td>
+<td>Decimal Numbers</td>
+<td><tt class="docutils literal">varint</tt> <em>E</em>, <em>M</em></td>
+<td><tt class="docutils literal">M times <span class="pre">10^{E}</span></tt></td>
+</tr>
+<tr><td>0100</td>
+<td><strong>␄</strong></td>
+<td><tt class="docutils literal">rational</tt></td>
+<td>Rational Numbers (Fractions)</td>
+<td><tt class="docutils literal">varint</tt> <em>N</em>, <tt class="docutils literal">varuint</tt> <em>D</em></td>
+<td><tt class="docutils literal">M div D</tt></td>
+</tr>
+<tr><td>0101</td>
+<td><strong>␅</strong></td>
+<td><tt class="docutils literal">false</tt></td>
+<td>Boolean (false)</td>
+<td>none</td>
+<td>-</td>
+</tr>
+<tr><td>0110</td>
+<td><strong>␆</strong></td>
+<td><tt class="docutils literal">true</tt></td>
+<td>Boolean (true)</td>
+<td>none</td>
+<td>-</td>
+</tr>
+<tr><td>0111</td>
+<td><strong>␇</strong></td>
+<td><tt class="docutils literal">lob</tt></td>
+<td>Large Object - oversized value</td>
+<td><tt class="docutils literal">varuint</tt> <em>L</em>, <em>L</em> utf-8 bytes of filename</td>
+<td>-</td>
+</tr>
+<tr><td>1000</td>
+<td><strong>␈</strong></td>
+<td><em>List&lt;&gt;</em></td>
+<td>begin list of homogenous values</td>
+<td>type <em>T</em>, <tt class="docutils literal">varuint</tt> <em>N</em>, values
+<em>V</em><sub>1</sub>..<em>V</em><sub>N</sub>, <tt class="docutils literal">pop</tt></td>
+<td>-</td>
+</tr>
+<tr><td>1001</td>
+<td><strong>␉</strong></td>
+<td><tt class="docutils literal">null</tt></td>
+<td>explicit/resetting NULL</td>
+<td>none</td>
+<td>-</td>
+</tr>
+<tr><td>1010</td>
+<td><strong>␊</strong></td>
+<td><tt class="docutils literal">eor</tt></td>
+<td>Row divider in row pages</td>
+<td>none (next row)</td>
+<td>-</td>
+</tr>
+<tr><td>1011</td>
+<td><strong>␋</strong></td>
+<td><tt class="docutils literal">rowleft</tt></td>
+<td>For fast scanning of pages by primary key</td>
+<td><tt class="docutils literal">varuint</tt> <em>L</em> (bytes of rest of row, excluding <tt class="docutils literal">eor</tt>)</td>
+<td>-</td>
+</tr>
+<tr><td>1100</td>
+<td><strong>␌</strong></td>
+<td>-</td>
+<td>reserved</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr><td>1101</td>
+<td><strong>␍</strong></td>
+<td><tt class="docutils literal">reset</tt></td>
+<td>Reset column index to 0 (or offset)</td>
+<td>-</td>
+<td>-</td>
+</tr>
+<tr><td>1110</td>
+<td><strong>␎</strong></td>
+<td><em>Tuple&lt;&gt;</em></td>
+<td>begin list of non-homogenous values</td>
+<td>type <em>T</em><sub>1</sub>, value <em>V</em><sub>1</sub>, ...  type
+<em>T</em><sub>x</sub>, value <em>V</em><sub>x</sub>, <tt class="docutils literal">pop</tt></td>
+<td>-</td>
+</tr>
+<tr><td>1111</td>
+<td><strong>␏</strong></td>
+<td><tt class="docutils literal">pop</tt></td>
+<td>End list</td>
+<td><em>previous context resumed</em></td>
+<td>-</td>
+</tr>
+</tbody>
 </table>
 <p>The ASCII column reminds you what ASCII control character you will see
 if you end up directly inspecting heap contents (and the column offset
-is 0).
-<p><h3>Boolean values</h3>
+is 0).</p>
+<div class="section" id="boolean-values">
+<h2>Boolean values</h2>
+<div class="figure align-right" style="width: 80%">
+<img alt="f = 0 000 00101, t = 0 000 0110, 1 byte each" src="../files/boolean.png" style="width: 50%;" />
+<p class="caption"><strong>Figure 2.</strong> Encodings for true and false</p>
+</div>
 <p>There are two types assigned to booleans, effectively squeezing the
-value into the type code header.
+value into the type code header.</p>
 <p>Some standard types will have functions which decide on the
-appropriate encoding based on the value; booleans are one of them.
-<p><h3>Streaming features</h3>
+appropriate encoding based on the value; booleans are one of them.</p>
+</div>
+<div class="section" id="streaming-features">
+<h2>Streaming features</h2>
 <p>As in ProtocolBuffer, well formed rows from two sources can be merged
 by string concatenation, except using the ASCII carriage return (CR)
 character between them, which encodes a 'Reset' column.  Normally it
 is not necessary to encode NULL column values; leaving them out is
 equivalent, but in the context of combining rows this may be useful.
 Explicit NULL values should never appear in stored rows or pages; it
-is reserved for stream use in situations where it is required.
+is reserved for stream use in situations where it is required.</p>
 <p>Otherwise, a stream looks like a continuous data page; see the next
-section.
-<p><h3>Page feature types</h3>
+section.</p>
+<div class="figure align-center" style="width: 90%">
+<img alt="0 010 0000 - type, column 2 (010), varint (0000) 0 1010110  - column 2 value, -42 0 000 0001 - type, column 3 (2+1+000), string (0001) 0 0000001  -  column 3 value - string length, 1 byte 01011000 - column 3 value - string contents, &quot;X&quot; 0 000 1101 - column reset (1101) to N-1; 0 (000) =&gt; -1 0 000 0000 - type, column 0 (-1+1+000), varint (0000) 0 0101010 - column 0 value, 42 0 000 0010 - type, column 1 (0+1+000), string (0000) 0 0000010 - column 1 value - string length, 2 bytes 001100100 00110010 - column 1 value - string contents, &quot;42&quot;" src="../files/column-reset.png" style="width: 100%;" />
+<p class="caption"><strong>Figure 3.</strong> Column 2 and 3 can be sent before columns 0 and 1, by
+making the first emitted column have a column number of 2,
+following the extra columns with a column reset pseudo-type, and
+then the example from Figure 1, verbatim.</p>
+</div>
+</div>
+<div class="section" id="page-feature-types">
+<h2>Page feature types</h2>
 <p>Two types are added for paged rows - blobs which contain multiple
-rows.  Paging, as well as facilitating streaming, allows for "table
-compression" to work, useful for improving OLAP disk space use and
-scan requirements.  Some implementations may find it appropriate to
-omit all support for row paging.  It is described more in the <a
-href="../design/treeformat.html">TreeFormat section</a>.
-<p>First, there is the <tt>eor</tt> marker, which allows for delimiting
-rows in a page.
-<p>Secondly, there is the <tt>rowleft</tt> type which appears after the
+rows.  Paging, as well as facilitating streaming, allows for &quot;table
+compression&quot; to work, useful for improving OLAP disk space use and
+scan requirements.  <strong>Some implementations may find it appropriate to
+omit all support for row paging</strong> - it is described more in the
+<a class="reference external" href="./treeformat.html">TreeFormat</a> section.</p>
+<p>First, there is the <tt class="docutils literal">eor</tt> marker, which allows for delimiting
+rows in a page.</p>
+<p>Secondly, there is the <tt class="docutils literal">rowleft</tt> type which appears after the
 primary key columns, to allow faster scanning by primary key in pages.
 Instead of decoding all columns on the way to the next row, the next
-primary key can be immediately located.  The <tt>rowleft</tt> type
-encodes a <tt>varuint</tt> which is the length of the data columns in
+primary key can be immediately located.  The <tt class="docutils literal">rowleft</tt> type
+encodes a <tt class="docutils literal">varuint</tt> which is the length of the data columns in
 bytes; skipping that many bytes forward should land you on an
-<tt>eor</tt> marker.
-<p><h3>Large Objects (LOBs)</h3>
+<tt class="docutils literal">eor</tt> marker.</p>
+</div>
+<div class="section" id="large-objects-lobs">
+<h2>Large Objects (LOBs)</h2>
 <p>For larger column values, they may have their data saved in their own
-blob instead of stored in the page using the 'string' code.
-<p>Postgres calls this feature "toast" tables.
-<p>The value is a string, a filename.  The filename is stored in the git
-tree, and a reference counting back-reference to the row will be
-required to be able to effectively manage that.
-<p><h3>Arrays and Nested Types</h3>
-<p>Some attributes are arrays; others are structured value types.  This
-is different to a foreign key; they are non-relational entities, which
-are only accessible from the parent object.  They let you avoid joins
-when the values stored are true value types, but being non-relational
-you cannot place unique constraints on them, or refer to them as
-discrete entities.  They also let you get many of the benefits of
-document stores, but with much stronger type checking along the way.
-<p>Postgres has this sort of functionality built into it, and it works
-quite well.  For now, <tt>push</tt> and <tt>pop</tt> are merely
-reserved.
-<p><h3>Schema changes</h3>
+blob instead of stored in the page using the 'string' code.</p>
+<p>Postgres calls this feature &quot;toast&quot; tables.  <strong>Some implementations will
+get away without implementing this</strong>.</p>
+<p>The value of the column is a string, a filename.  The filename is
+stored in the git tree, and a reference counting back-reference to the
+row (a la GiST index entry in Postgres) will be required to be able to
+effectively manage that.</p>
+<!-- array-nested: -->
+</div>
+<div class="section" id="arrays-and-nested-types">
+<h2>Arrays and Nested Types</h2>
+<p>While these concepts are not in every database (Postgres being the
+shining exception of course), it was clear during early development of
+this standard, and also from the design of projects such as <a class="reference external" href="http://avro.apache.org/">Avro</a> that
+this is actually a fairly fundamental feature.  It's certainly
+fundamental in document store systems, which are sometimes limited to
+just arrays, hashes, strings and numbers yet still very useful.</p>
+<p>Boolean encoding types are not permitted in these types in any use
+case where the column type byte may be omitted.  Arrays of booleans
+can be represented as raw data blobs in the meantime.</p>
+<div class="section" id="encoding-arrays">
+<h3>Encoding Arrays</h3>
+<div class="figure align-right" style="width: 90%">
+<img alt="tbc" src="../files/array.png" style="width: 50%;" />
+<p class="caption"><strong>Figure 4.</strong> the column contains a 17-member list of <tt class="docutils literal">varint</tt>
+values.</p>
+</div>
+<p>With arrays, the values must all be of the same encoding type.  The
+first <tt class="docutils literal">varint</tt> to follow is a type specifier for the values,
+specified in exactly the same way as a column encoding; no offset
+should be specified.  For a multi-dimensional array, this may specify
+the <em>List&lt;&gt;</em> type again.  After the type comes a <tt class="docutils literal">varuint</tt>, which is
+the number of values expected.  The values appear directly afterwards.</p>
+<p>While it is not technically necessary, the <tt class="docutils literal">pop</tt> column specifier is
+to be found at the end of the list of values.</p>
+</div>
+<div class="section" id="encoding-tuples">
+<h3>Encoding Tuples</h3>
+<div class="figure align-right" style="width: 90%">
+<img alt="tbc" src="../files/tuple.png" style="width: 50%;" />
+<p class="caption"><strong>Figure 5.</strong> the column contains the tuple (17, &quot;X&quot;)</p>
+</div>
+<p>Tuples are permitted where the type of a column is recorded as a
+record type in the store's <tt class="docutils literal">meta</tt> columns (see <a class="reference external" href="./metaformat.html">MetaFormat</a>).  They
+are exactly the same thing as Postgres' compound types.</p>
+<p>Whenever a tuple is used as a type, the <em>Tuple&lt;&gt;</em> introduction column
+type appears, followed by more columns (numbered beginning with column
+0), followed by the <tt class="docutils literal">pop</tt> column psuedo-type.</p>
+</div>
+<div class="section" id="arrays-of-tuples">
+<h3>Arrays of Tuples</h3>
+<p>If the type of an array is <em>Tuple&lt;&gt;</em>, then a list of types is
+expected, terminated by a <tt class="docutils literal">pop</tt>.  If the list is empty, then each
+item in the array is a full (embedded) row, with each of its columns
+introduced with an encoding <tt class="docutils literal">varint</tt> and a value, just like encoding
+a regular embedded Tuple.  If however there is a list of types, then
+this defines the list for each item in the entire array, and just the
+values can be listed.  This precludes individual items in the array
+having <tt class="docutils literal">NULL</tt> values.</p>
+<p>For example, an array of (string, float) - able to encode a map from
+string keys to floating point values - can be encoded as:</p>
+<blockquote>
+<em>List&lt;&gt;</em> <em>Tuple&lt;&gt;</em> <tt class="docutils literal">string</tt> <tt class="docutils literal">float</tt> <tt class="docutils literal">pop</tt> <em>N</em> <em>K</em><sub>1</sub> <em>V</em><sub>1</sub> ... <em>K</em><sub>N</sub> <em>V</em><sub>N</sub> <tt class="docutils literal">pop</tt></blockquote>
+<p>This represents a complete overhead of as few as 7 bytes for the map,
+with values encoded as directly as can be after that.</p>
+<p>If the tuples are not homogenous, then the list of types can be empty.
+One example of this is that some rows contain NULL for some data.
+Another is that row data is directly transferred from another source
+in this column without re-parsing.</p>
+<blockquote>
+<p><em>List&lt;&gt;</em> <em>Tuple&lt;&gt;</em> <tt class="docutils literal">pop</tt> <em>N</em></p>
+<p><tt class="docutils literal">string</tt> <em>K</em><sub>1</sub> <tt class="docutils literal">float</tt> <em>V</em><sub>1</sub> <tt class="docutils literal">eor</tt></p>
+<p><tt class="docutils literal">string</tt> <em>K</em><sub>2</sub> <tt class="docutils literal">float</tt> <em>V</em><sub>2</sub> <tt class="docutils literal">eor</tt></p>
+<p><tt class="docutils literal">string</tt> <em>K</em><sub>N</sub> <tt class="docutils literal">float</tt> <em>V</em><sub>N</sub> <tt class="docutils literal">pop</tt></p>
+</blockquote>
+</div>
+</div>
+<div class="section" id="schema-changes">
+<h2>Schema changes</h2>
 <p>When columns are added, they get a new number, and, when they are
 deleted, the numbers are not re-used.  This is done so that
 frequently, schema modifications do not require major changes to the
-table data.
+table data.</p>
 <p>Lazy schema change operations might not mop up all of the columns
-which no longer exist; cleaning this up is akin to a VACUUM operation.
-<p>
-  </div><!-- id="body" -->
-  <div id="footer">   <hr />
+which no longer exist; cleaning this up is akin to a VACUUM operation.</p>
+</div>
+</div>
+</div>
+
+  </div>
+
+  <div id="footer" style="clear: both">
+   <hr />
    <a href="../copyright.html">copyright info</a> |
    <a href="../map.html">site map</a>
+  </div>
 
-  </div><!-- id="footer" -->
 </body>
+</html>

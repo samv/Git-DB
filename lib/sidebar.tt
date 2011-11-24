@@ -1,8 +1,0 @@
-<div id="archive_pane">
-  [% INCLUDE archive_pane.tt %]
-</div>
-<hr style="clear: both" />
-<div id="blogroll">
-  [% INCLUDE blogroll.tt
-        pane = 1 %]
-</div>

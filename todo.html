@@ -1,142 +1,177 @@
-<html>
-  <head><title>git db - deferred features</title>
-<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
-<link type="text/css" rel="stylesheet" href="gitdb.css">
-
-  </head>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+    <title>deferred features</title>
+    <link rel="stylesheet" href="gitdb.css" type="text/css" />
+    <meta http-equiv="Content-Type" content="text/html; charset=ISO8859-1" />
+    <meta name="description" content="gitdb - decentralized, replicating transactional store" />
+    <meta name="author" content="Sam Vilain" />
+    <meta name="copyright" content="&copy; 2009-2011 Sam Vilain" />
+    <meta name="keywords" content="gitdb, Git-DB, database, decentralized, transactional, ACID, git, avro, thrift, IDL, Protocol Buffers,
+    " />
+</head>
 <body>
-  <div id="sitelogo">	<a href="index.html">
-	  <img id="logo" src="files/gitdb-logo.png" border="0" />
-	  <div id="titlebox">
-	  <span id="site_title">git db</span>
-<span id="site_strapline">decentralized data storage in git</span>
-      	  </div>
-	</a>
+  <div id="sitelogo">
+    <a href="index.html">
+      <img id="logo" src="files/gitdb-logo.png" border="0" />
+      <div id="titlebox">
+        <span id="site_title">git db</span>
+        <span id="site_strapline">decentralized data storage in git</span>
+      </div>
+    </a>
+  </div>
 
-  </div><!-- id="sitelogo" -->
   <div id="navbar">
-<div class="menuItem">
-  <a href="index.html" class="menu">Home</a>
-</div>
+    <div class="menuItem">
+      <a href="design/index.html" class="menu">Design</a>
+    </div>
+    <div class="menuItem">
+      <a href="code.html" class="menu">Code</a>
+    </div>
+  <div id="breadcrumbs">
+    <ul>
+      <li><a href="index.html">Index</a></li>
+<li>&gt;</li>
+<li>deferred features</li>
 
-<div class="menuItem">
-  <a href="err/404.html" class="menu">Blog</a>
-</div>
-
-<div class="menuItem">
-  <a href="design.html" class="menu">Design</a>
-</div>
-
-<div class="menuItem">
-  <a href="code.html" class="menu">Code</a>
-</div>
-
-
-<div style="clear: both"></div>
-
+    </ul>
+  </div>
   </div><!-- id="navbar" -->
+
+
   <div id="body">
-
-  <h1 id="title">deferred features</h1>
-
+    <div class="document" id="deferred-features">
+<h1 class="title">deferred features</h1>
 <p>The following features are defined as being on the roadmap, but not
-close enough to worry about exactly where yet.
-<p><h2>PARTITIONING, SHARDING AND FAN-OUT</h2>
+close enough to worry about exactly where yet.</p>
+<p>This isn't really a TODO list for the next things to do, just thinking
+about &quot;large&quot; features, and how they fit logically into the picture.</p>
+<div class="section" id="partitioning-sharding-and-fan-out">
+<h1>PARTITIONING, SHARDING AND FAN-OUT</h1>
 <p>Being able to specify the exact fan-out of the schema in the store may
 be useful; it can be used as a part of a sharding implementation as
-well.
-<p>That is, say that the primary key of a row is:
-
-<pre>(urn:ietf:gitdb:schema, 0.1, 4, 2)</pre>
-<p>This corresponds to the filename;
-
-<pre>urn:ietf:gitdb:schema,0.1,4,2</pre>
+well.</p>
+<p>That is, say that the primary key of a row is:</p>
+<pre class="literal-block">
+(urn:ietf:gitdb:schema, 0.1, 4, 2)
+</pre>
+<p>This corresponds to the filename;</p>
+<pre class="literal-block">
+urn:ietf:gitdb:schema,0.1,4,2
+</pre>
 <p>The fan-out might be specified as the first two keys; so the expected
-filename in the store is then:
-
-<pre>urn:ietf:gitdb:schema,0.1/4,2</pre>
+filename in the store is then:</p>
+<pre class="literal-block">
+urn:ietf:gitdb:schema,0.1/4,2
+</pre>
 <p>This can be useful for partitioning/sharding, where you might have
 your primary key as some function of the lookup ID, then split by the
-first 3 nybbles to achieve 1024 shards;
-
-<pre>badabadabadabadabaa001</pre>
-<p>becomes:
-
-<pre>bad/abadabadabadabaa001</pre>
+first 3 nybbles to achieve 1024 shards;</p>
+<pre class="literal-block">
+badabadabadabadabaa001
+</pre>
+<p>becomes:</p>
+<pre class="literal-block">
+bad/abadabadabadabaa001
+</pre>
 <p>As each directory has a single checksum which represents the entirety
 of its contents, nodes need not hold a copy of the other shards; just
-the current checksum of the contents.
-<p><h2>FUNCTIONS</h2>
+the current checksum of the contents.</p>
+<p>Partitioning could be represented either by abstracting the object
+database layer, or a more explicit means such as submodules.</p>
+</div>
+<div class="section" id="functions">
+<h1>FUNCTIONS</h1>
 <p>This is probably the first next big thing to describe.  A function is
-described by a few things;
-<p><ul>
-<li>Its name, which within a schema can be reasonably happy to be unique
-<li>The number and type of input arguments and return values.
-<li>The language which the function is defined in.
-<li>The actual definition of the function, in said language.
+described by a few things;</p>
+<ul class="simple">
+<li>Its name, which within a schema can be reasonably happy to be unique</li>
+<li>The number and type of input arguments and return values.</li>
+<li>The language which the function is defined in.</li>
+<li>The actual definition of the function, in said language.</li>
 </ul>
 <p>This is a bit of a can of worms, so a prototype which avoids it is
-probably better.
-<p><h2>CHECK CONSTRAINTS</h2>
+probably better.</p>
+</div>
+<div class="section" id="check-constraints">
+<h1>CHECK CONSTRAINTS</h1>
 <p>Check constraints are a basic part of data modelling and allow sanity
 checks to be applied to the data as it goes in.  These do however
 require a mechanism for expressing functions, so until that is solved,
-check constraints will be out of scope.
-<p><h2>TRIGGERS</h2>
+check constraints will be out of scope.</p>
+</div>
+<div class="section" id="triggers">
+<h1>TRIGGERS</h1>
 <p>Triggers are a way of making database stuff happen on certain events;
 such as inserting, deleting or updating a row.  This can be used to
-enforce very domain-specific rules.
-<p><h2>INDEX PREDICATES</h2>
+enforce very domain-specific rules.</p>
+</div>
+<div class="section" id="index-predicates">
+<h1>INDEX PREDICATES</h1>
 <p>Sometimes you don't want an index to apply to all rows.  There will be
 an implied predicate of all indexes; they will only apply if the
 columns they index are not null.  This itself is useful, but being
-able to only index a select portion of columns is also very handy.
-<p><h2>FUNCTIONAL INDEXES</h2>
+able to only index a select portion of columns is also very handy.</p>
+</div>
+<div class="section" id="functional-indexes">
+<h1>FUNCTIONAL INDEXES</h1>
 <p>Normally values are inserted into indexes as is, but this allows for
 some transformation of columns to the value which is considered
 unique.  Useful for things like case insensitive (but case preserving)
-constraints.
-<p><h2>ARRAY TYPES</h2>
+constraints.</p>
+</div>
+<div class="section" id="array-types">
+<h1>ARRAY TYPES</h1>
 <p>Array types allow for more compact class definitions, and for example
 in the above definitions would allow for some slave tables to be
-removed entirely (<tt>meta.key:attr</tt> and <tt>meta.class:super</tt>)
-<p><h2>SEQUENCES</h2>
+removed entirely (&lt;tt&gt;meta.key:attr&lt;/tt&gt; and &lt;tt&gt;meta.class:super&lt;/tt&gt;)</p>
+</div>
+<div class="section" id="sequences">
+<h1>SEQUENCES</h1>
 <p>Not really useful until they can be used, as with functions.  They are
 also not a very good fit to the distributed approach in many of the
 distributed computing profiles; GUIDs (or just random strings) are
-often a better idea.
+often a better idea.</p>
 <p>That being said, if sequences are used as default values and
 constraints, then the work to merge when two writers use the same
 sequence number is defined and limited to changing the values in the
-new rows which were written or the linked rows which were updated.
+new rows which were written or the linked rows which were updated.</p>
 <p>This is likely to be an acceptable penalty for all but the busiest
-OLTP systems.
-<p><h2>VIEWS</h2>
+OLTP systems.</p>
+</div>
+<div class="section" id="views">
+<h1>VIEWS</h1>
 <p>Describing a view requires a good definition of query syntax, joins,
 expressions, etc.  After the abstract query syntax tree is completed,
-this will be revisited.  Materialized views should also come "for
-free" in this design without having to manually write triggers
-<p><h2>Skipping storage</h2>
+this will be revisited.  Materialized views should also come &quot;for
+free&quot; in this design without having to manually write triggers</p>
+</div>
+<div class="section" id="skipping-storage">
+<h1>Skipping storage</h1>
 <p>There are MetaFormat ways to specify this, but also regular git
-filesystem mechanisms for skipping storage such as <tt>.gitignore</tt>
+filesystem mechanisms for skipping storage such as &lt;tt&gt;.gitignore&lt;/tt&gt;
 files should be honoured.  If they are discovered and not understood,
-then the program should probably refuse to run.
-<p><h2>Sharding</h2>
-<p>Git submodules might be a more sensible way to achieve sharding than 
-backing to cassandra.
-<p><h2>FULL PREDICATE TRANSACTION ISOLATION</h2>
+then the program should probably refuse to run.</p>
+</div>
+<div class="section" id="full-predicate-transaction-isolation">
+<h1>FULL PREDICATE TRANSACTION ISOLATION</h1>
 <p>In this mode, temporary views are created for all queries issued in
 the transaction.  These take up little space, just a few rows in the
 meta tables for each query; the data returned is not duplicated.
 Locks are then recorded on the view rows.  When merging in this
 isolation level, all views computed in other transactions must be
-computed on the new data, to show that they return the same result.
-<p>This feature is, shall we say, a long way down the road-map :-).
+computed on the new data, to show that they return the same result.</p>
+<p>This feature is, shall we say, a long way down the road-map :-).</p>
+</div>
+</div>
 
-  </div><!-- id="body" -->
-  <div id="footer">   <hr />
+  </div>
+
+  <div id="footer" style="clear: both">
+   <hr />
    <a href="copyright.html">copyright info</a> |
    <a href="map.html">site map</a>
+  </div>
 
-  </div><!-- id="footer" -->
 </body>
+</html>

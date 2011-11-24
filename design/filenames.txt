@@ -1,0 +1,218 @@
+..
+
+  restindex
+  /restindex
+
+=================================
+Filenames: locating packed values
+=================================
+
+The filename standard is the first level of the 
+TreeFormat_; it specifies
+an alternate encoding form based on traditional text value rendering.
+
+The Row Identifier
+========================
+
+The *abstract* row identifier is the list of values which comprise its
+*primary key*; details on which attributes this refers to is described
+in the MetaFormat_.
+
+The *row identifier filename* is a utf-8 string constructed as
+follows.  First a basic standard printing of the values happens.  The
+details depend on the type, but are all relatively well known and
+standard representations; :t:`sprintf(3)` and :t:`sscanf(3)` should be
+sufficient here.  The characteristics of functions used for each of
+these uses is given in the `types catalog`_.  The resulting value has
+various special characters escaped before it is used as filename.
+
+==================   ==================  ==================
+type name            example value       filename form
+==================   ==================  ==================
+``varint``           1234                ``1234``
+\                    -1                  ``－1``
+``float``            1.234               ``1.234``
+\                    0.0                 ``0``
+\                    10²³                ``1e+23``
+``string``           "1234"              ``1234``
+\                    "\0"                ``␀``
+\                    "foo-bar"           ``foo－bar``
+\                    "foo/bar"           ``foo／bar``
+\                    "foo\\bar"          ``foo＼bar``
+\                    "foo＼bar"          ``foo\＼bar``
+``decimal``          1.20                ``1.2``
+``rational``         123812/7            ``17687.42``
+``bool``             true                ``t``
+\                    false               ``f``
+==================   ==================  ==================
+
+The Row Filename refers to the result of the escaping, and all of the
+string values and joining the lot together with commas.
+
+Escaping Rules
+==============
+
+These rules apply to marshalling out all values, however they only
+really affect text strings and the unary '-' which may appear in a
+numbers (eg, twice in the value ``-5.6e-15``);
+
+1. Any reserved or otherwise problematic ASCII punctuation character
+   is converted to its fullwidth form, by adding 0xFEE0 to their
+   codepoint value.  This list of characters minimally includes the
+   colon, the comma, and the ASCII whorlygig characters:
+
+   .. beware of the Ohm:
+   ..
+
+       - \ | / : ,
+  
+   On marshall in, *all* of the characters in the full-width plane are
+   always converted back to their ASCII versions, by subtracting
+   0xFEE0 from their codepoint value.
+
+   If a particular implementation is restricted further, it may escape
+   more than these core characters, but this is not required.
+
+2. ASCII control characters are converted to their Unicode page 0x24
+   equivalents, by adding 0x2400 to their codepoint value.  On
+   marshall in, the reverse transform is applied.
+
+3. One outlier (\177 or U+007F, the delete character) fits neither
+   rules, because the appropriate Unicode escape character is in an
+   odd place.  Instead that one gets replaced with U+2421.
+
+4. All characters which could be interpreted as substitution escapes
+   as per the above rules can be escaped by a fall-back escaping
+   rule. Two characters may be used, one of which is the regular
+   backblash (``U+002F REVERSE SOLIDUS``), and the other another
+   unicode backslash character.  Again, for those implementations for
+   which a real backslash is problematic, the is a Unicode
+   alternative, U+244A.
+
+.. list-table::
+   :widths: 16 16 16 16 16 16
+   :header-rows: 1
+
+   * - Rule
+     - Range name
+     - examples
+     - input range
+     - output format
+     - output range
+   * - 1
+     - ASCII punctuation
+     - ``, / | \ - :``
+     - U+0020-U+007E
+     - ``，／｜＼－：``
+     - U+FF00-U+FF5E
+   * - 2
+     - ASCII control
+     - (not printable)
+     - U+0000-U+001F
+     - ``␀, ␇, ␈`` etc
+     - U+2400-U+241F
+   * - 3
+     - ASCII delete
+     - (unprintable)
+     - U+007F
+     - ``␡``
+     - U+2421
+   * - 4a
+     - Fullwidth forms
+     - ``，／｜＼－：``
+     - U+FF00-U+FF5F
+     - ``\， \／ \｜ \＼ \－ \：``
+       or ``⑊， ⑊／ ⑊｜ ⑊＼ ⑊－ ⑊：``
+     - U+002F, original char
+       or U+244A, original char
+   * - 4b
+     - ASCII control representations
+     - ``␀, ␇, ␈`` etc
+     - U+2400-U+2421
+     - ``\␀ \␇ \␈``
+       or ``⑊␀ ⑊␇ ⑊␈``
+     - U+002F, char
+        or U+244A, char
+   * - 4c
+     - unicode escape character
+     - ``⑊``
+     - U+244A
+     - ``\⑊`` or ``⑊⑊``
+     - U+002F, U+244A or U+244A, U+244A
+
+Checkouts on non-UNIX and MacOS filesystems
+===========================================
+
+There are a number of issues with using 'git checkout' of the contents
+of a git db repository on various filesystems;
+
+i. On *case-insensitive filesystems*, such as FAT, NTFS and Mac's HFS
+   (sometimes), when there are two keys which differ only in case and
+   end up in the same directory.  Eg, one file called "``Bob``" and
+   one called "``bob``".
+
+ii. On filesystems that *fold* either case or unicode normalization
+    forms.  For instance, when the program tries to write a file
+    called "``bob``", but the file created is later shown as
+    "``BOB``".  The unicode normalization issue is similar but less
+    well known; it is where a filename is written such as "``Ma``\
+    *<U+304>*\ ``ori``" (NKD - decomposed), but when later read back
+    is returned as "``M``\ *<U+101>*\ ``ori``" (NKC - composed).</li>
+
+iii. On filesystems which *prohibit characters*.  On most UNIX systems
+     the list of prohibited characters is very short.  For instance,
+     just the NUL character and "``/``", the directory separator.
+
+Of these problems, the prohibited characters case is easily solved; so
+long as unicode is allowed in filenames, they can be escaped as per
+above.
+
+The other two problems are harder to work around.  Really though, an
+implementation of this standard that works with a checkout is making
+life hard for itself.  Being able to check out the store as a
+repository and look around at it is really intended more as a
+debugging tool.
+
+With the exception of omitted columns, the filenames are really just
+informational, and helping you find the actual data which will be
+inside the blobs they refer to.  So, the other workaround for systems
+like this is to full scan when in doubt.  It's slower, but it works.
+
+Ranges
+======
+
+If a range of values is required to be specified, these are separated
+by a ``-``; ranges can cover multiple columns, eg
+
+..
+
+  1,1-5,50
+  5,52-9,2
+
+Ranges may appear when using paged rows, or breaking up large
+directories.  See the TreeFormat_ for more information.
+
+Sorting and Collation
+=====================
+
+Filenames are always sorted using the natural sort order of the
+primary key, key by key.  This means that all tables are stored in
+primary key order.  If you don't like that, key using a hash function,
+UUID or some other surrogate (even a sequence) as a primary key and
+ignore the 'real' primary key in your application.
+
+Initially all text string sorting and collation must be performed in
+the C locale; future versions or types will address this problem in a
+locale-aware fashion.
+
+Sorting for numeric types will be by the decimal version of the
+number, ie the value.  Strings will be sorted by the *unescaped* form.
+
+.. _TreeFormat:
+   ./treeformat.html
+
+.. _MetaFormat:
+   ./meta.html
+
+.. _types catalog:
+   ./meta.html#types

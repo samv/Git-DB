@@ -1,419 +1,451 @@
-<html>
-  <head><title>git db - MetaFormat: specifying data structure</title>
-<meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
-<link type="text/css" rel="stylesheet" href="../gitdb.css">
-
-  </head>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en">
+<head>
+    <title>MetaFormat: specifying data structure</title>
+    <link rel="stylesheet" href="../gitdb.css" type="text/css" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="description" content="gitdb - decentralized, replicating transactional store" />
+    <meta name="author" content="Sam Vilain" />
+    <meta name="copyright" content="&copy; 2009-2011 Sam Vilain" />
+    <meta name="keywords" content="gitdb, Git-DB, database, decentralized, transactional, ACID, git, avro, thrift, IDL, Protocol Buffers,
+    " />
+</head>
 <body>
-  <div id="sitelogo">	<a href="../index.html">
-	  <img id="logo" src="../files/gitdb-logo.png" border="0" />
-	  <div id="titlebox">
-	  <span id="site_title">git db</span>
-<span id="site_strapline">decentralized data storage in git</span>
-      	  </div>
-	</a>
+  <div id="sitelogo">
+    <a href="../index.html">
+      <img id="logo" src="../files/gitdb-logo.png" border="0" />
+      <div id="titlebox">
+        <span id="site_title">git db</span>
+        <span id="site_strapline">decentralized data storage in git</span>
+      </div>
+    </a>
+  </div>
 
-  </div><!-- id="sitelogo" -->
   <div id="navbar">
-<div class="menuItem">
-  <a href="../index.html" class="menu">Home</a>
-</div>
+    <div class="menuItem">
+      <a href="../design/index.html" class="menu">Design</a>
+    </div>
+    <div class="menuItem">
+      <a href="../code.html" class="menu">Code</a>
+    </div>
+  <div id="breadcrumbs">
+    <ul>
+      <li><a href="../index.html">Index</a></li>
+<li>&gt;</li>
+<li><a href="index.html">Design</a></li>
+<li>&gt;</li>
+<li>MetaFormat: specifying data structure</li>
 
-<div class="menuItem">
-  <a href="../err/404.html" class="menu">Blog</a>
-</div>
-
-<div class="menuItem">
-  <a href="../design.html" class="menu">Design</a>
-</div>
-
-<div class="menuItem">
-  <a href="../code.html" class="menu">Code</a>
-</div>
-
-
-<div style="clear: both"></div>
-
+    </ul>
+  </div>
   </div><!-- id="navbar" -->
+
+
   <div id="body">
-
-  <h1 id="title">MetaFormat: specifying data structure</h1>
-
+    <div class="document" id="metaformat-specifying-data-structure">
+<h1 class="title">MetaFormat: specifying data structure</h1>
 <p>There is a special schema in the git db store which represents the
-schema of the tables itself; these are identified with the
-<tt>meta.</tt> schema name.  Optionally there are rows in the schema
-which represent the schema of the <tt>meta.</tt> store itself.
-<p><h1>Meta Tables</h1>
-<p>As the intrinsic storage building block, the <tt>meta.</tt> tables
-have the following restrictions;
-<p><dl>
-  <dt><b>column types</b></dt>
-    <dd>All columns <em>must</em> be defined in terms of primitive
-      types; arrays and nested types are not permitted.  Instead, in
-      this version of git db they are implemented using the
-      traditional, relational approach using foreign keys and
-      suchlike, called <b>slave tables</b> in this specification (see
-      below).
-    </dd>
-  <dt><b>keys</b></dt>
-    <dd>All tables in <tt>meta.</tt> space <em>must</em> have a
-      primary key.  Primary key columns must come first.  Keys are
-      simple (ie, not functional) and unconditional (ie, not partial),
-      unless one of the columns in the key is marked NULL.
-    <br />
-      <b>Foreign key</b> constraints are present and <em>must</em>
-      reference another table's primary key.
-    </dd>
-  <dt><b>unique constraints</b></dt>
-    <dd>Non-primary unique constraints <em>may</em> be implemented in
-      terms of foreign key constraints to specially named tables.
-      These are effectively <em>indexes</em> and exist in regular
-      databases but are not normally referencable.
-    </dd>
-</dl>
-<p>Note that tables with a name after the <tt>:</tt> is a <b>slave
-table</b> or <b>link table</b>; they are tables which always have a
-foreign key relationship with the table they are slave to.
-<p>Sometimes, these are used for 1 to many relationships between
-items. In later versions, arrays may be used for this purpose instead.
-<p>In other cases, they simply express constraints/proofs.  To help the
-parts of it which express constraints and proofs slink into the
-shadows cast by the lines which actually define interesting columns,
-the interesting ones are shown in <b>bold</b>.  Currently that means
-lines which define attributes, which are not merely columns used for
-foreign keys in a slave table.
+schema of the tables itself; these are identified with the <tt class="docutils literal">meta.</tt>
+schema name.  Optionally there are rows in the schema which represent
+the schema of the <tt class="docutils literal">meta.</tt> store itself.</p>
+<div class="section" id="meta-tables">
+<h1>Meta Tables</h1>
+<p>As the intrinsic storage building block, the <tt class="docutils literal">meta.</tt> Tables have the
+following restrictions;</p>
+<p><strong>column types</strong></p>
+<blockquote>
+All columns <em>must</em> be defined in terms of types from the standard
+type library.</blockquote>
+<p><strong>keys</strong></p>
+<blockquote>
+All tables in <tt class="docutils literal">meta.</tt> space <em>must</em> have a primary key.  Primary
+key columns must come first.</blockquote>
+<p><strong>unique constraints</strong></p>
+<blockquote>
+Non-primary unique constraints are specified in terms of foreign
+key constraints to specially named tables.  In a regular database
+these tables are hidden (but you can see them in Postgres, if you
+directly inspect the catalog).</blockquote>
 <p>This is being presented like this in order to satisfy the
-<em>bootstrapping</em> requirement of the schema; it should be able to
-store itself, including all of the relevant constraints that you would
-expect to operate on the data structure.
-<p><h2>The "Schema" or "Namespace" table</h2>
+<em>bootstrapping</em> requirement of the schema; it should be able to store
+itself, including all of the relevant constraints that you would
+expect to operate on the data structure.</p>
+</div>
+<div class="section" id="the-schema-or-namespace-table">
+<h1>The &quot;Schema&quot; or &quot;Namespace&quot; table</h1>
+<p>The schema table defines local names of the schemas used.  This
+controls the path where the data lives in the top level of the
+repository.  It also allows for schema revisioning.  The repository
+revision is a <tt class="docutils literal">num</tt>, which can be any number; integer, decimal,
+float etc.</p>
+<pre class="literal-block">
+meta.schema:
+  ns_url text not null
+  ns_rev num not null
+  primary key (ns_url, ns_rev)
+  ns_name str not null
+  foreign key (ns_name) references :ns_name_idx
 
-<pre>
-  # a schema is like a namespace; it's what you connect to.
-  meta.schema:
-    <b>ns_url text not null</b>
-    <b>ns_rev num not null</b>
-    primary key (ns_url, ns_rev)
-    <b>ns_name str not null</b>
-    unique key (ns_name)
- 
-  # this table is the schema name index.
-  meta.schema:ns_name_idx
-    ns_name str not null
-    primary key (ns_name)
+meta.schema:ns_name_idx
+  ns_name str not null
+  primary key (ns_name)
 </pre>
-<p><h2>The "Class" or "Table" table</h2>
+<p>Specified in a more Avro-like JSON syntax, that would be:</p>
+<pre class="literal-block">
+{ &quot;name&quot;: &quot;schema&quot;,
+  &quot;type&quot;: &quot;tuple&quot;,
+  &quot;fields&quot;: [
+     { &quot;name&quot;: &quot;ns_url&quot;, &quot;type&quot;: &quot;string&quot;, &quot;required&quot;: 1 },
+     { &quot;name&quot;: &quot;ns_rev&quot;, &quot;type&quot;: &quot;num&quot;, &quot;required&quot;: 1 },
+     { &quot;name&quot;: &quot;ns_name&quot;, &quot;type&quot;: &quot;string&quot;, &quot;required&quot;: 1 },
+  ],
+  &quot;keys&quot;: [
+     { &quot;primary&quot;: &quot;1&quot;,
+       &quot;fields&quot;: [ &quot;ns_url&quot;, &quot;ns_rev&quot; ] },
+     { &quot;unique&quot;: &quot;1&quot;,
+       &quot;fields&quot;: [ &quot;ns_name&quot; ],
+      },
+  ],
+}
+</pre>
+<p>The values, for the <tt class="docutils literal">meta</tt> schema, are:</p>
+<pre class="literal-block">
+[ &quot;http://github.com/samv/Git-DB&quot;, 0.1, &quot;meta&quot; ]
+</pre>
+<p>Which would be encoded as:</p>
+<pre class="literal-block">
+00000000  021d 6874 7470 3a2f 2f67 6974 6875 622e  ␂␝http://github.
+00000010  636f 6d2f 7361 6d76 2f47 6974 2d44 4203  com/samv/Git-DB␃
+00000020  7f01 0204 6d65 7461                      ␡␁␂␄meta
+</pre>
+</div>
+<div class="section" id="the-tuple-table">
+<h1>The &quot;Tuple&quot; table</h1>
+<p>The &quot;paths&quot; table defines which schemas are active at which paths
+within the git tree.  Multiple versions of the same schema can be
+deployed, but they have to have unique ns_name's.</p>
+<pre class="literal-block">
+{ &quot;name&quot;: &quot;tuple&quot;,
+  &quot;type&quot;: &quot;tuple&quot;,
+  &quot;fields&quot;: [
+     { &quot;name&quot;: &quot;ns_url&quot;, &quot;type&quot;: &quot;string&quot;, &quot;required&quot;: 1 },
+     { &quot;name&quot;: &quot;ns_rev&quot;, &quot;type&quot;: &quot;num&quot;, &quot;required&quot;: 1 },
+     { &quot;name&quot;: &quot;tuple_index&quot;, &quot;type&quot;: &quot;int&quot;, &quot;required&quot;: 1 },
+     { &quot;name&quot;: &quot;tuple_name&quot;, &quot;type&quot;: &quot;string&quot;, &quot;required&quot;: 1 },
+  ],
+  &quot;keys&quot;: [
+     { &quot;primary&quot;: &quot;1&quot;,
+       &quot;fields&quot;: [ &quot;ns_url&quot;, &quot;ns_rev&quot;, &quot;tuple_index&quot; ],
+     },
+     { &quot;foreign&quot;: &quot;1&quot;,
+       &quot;fields&quot;: [ &quot;ns_url&quot;, &quot;ns_rev&quot; ],
+       &quot;references&quot;: {
+           &quot;ns_name&quot;: &quot;meta&quot;,
+           &quot;tuple_name&quot;: &quot;schema&quot;,
+       }
+     },
+     { &quot;unique&quot;: &quot;1&quot;,
+       &quot;fields&quot;: [ &quot;ns_url&quot;, &quot;ns_rev&quot;, &quot;tuple_name&quot; ],
+     },
+  ],
+},
+</pre>
+</div>
+<div class="section" id="the-store-table">
+<h1>The &quot;Store&quot; table</h1>
+<p>The tuple table defines types, but they do not necessarily &quot;deploy&quot;
+them.  Tuples can be defined merely for use within other parts of the
+schema, so this extra table connects tuples with <a class="reference external" href="./treeformat.html">TreeFormat</a> trees.</p>
+<p>The &quot;path&quot; field is actually optional, the default will be
+<tt class="docutils literal">/ns_name/tuple_name</tt> but this is provided as an extra flexibility.
+The only fixed path is therefore <tt class="docutils literal">/.meta</tt></p>
+<pre class="literal-block">
+{ &quot;name&quot;: &quot;store&quot;,
+  &quot;type&quot;: &quot;tuple&quot;,
+  &quot;fields&quot;: [
+     { &quot;name&quot;: &quot;ns_name&quot;, &quot;type&quot;: &quot;string&quot;, &quot;required&quot;: 1 },
+     { &quot;name&quot;: &quot;tuple_name&quot;, &quot;type&quot;: &quot;string&quot;, &quot;required&quot;: 1 },
+     { &quot;name&quot;: &quot;ns_url&quot;, &quot;type&quot;: &quot;string&quot;, &quot;required&quot;: 1 },
+     { &quot;name&quot;: &quot;ns_rev&quot;, &quot;type&quot;: &quot;num&quot;, &quot;required&quot;: 1 },
+     { &quot;name&quot;: &quot;tuple_index&quot;, &quot;type&quot;: &quot;int&quot;, &quot;required&quot;: 1 },
+     { &quot;name&quot;: &quot;path&quot;, &quot;type&quot;: &quot;string&quot;, &quot;required&quot;: 0 },
+  ],
+  &quot;keys&quot;: [
+     { &quot;primary&quot;: &quot;1&quot;,
+       &quot;fields&quot;: [ &quot;ns_name&quot;, &quot;tuple_name&quot; ],
+     },
+     { &quot;foreign&quot;: &quot;1&quot;,
+       &quot;fields&quot;: [ &quot;ns_url&quot;, &quot;ns_rev&quot;, &quot;tuple_index&quot; ],
+       &quot;references&quot;: &quot;meta.class&quot;,
+     },
+  ],
+},
+</pre>
+</div>
+<div class="section" id="the-attributes-or-columns-table">
+<h1>The &quot;Attributes&quot; or &quot;Columns&quot; table</h1>
+<pre class="literal-block">
+# this table records the list of attributes/columns of a
+# class/table.
+meta.attr:
+  **ns_url text not null**
+  **ns_rev num not null**
+  **tuple_index int not null**
+  foreign key (ns_url, ns_rev, tuple_index)
+          references meta.class
+  **attr_index int not null**
+  primary key (ns_url, ns_rev, tuple_index, attr_index)
+  # if attr_name is null, the column is deleted.
+  **attr_name text null**
+  unique key (ns_url, ns_rev, tuple_index, attr_name)
+  **attr_type text not null**
+  foreign key (ns_url, ns_rev, attr_type) references meta.type
+       (ns_url, ns_rev, type_name)
+  **attr_required bool not null**
+  # a 'default' is somewhat problematic; *any* value can be placed
+  # here, and it is not known how to interpret it without looking up
+  # what the attr_type means; so, it may be seen as 'opaque'
+  **attr_default item null**
 
-<pre>
-  # a class essentially describes a table
-  meta.class:
-    <b>ns_url text not null</b>
-    <b>ns_rev num not null</b>
-    foreign key (ns_url, ns_rev)
-            references meta.schema
-    <b>class_index int not null</b>
-    primary key (ns_url, ns_rev, class_index)
-    <b>class_name text not null</b>
-    unique key (ns_url, ns_rev, class_name)
-<p>  # this enforces the unique key above^ and is optional in the store
-  meta.class:nameidx
-    ns_url text not null
-    ns_rev num not null
-    class_name not null
-    primary key (ns_url, ns_rev, class_name)
-    class_index int not null
-    foreign key (ns_url, ns_rev, class_index)
-            references meta.class
-<p>  # only one revision of the schema may actually have tables at any
-  # given time.  Also enforces that no two tables can have the same
-  # name, and lets you figure out which class the filesystem paths
-  # relate to.
-  meta.class:ns_name_class_name
-    ns_name not null
-    foreign key (ns_name) references meta.schema:ns_name_idx
-    class_name not null
-    primary key (schema_name, class_name)
-    ns_url text not null
-    ns_rev num not null
-    class_index int not null
-    foreign key (ns_url, ns_rev, class_index)
-            references meta.class
-<p>  # superclass heirarchy.  whole table is primary key! (link table)
-  # many RDBMSes don't have this concept, but it's like postgres'
-  # INHERITS option to CREATE TABLE
-  meta.class:super
-    <b>ns_url text not null</b>
-    <b>ns_rev num not null</b>
-    <b>class_index int not null</b>
-    foreign key (ns_url, ns_rev, class_index)
-            references meta.class
-    <b>superclass_index int not null</b>
-    foreign key (ns_url, ns_rev, superclass_index)
-          references meta.class (ns_url, ns_rev, class_index)
+# for unique key in above
+meta.attr:attr_name_idx
+  ns_url text not null
+  ns_rev num not null
+  tuple_index int not null
+  name text not null
+  primary key (ns_url, ns_rev, tuple_index, name)
+  attr_index int not null
+  foreign key (ns_url, ns_rev, tuple_index, attr_index)
+          references meta.attr
 </pre>
-<p><h2>The "Attributes" or "Columns" table</h2>
+<p>In Avro-like syntax:</p>
+<p>Precision/scale modifiers, such as <tt class="docutils literal">VARCHAR(2)</tt> etc are not
+supported directly; they're something of a bodge when proper
+generics/higher order type system is a more complete solution.  Done
+properly, a generics system can also be the starting point for
+features such as arrays (ARRAY [TYPE]) and composite types (eg TUPLE
+[TYPE, TYPE, TYPE]); so this will be left out initially, and the
+database will be fully arbitrary length throughout.</p>
+</div>
+<div class="section" id="keys-key-constraints">
+<h1>KEYS &amp; KEY CONSTRAINTS</h1>
+<pre class="literal-block">
+# the 'key' table describes unique and foreign key constraints as
+# well as listing recommended indexes (stored=false)
+meta.key:
+  **ns_url text not null**
+  **ns_rev num not null**
+  **tuple_index int not null**
+  foreign key (ns_url, ns_rev, tuple_index)
+          references meta.class
+  **key_name text not null**
+  primary key (ns_url, ns_rev, tuple_index, key_name)
+  **key_unique bool not null**
+  **key_primary bool not null**
+  **key_stored bool not null**
+  # whether this key also restricts subclasses of the parent.
+  # subclasses will have multiple key rows!
+  **key_heritable bool not null**
 
-<pre>
-  # this table records the list of attributes/columns of a
-  # class/table.
-  meta.attr:
-    <b>ns_url text not null</b>
-    <b>ns_rev num not null</b>
-    <b>class_index int not null</b>
-    foreign key (ns_url, ns_rev, class_index)
-            references meta.class
-    <b>attr_index int not null</b>
-    primary key (ns_url, ns_rev, class_index, attr_index)
-    # if attr_name is null, the column is deleted.
-    <b>attr_name text null</b>
-    unique key (ns_url, ns_rev, class_index, attr_name)
-    <b>attr_type text not null</b>
-    foreign key (ns_url, ns_rev, attr_type) references meta.type
-         (ns_url, ns_rev, type_name)
-    <b>attr_required bool not null</b>
-    # a 'default' is somewhat problematic; *any* value can be placed
-    # here, and it is not known how to interpret it without looking up
-    # what the attr_type means; so, it may be seen as 'opaque'
-    <b>attr_default item null</b>
-    # a couple of type parameters common enough to hack in here.
-    <b>attr_scale int null</b>
-    <b>attr_precision int null</b>
-<p>  # for unique key in above
-  meta.attr:attr_name_idx
-    ns_url text not null
-    ns_rev num not null
-    class_index int not null
-    name text not null
-    primary key (ns_url, ns_rev, class_index, name)
-    attr_index int not null
-    foreign key (ns_url, ns_rev, class_index, attr_index)
-            references meta.attr
+# this slave table links the key to the (ordered) list of attributes
+# which are a part of the key, and if the key is a foreign key, then
+# also the columns of the foreign key.
+meta.key:attr
+  **ns_url text not null**
+  **ns_rev num not null**
+  **tuple_index int not null**
+  **key_name text not null**
+  foreign key (ns_url, ns_rev, tuple_index, key_name)
+          references meta.key
+  **key_pos int not null**
+  primary key (ns_url, ns_rev, tuple_index, name, key_pos)
+  attr_index int not null
+  foreign key (ns_url, ns_rev, tuple_index, attr_index)
+          references meta.attr
+  foreign_tuple_index int null
+  foreign key (ns_url, ns_rev, foreign_tuple_index)
+          references meta.class (ns_url, ns_rev, tuple_index)
+  foreign_attr_index int null
+  foreign key (ns_url, ns_rev, foreign_tuple_index, foreign_attr_index)
+          references meta.attr (ns_url, ns_rev, tuple_index, attr_index)
 </pre>
-<p><h2>KEYS & KEY CONSTRAINTS</h2>
-
-<pre>
-  # the 'key' table describes unique and foreign key constraints as
-  # well as listing recommended indexes (stored=false)
-  meta.key:
-    <b>ns_url text not null</b>
-    <b>ns_rev num not null</b>
-    <b>class_index int not null</b>
-    foreign key (ns_url, ns_rev, class_index)
-            references meta.class
-    <b>key_name text not null</b>
-    primary key (ns_url, ns_rev, class_index, key_name)
-    <b>key_unique bool not null</b>
-    <b>key_primary bool not null</b>
-    <b>key_stored bool not null</b>
-    # whether this key also restricts subclasses of the parent.
-    # subclasses will have multiple key rows!
-    <b>key_heritable bool not null</b>
-<p>  # this slave table links the key to the (ordered) list of attributes
-  # which are a part of the key, and if the key is a foreign key, then
-  # also the columns of the foreign key.
-  meta.key:attr
-    <b>ns_url text not null</b>
-    <b>ns_rev num not null</b>
-    <b>class_index int not null</b>
-    <b>key_name text not null</b>
-    foreign key (ns_url, ns_rev, class_index, key_name)
-            references meta.key
-    <b>key_pos int not null</b>
-    primary key (ns_url, ns_rev, class_index, name, key_pos)
-    attr_index int not null
-    foreign key (ns_url, ns_rev, class_index, attr_index)
-            references meta.attr
-    foreign_class_index int null
-    foreign key (ns_url, ns_rev, foreign_class_index)
-            references meta.class (ns_url, ns_rev, class_index)
-    foreign_attr_index int null
-    foreign key (ns_url, ns_rev, foreign_class_index, foreign_attr_index)
-            references meta.attr (ns_url, ns_rev, class_index, attr_index)
+</div>
+<div class="section" id="id1">
+<span id="types"></span><h1>Types</h1>
+<pre class="literal-block">
+# meta.type: this is basically a compatibility table and is optional
+# if using only predefined types.  'Functions' here are strings;
+# only the name, not the definition nor the function prototype are
+# represented.  They are to be well-known function names, but the
+# paranoid should prepare for them to be custom to the schema
+# ID/revision.
+meta.type:
+  **ns_url text not null**
+  **ns_rev num not null**
+  foreign key (id, ns_rev) references meta.schema
+  **type_name text not null**
+  primary key (id, ns_rev, type_name)
+  **type_formats int not null**
+  **type_dump_func text null**
+  **type_load_func text null**
+  **type_choose_func text null**
+  **type_cmp_func text null**
+  **type_print_func text null**
+  **type_scan_func text null**
 </pre>
-<p><a name="types"><h2>TYPES</h2></a>
-
-<pre>
-  # meta.type: this is basically a compatibility table and is optional
-  # if using only predefined types.  'Functions' here are strings;
-  # only the name, not the definition nor the function prototype are
-  # represented.  They are to be well-known function names, but the
-  # paranoid should prepare for them to be custom to the schema
-  # ID/revision.
-  meta.type:
-    <b>ns_url text not null</b>
-    <b>ns_rev num not null</b>
-    foreign key (id, ns_rev) references meta.schema
-    <b>type_name text not null</b>
-    primary key (id, ns_rev, type_name)
-    <b>type_formats int not null</b>
-    <b>type_dump_func text null</b>
-    <b>type_load_func text null</b>
-    <b>type_choose_func text null</b>
-    <b>type_cmp_func text null</b>
-    <b>type_print_func text null</b>
-    <b>type_scan_func text null</b>
-</pre>
-<p><tt>type_formats</tt> is an integer which is interpreted bitwise, and
+<p><tt class="docutils literal">type_formats</tt> is an integer which is interpreted bitwise, and
 represents the encodings which are allowed for that type in this
 store.  The values for the standard types, below, represent all of the
 encodings which are defined by this standard.  Using an encoding for a
-type which is not permitted by the <tt>type_formats</tt> value in the
-<tt>meta.type</tt> table is a data consistency error.
-<p>The functions are described as below:
-<p><dl>
-  <dt><tt>type_choose_func</tt></dt>
-  <dd>Some types get to choose the encoding based on the value to be
-    encoded.  If that is true, this function will be defined,
-    otherwise it will be null and only one <tt>type_formats</tt> bit
-    may be set.
-  </dd>
-  <dt><tt>type_dump_func</tt></dt>
-  <dd>The name of a function which marshalls the value out.  The
-    function will take the value, an encoding, and return a value
-    valid for that encoding.
-  </dd>
-  <dt><tt>type_load_func</tt></dt>
-  <dd>The reverse, but marshalls the value in.  The encoding is a
-    formal parameter.
-  </dd>
-  <dt><tt>type_cmp_func</tt></dt>
-  <dd>The name of a function which can compare two values.  For
-    primary key sorting purposes.
-  </dd>
-  <dt><tt>type_print_func</tt></dt>
-  <dd>The name of a function which converts the value to a primary
-    key-form string.  This need not be reversible; if not, the
-    standard types' function name starts with <tt>hash_</tt>
-  </dd>
-  <dt><tt>type_scan_func</tt></dt>
-  <dd>The reverse of <tt>type_print_func</tt>; turns a formatted
-    string back into a value.  If this is not reversible then the
-    function will be converting the row value to a placeholder.
-  </dd>
-</dl>
-<p><h3>Standard Types</h3>
+type which is not permitted by the <tt class="docutils literal">type_formats</tt> value in the
+<tt class="docutils literal">meta.type</tt> table is a data consistency error.  <tt class="docutils literal">type_formats</tt>
+roughly covers the <tt class="docutils literal">INTERNALLENGTH</tt> and <tt class="docutils literal">STORAGE</tt> properties in
+the equivalent Postgres feature, <tt class="docutils literal">CREATE TYPE</tt></p>
+<p>The functions are described as below:</p>
+<p><tt class="docutils literal">type_choose_func</tt></p>
+<blockquote>
+Some types get to choose the encoding based on the value to be
+encoded.  If that is true, this function will be defined,
+otherwise it will be null and only one <tt class="docutils literal">type_formats</tt> bit may be
+set.</blockquote>
+<p><tt class="docutils literal">type_dump_func</tt></p>
+<blockquote>
+The name of a function which marshalls the value out.  The
+function will take the value, an encoding, and return a value
+valid for that encoding.  This is similar to the <tt class="docutils literal">SEND</tt> function
+in Postgres.</blockquote>
+<p><tt class="docutils literal">type_load_func</tt></p>
+<blockquote>
+The reverse, but marshalls the value in.  The encoding is a formal
+parameter.  This corresponds to <tt class="docutils literal">RECEIVE</tt> in Postgres.</blockquote>
+<p><tt class="docutils literal">type_cmp_func</tt></p>
+<blockquote>
+The name of a function which can compare two values.  For primary
+key sorting purposes.  This corresponds to the <tt class="docutils literal">CREATE OPERATOR
+CLASS ... DEFAULT FOR TYPE ... USING BTREE</tt> command in Postgres.</blockquote>
+<p><tt class="docutils literal">type_print_func</tt></p>
+<blockquote>
+The name of a function which converts the value to a primary
+key-form string, like <tt class="docutils literal">OUTPUT</tt> in Postgres.  This need not be
+reversible; if not, the standard types' function name starts with
+<tt class="docutils literal">hash_</tt></blockquote>
+<p><tt class="docutils literal">type_scan_func</tt></p>
+<blockquote>
+The reverse of <tt class="docutils literal">type_print_func</tt>; turns a formatted string back
+into a value, like <tt class="docutils literal">INPUT</tt> in Postgres.  If this is not
+reversible then the function will be converting the row value to a
+placeholder.</blockquote>
+<p>Types do not need to specify a hashing function as in Postgres; this
+is considered an internal implementation detail.  As truly custom
+types are not yet permitted, hashing may proceed on the basis of the
+encoded value.</p>
+<div class="section" id="standard-types">
+<h2>Standard Types</h2>
 <p>The <em>standard types</em> here represent a common set of well known
 data types in use in databases and programming, and a corresponding
 set of <em>well known functions</em> which perform the trivial IO
-operations, and for which reference implementations will be provided.
+operations, and for which reference implementations will be provided.</p>
 <p>Implementations need not support all types; however if opening a
 store, this table may be checked to see that the understanding of all
-parties as to the nature of the types is known.
-<p><table>
-  <thead>
-    <tr>
-      <th>type_name</th>
-      <th>type_formats</th>
-      <th>type_choose_func</th>
-      <th>type_dump_func</th>
-      <th>type_load_func</th>
-      <th>type_cmp_func</th>
-      <th>type_print_func</th>
-      <th>type_scan_func</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td>bool</td>
-      <td>1100000b</td>
-      <td>is_tf</td>
-      <td>emit_bool</td>
-      <td>read_bool</td>
-      <td>false_first</td>
-      <td>fmt_bool</td>
-      <td>scan_bool</td>
-    </tr>
-    <tr>
-      <td>integer</td>
-      <td>1b</td>
-      <td>-</td>
-      <td>emit_varint</td>
-      <td>read_varint</td>
-      <td>cmp_num</td>
-      <td>fmt_int</td>
-      <td>scan_int</td>
-    </tr>
-    <tr>
-      <td>real</td>
-      <td>11011b</td>
-      <td>pack_real</td>
-      <td>emit_real</td>
-      <td>read_real</td>
-      <td>cmp_num</td>
-      <td>fmt_real</td>
-      <td>scan_real</td>
-    </tr>
-    <tr>
-      <td>numeric</td>
-      <td>1000b</td>
-      <td>-</td>
-      <td>emit_real</td>
-      <td>read_real</td>
-      <td>cmp_num</td>
-      <td>fmt_real</td>
-      <td>scan_real</td>
-    </tr>
-    <tr>
-      <td>bytea</td>
-      <td>1000100b</td>
-      <td>large_value</td>
-      <td>emit_bytea</td>
-      <td>read_bytea</td>
-      <td>cmp_bytes</td>
-      <td>fmt_bytea_hex</td>
-      <td>scan_bytea_hex</td>
-    </tr>
-    <tr>
-      <td>text</td>
-      <td>1000100b</td>
-      <td>large_value</td>
-      <td>emit_text</td>
-      <td>read_text</td>
-      <td>cmp_text</td>
-      <td>fmt_text</td>
-      <td>scan_text</td>
-    </tr>
-    <tr>
-      <td>nkd_text</td>
-      <td>1000100b</td>
-      <td>large_value</td>
-      <td>emit_nkd_text</td>
-      <td>read_nkd_text</td>
-      <td>cmp_nkd_text</td>
-      <td>fmt_nkd_text</td>
-      <td>scan_nkd_text</td>
-    </tr>
-    <tr>
-      <td>nkc_text</td>
-      <td>1000100b</td>
-      <td>large_value</td>
-      <td>emit_nkc_text</td>
-      <td>read_nkc_text</td>
-      <td>cmp_nkc_text</td>
-      <td>fmt_nkc_text</td>
-      <td>scan_nkc_text</td>
-    </tr>
-    <tr>
-      <td>json</td>
-      <td>1000100b</td>
-      <td>large_json</td>
-      <td>emit_json</td>
-      <td>read_json</td>
-      <td>cmp_struct_hash</td>
-      <td>hash_json</td>
-      <td>scan_hash</td>
-    </tr>
-  </tbody>
-</table>
-<p>The functions are all described in detail in the reference
-implementation.  Most are very simple.
-<p>If a <tt>type_name</tt> is used in the schema, but not listed in
-<tt>meta.types</tt>, then the above definitions are used.
+parties as to the nature of the types is known.</p>
+<!-- list-table:
+:widths: 12 12 12 12 12 12 12 12
 
-  </div><!-- id="body" -->
-  <div id="footer">   <hr />
+* - ``type_name``
+  - ``type_formats``
+  - ``type_choose_func``
+  - ``type_dump_func``
+  - ``type_load_func``
+  - ``type_cmp_func``
+  - ``type_print_func``
+  - ``type_scan_func``
+* - bool
+  - 1100000b
+  - is_tf
+  - emit_bool
+  - read_bool
+  - false_first
+  - fmt_bool
+  - scan_bool
+* - integer
+  - 1b
+  - -
+  - emit_varint
+  - read_varint
+  - cmp_num
+  - fmt_int
+  - scan_int
+* - real
+  - 11011b
+  - pack_real
+  - emit_real
+  - read_real
+  - cmp_num
+  - fmt_real
+  - scan_real
+* - numeric
+  - 1000b
+  - -
+  - emit_real
+  - read_real
+  - cmp_num
+  - fmt_real
+  - scan_real
+* - bytea
+  - 1000100b
+  - large_value
+  - emit_bytea
+  - read_bytea
+  - cmp_bytes
+  - fmt_bytea_hex
+  - scan_bytea_hex
+* - text
+  - 1000100b
+  - large_value
+  - emit_text
+  - read_text
+  - cmp_text
+  - fmt_text
+  - scan_text
+* - nkd_text
+  - 1000100b
+  - large_value
+  - emit_nkd_text
+  - read_nkd_text
+  - cmp_nkd_text
+  - fmt_nkd_text
+  - scan_nkd_text
+* - nkc_text
+  - 1000100b
+  - large_value
+  - emit_nkc_text
+  - read_nkc_text
+  - cmp_nkc_text
+  - fmt_nkc_text
+  - scan_nkc_text
+* - json
+  - 1000100b
+  - large_json
+  - emit_json
+  - read_json
+  - cmp_struct_hash
+  - hash_json
+  - scan_hash -->
+<p>The functions are all described in detail in the reference
+implementation.  Most are very simple.</p>
+<p>If a <tt class="docutils literal">type_name</tt> is used in the schema, but not listed in
+<tt class="docutils literal">meta.types</tt>, then the above definitions are used.</p>
+</div>
+</div>
+</div>
+
+  </div>
+
+  <div id="footer" style="clear: both">
+   <hr />
    <a href="../copyright.html">copyright info</a> |
    <a href="../map.html">site map</a>
+  </div>
 
-  </div><!-- id="footer" -->
 </body>
+</html>
