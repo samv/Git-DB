@@ -36,7 +36,7 @@ has 'name' =>
 has 'type' =>
 	is => "ro",
 	isa => "Git::DB::Type",
-	coerce => 1,
+	#coerce => 1,
 	required => 1,
 	;
 
