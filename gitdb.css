@@ -1,0 +1,83 @@
+
+body {
+     margin: 0em;
+     font-family: "Bitstream Charter", serif;
+}
+
+/*#-------------------------------------
+| # logo & title
+-*/
+
+#sitelogo {
+     background: darkgreen;
+     margin: 0em;
+     height: 69pt;
+     padding: 0em;
+}
+#logo {
+     float: left;
+     padding: 0 1em 0 0; 
+     height: 100%;
+     bottom: 0;
+}
+#titlebox {
+     padding: 9pt 0 5pt 0;
+     color: white;
+}
+#site_title {
+     font-size: 40pt;
+     font-family: "Satanic Participants", "FreeSans", "Helvetica", sans-serif;
+}
+#site_strapline {
+     font-size: 10pt;
+     font-style: italic;
+}
+
+/*#-------------------------------------
+| # navbar
+-*/
+
+#navbar {
+	padding: 0.4em;
+	background: lightseagreen;
+} 
+
+#navbar .menuItem {
+	display: inline;
+	padding-left: 1em;
+}
+
+h1, h2, h3, h4, h5, h6 {
+      font-family: "FreeSans", "Helvetica", sans-serif;
+}
+
+a:link {
+	text-decoration: none;
+	color: violetred;
+}
+a:visited {
+	text-decoration: none;
+	color: firebrick;
+}
+a:hover {
+	text-decoration: none;
+	color: hotpink;
+}
+a:active {
+	text-decoration: none;
+	color: orangered2;
+}
+
+#title {
+      padding-left: 1em;
+      font-family: "Satanic Participants", "FreeSans", "Helvetica", sans-serif;
+
+      background: #f0f8ff;  /* AliceBlue */
+}
+
+#body {
+      background: #f0f8ff;  /* AliceBlue */
+      width: 50em;
+      padding: 0.5em 1em 0.5em 1em;
+}
+
