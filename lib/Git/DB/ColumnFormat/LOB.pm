@@ -51,16 +51,22 @@ sub read_col {
 	my $inv = shift;
 	my $io = shift;
 	my $extra = shift;
-	my ($schema_idx, $class_idx, $store)
-		= $extra->("schema_idx", "class_idx", "store");
 	my $length = read_uint($io);
 	my $blobid = read_str($io);
-	Git::DB::LOB->new(
-		blobid => $blobid,
-		store => $store,
-		schema_idx => $schema_idx,
-		class_idx => $class_idx,
-	);
+        if ( $extra ) {
+                my ($schema_idx, $class_idx, $store)
+                    = $extra->("schema_idx", "class_idx", "store");
+                Git::DB::LOB->new(
+                        blobid => $blobid,
+                        store => $store,
+                        schema_idx => $schema_idx,
+                        class_idx => $class_idx,
+                    );
+        }
+        else {
+                # no schema passed - just return the raw data
+                return "[$length byte LOB at $blobid]";
+        }
 }
 
 with 'Git::DB::ColumnFormat';

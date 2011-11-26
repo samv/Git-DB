@@ -17,13 +17,15 @@ use IO::Handle;
 use Git::DB::Defines qw(:int :float);
 
 use Sub::Exporter -setup => {
-	exports => [qw(encode_text decode_text read_text
-		       encode_int decode_int read_int
-		       encode_uint decode_uint read_uint
-		       encode_float decode_float read_float
-		       encode_decimal
-		     )],
-	};
+	exports => [ qw(
+		encode_text decode_text read_text
+		encode_bytes decode_bytes read_bytes
+		encode_int decode_int read_int
+		encode_uint decode_uint read_uint
+		encode_float decode_float read_float
+		encode_decimal
+	)],
+};
 
 sub encode_bytes {
 	my $bytes = shift;
@@ -202,6 +204,34 @@ sub encode_decimal {
 		$scale += length $1;
 	}
 	join "", encode_int($scale), encode_int($num);
+}
+
+sub encode_type {
+	use integer;
+	my $offset = shift;
+	my $col_fmt = shift;
+	if ($col_fmt > 15 or $col_fmt < 0) {
+		die "type '$col_fmt' is invalid";
+	}
+	return encode_varint($offset * 16 | $col_fmt);
+}
+
+sub decode_type {
+	use integer;
+	my $string = shift;
+	my $type = decode_varint($string);
+	my $col_fmt = $type & 15;
+	my $offset = $type / 16;
+	return ($offset, $col_fmt);
+}
+
+sub read_type {
+	use integer;
+	my $io = shift;
+	my $type = read_int($io);
+	my $col_fmt = $type & 15;
+	my $offset = $type / 16;
+	return ($offset, $col_fmt);
 }
 
 1;
