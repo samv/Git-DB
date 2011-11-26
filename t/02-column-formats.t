@@ -2,6 +2,7 @@
 
 use strict;
 use Test::More qw(no_plan);
+use boolean;
 
 # The column format.
 use_ok("Git::DB::ColumnFormat", ":all");
@@ -69,8 +70,8 @@ my @TESTS = (
 		=> Math::BigRat->new("1019514486099146/324521540032945"),
 
 	# type=5,6 => Boolean tests
-	5, "" => "",
-	6, "" => "1",
+	5, "" => false,
+	6, "" => true,
 
 	# type=7 => LOB tests - later
 	#7, "0x14257cc5642cb1a054f08cc83f2d943e56fd3ebe99" => "foo\n",
@@ -101,3 +102,5 @@ while ( my ($type, $encoded, $value) = splice @TESTS, 0, 3 ) {
 	my $read_back = $cf->read_col($io);
 	is($read_back, $value, "$test_name: in OK");
 }
+
+require t::ShowDeps;

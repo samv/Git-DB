@@ -3,6 +3,7 @@ package Git::DB::ColumnFormat::False;
 
 use Moose;
 
+use boolean;
 use Git::DB::Defines qw(ENCODING_FALSE);
 
 sub type_num { ENCODING_FALSE };
@@ -12,7 +13,7 @@ sub write_col {
 }
 
 sub read_col {
-	return "";
+	return false;
 }
 
 with 'Git::DB::ColumnFormat';
