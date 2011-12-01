@@ -68,7 +68,7 @@ sub cat_page_file {
         if ( $self->has_tabledir ) {
                 $file =~ s{^\Q$self->tabledir\E/?}{};
         }
-         my @pk_cols = split_row_id_filename($file);
+         my @pk_cols = eval{ split_row_id_filename($file) };
         $self->cat_page($input_fh, @pk_cols)
 }
 
@@ -82,6 +82,7 @@ use constant EXPECT_COLUMN => do {
         $a;
 };
 
+# This function should be moved into one of the modules!
 sub cat_page {
         my $self = shift;
         my $io = shift;
