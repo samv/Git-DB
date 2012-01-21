@@ -1,3 +1,0 @@
-
-package Git::DB::Relation;
-
