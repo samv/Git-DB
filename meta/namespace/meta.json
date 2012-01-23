@@ -1,0 +1,6 @@
+/* this 'meta' schema is too late to apply, but storing it can enhance
+ * debugging */
+{ "ns_name": "meta",
+  "ns_url": "http://github.com/samv/Git-DB",
+  "ns_rev": 0.1,
+}
