@@ -1,0 +1,95 @@
+/* primary keys in the meta schema. */
+[
+ {
+     "ns_name": "meta",
+     "type_name": "namespace",
+     "key_name": "namespace_ns_name_idx",
+     "key_inherit": true,
+     "key_attr_index": [0],
+     "primary_path": "/meta/namespace",
+ },
+
+ /* the following primary keys are the result of
+    the type_ns_name_type_name_idx super-tuple index.
+
+    They are marked as not inherited, because they were themselves
+    added as the result of an inheritance rule.  I'm leaning towards
+    making them always inherit, because: (see note by tuple primary
+    key)
+
+ */
+ {
+     "ns_name": "meta",
+     "type_name": "enum",
+     "key_name": "enum_ns_name_type_name_idx",
+     "key_inherit": false,
+     "key_attr_index": [0,1],
+     "primary_path": "/meta/enum",
+ },
+ {
+     "ns_name": "meta",
+     "type_name": "value",
+     "key_name": "value_ns_name_type_name_idx",
+     "key_inherit": false,
+     "key_attr_index": [0,1],
+     "primary_path": "/meta/value",
+ },
+
+ /* if this tuple could be targeted for the tuple_super association,
+  * it would be better.  Currently it targets
+  * type_ns_name_type_name_idx.  Again, inherited as default policy
+  * wins.  But because this one is not inherited, the index doesn't
+  * contain sub-types.
+  */
+ {
+     "ns_name": "meta",
+     "type_name": "tuple",
+     "key_name": "tuple_ns_name_type_name_idx",
+     "key_inherit": false,
+     "key_attr_index": [0,1],
+     "primary_path": "/meta/tuple",
+ },
+ {
+     "ns_name": "meta",
+     "type_name": "table",
+     "key_name": "table_ns_name_type_name_idx",
+     "key_inherit": false,
+     "key_attr_index": [0,1],
+     "primary_path": "/meta/table",
+ },
+
+ /* moving on to attr and key */
+ {
+     "ns_name": "meta",
+     "type_name": "attr",
+     "key_name": "attr_ns_name_type_name_index_idx",
+     "key_inherit": true,
+     "key_attr_index": [0,1,2],
+     "primary_path": "/meta/attr",
+ },
+ /* overlaps columns with key's key_ns_name_key_name_idx */
+ {
+     "ns_name": "meta",
+     "type_name": "unique",
+     "key_name": "unique_ns_name_type_name_key_name_idx",
+     "key_inherit": false,
+     "key_attr_index": [0,1,2],
+     "primary_path": "/meta/unique",
+ },
+ {
+     "ns_name": "meta",
+     "type_name": "primary",
+     "key_name": "primary_ns_name_type_name_key_name_idx",
+     "key_inherit": false,
+     "key_attr_index": [0,1,2],
+     "primary_path": "/meta/primary",
+ },
+ {
+     "ns_name": "meta",
+     "type_name": "foreign",
+     "key_name": "foreign_ns_name_type_name_key_name_idx",
+     "key_inherit": false,
+     "key_attr_index": [0,1,2],
+     "primary_path": "/meta/foreign",
+ },
+]

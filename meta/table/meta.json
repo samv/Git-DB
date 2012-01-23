@@ -1,0 +1,60 @@
+[
+  {
+    "type_name": "namespace",
+    "table_path": "/meta/namespace",
+  },
+  
+  {
+    "type_name": "enum",
+    "type_inherit": "type",
+    "table_path": "/meta/enum",
+  },
+
+  {
+    "type_name": "value",
+    "type_inherit": "type",
+    "table_path": "/meta/value",
+  },
+  
+  /* tuples are types which are composed of other types*/
+  {
+    "type_name": "tuple",
+    "type_inherit": "type",
+    "table_path": "/meta/tuple",
+  },
+
+  /* tables are tuples which have a storage path */
+  {
+    "type_name": "table",
+    "type_inherit": "tuple",
+    "table_path": "/meta/table",
+  },
+  
+  /* attributes need their own table, so they can be a target of the
+   * relationship/constraint table, key */
+  {
+    "type_name": "attr",
+    "table_path": "/meta/attr",
+  },
+
+  /* unique indexes on the data set */
+  {
+    "type_name": "unique",
+    "type_inherit": "key",
+    "table_path": "/meta/unique",
+  },
+
+  /* primary keys are how you get at the data set */
+  {
+    "type_name": "primary",
+    "type_inherit": "unique",
+    "table_path": "/meta/primary",
+  },
+
+  /* foreign keys.  These just link to another key */
+  {
+    "type_name": "foreign",
+    "type_inherit": "key",
+    "table_path": "/meta/foreign",
+  },
+]

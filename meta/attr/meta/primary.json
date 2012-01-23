@@ -1,0 +1,8 @@
+[ /* a primary key is a unique key with a filesystem path and row data */
+ {
+     "attr_index": 5,
+     "attr_name": "primary_path",
+     "attr_type": "string",
+     "attr_required": false,
+ },
+],

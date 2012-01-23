@@ -1,0 +1,8 @@
+[
+ {
+     "attr_index": 11,
+     "attr_name": "table_path",
+     "attr_type": "string",
+     "attr_required": true,
+ },
+],
