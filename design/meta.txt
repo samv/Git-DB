@@ -605,7 +605,7 @@ well as achieving several of the various levels of normal form.  An
 important test is that the schema completely describes itself, and
 naturally fits within itself.
 
-.. figure:: ../files/meta-uml-full.png
+.. figure:: ../files/meta-uml.png
    :width: 60%
    :figwidth: 90%
    :alt: UML diagram showing relationship between all meta classes
