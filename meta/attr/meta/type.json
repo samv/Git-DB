@@ -1,0 +1,17 @@
+[
+ /* foreign key to namespace */
+ {
+     "attr_index": 0,
+     "attr_name": "ns_name",
+     "attr_type": "string",
+     "attr_required": true,
+ },
+ /* the name of the type is the primary key
+    for all types in this heirarchy. */
+ {
+     "attr_index": 1,
+     "attr_name": "type_name",
+     "attr_type": "string",
+     "attr_required": true,
+ },
+]

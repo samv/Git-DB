@@ -1,0 +1,45 @@
+[
+     /* attributes particular to values */
+     {
+       "attr_index": 3,
+       "attr_name": "value_formats",
+       "attr_type": "int",
+       "attr_required": true,
+     },
+     {
+       "attr_index": 4,
+       "attr_name": "value_dump_f",
+       "attr_type": "string",
+       "attr_required": false,
+     },
+     {
+       "attr_index": 5,
+       "attr_name": "value_load_f",
+       "attr_type": "string",
+       "attr_required": false,
+     },
+     {
+       "attr_index": 6,
+       "attr_name": "value_choose_f",
+       "attr_type": "string",
+       "attr_required": false,
+     },
+     {
+       "attr_index": 7,
+       "attr_name": "value_cmp_f",
+       "attr_type": "string",
+       "attr_required": false,
+     },
+     {
+       "attr_index": 8,
+       "attr_name": "value_print_f",
+       "attr_type": "string",
+       "attr_required": false,
+     },
+     {
+       "attr_index": 9,
+       "attr_name": "value_scan_f",
+       "attr_type": "string",
+       "attr_required": false,
+     },
+]

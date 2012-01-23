@@ -1,0 +1,9 @@
+[
+ {
+     "attr_index": 10,
+     "attr_name": "tuple_super",
+     "attr_type": "string",
+     "attr_required": false,
+     "attr_dim": 1,
+ },
+],

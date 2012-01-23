@@ -1,0 +1,5 @@
+/* the interesting facts about tuples are to be found in the attr and
+ * key type heirarchies */
+[ { "type_name": "type" },
+  { "type_name": "key" },
+]

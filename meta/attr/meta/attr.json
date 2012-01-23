@@ -1,0 +1,48 @@
+[
+ /* these are parts of the foreign key to tuple */
+ {
+     "attr_index": 0,
+     "attr_name": "ns_name",
+     "attr_type": "string",
+     "attr_required": true,
+ },
+ {
+     "attr_index": 1,
+     "attr_name": "type_name",
+     "attr_type": "string",
+     "attr_required": true,
+ },
+
+ /* the index here is the same as the columnformat column number.
+  */
+ {
+     "attr_index": 2,
+     "attr_name": "attr_index",
+     "attr_type": "int",
+     "attr_required": true
+ },
+ {
+     "attr_index": 3,
+     "attr_name": "attr_name",
+     "attr_type": "string",
+     "attr_required": true
+ },
+ {
+     "attr_index": 4,
+     "attr_name": "attr_type",
+     "attr_type": "int",
+     "attr_required": false
+ },
+ {
+     "attr_index": 5,
+     "attr_name": "attr_dim",
+     "attr_type": "int",
+     "attr_required": false
+ },
+ {
+     "attr_index": 6,
+     "attr_name": "attr_required",
+     "attr_type": "int",
+     "attr_required": false
+ },
+],

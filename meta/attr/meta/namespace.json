@@ -1,0 +1,20 @@
+[
+ {
+     "attr_index": 0,
+     "attr_name": "ns_name",
+     "attr_type": "string",
+     "attr_required": true,
+ },
+ {
+     "attr_index": 1,
+     "attr_name": "ns_url",
+     "attr_type": "string",
+     "attr_required": true,
+ },
+ {
+     "attr_index": 2,
+     "attr_name": "ns_rev",
+     "attr_type": "num",
+     "attr_required": true,
+ },
+]
