@@ -1,0 +1,4 @@
+"num",27,"dump_num","load_num","best_num","cmp_num","printf_f","strtod"
+"string",4,"dump_str","load_str",,"cmp_str","printf_s","strtod"
+"int",1,"dump_int","load_int",,"cmp_num","printf_d","scan_d"
+"bool",192,"noop","load_bool","dump_bool","cmp_ft","print","scan_bool"
