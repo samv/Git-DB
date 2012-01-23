@@ -280,8 +280,8 @@ Boolean encoding types are not permitted in these types in any use
 case where the column type byte may be omitted.  Arrays of booleans
 can be represented as raw data blobs in the meantime.
 
-Encoding Arrays
-^^^^^^^^^^^^^^^
+Homogenous Arrays
+^^^^^^^^^^^^^^^^^
 
 .. figure:: ../files/array.png
    :width: 50%
@@ -292,15 +292,16 @@ Encoding Arrays
    **Figure 4.** the column contains a 17-member list of ``varint``
    values.
 
-With arrays, the values must all be of the same encoding type.  The
-first ``varint`` to follow is a type specifier for the values,
-specified in exactly the same way as a column encoding; no offset
-should be specified.  For a multi-dimensional array, this may specify
-the *List<>* type again.  After the type comes a ``varuint``, which is
-the number of values expected.  The values appear directly afterwards.
+With homogenous arrays, the values must all be of the same encoding
+type.  The first ``varint`` to follow is a type specifier for the
+values, specified in exactly the same way as a column encoding; no
+offset should be specified.  For a multi-dimensional array, this may
+specify the *List<>* type again.  After the type comes a ``varuint``,
+which is the number of values expected.  The values appear directly
+afterwards.
 
-While it is not technically necessary, the ``pop`` column specifier is
-to be found at the end of the list of values.
+The ``pop`` column specifier is to be found at the end of the list of
+values.
 
 Encoding Tuples
 ^^^^^^^^^^^^^^^
@@ -324,12 +325,12 @@ type appears, followed by more columns (numbered beginning with column
 Arrays of Tuples
 ^^^^^^^^^^^^^^^^
 
-If the type of an array is *Tuple<>*, then a list of types is
-expected, terminated by a ``pop``.  If the list is empty, then each
-item in the array is a full (embedded) row, with each of its columns
-introduced with an encoding ``varint`` and a value, just like encoding
-a regular embedded Tuple.  If however there is a list of types, then
-this defines the list for each item in the entire array, and just the
+If the type of a list is *Tuple<>*, then a list of types is expected,
+terminated by a ``pop``.  If the list is empty, then each item in the
+array is a full (embedded) row, with each of its columns introduced
+with an encoding ``varint`` and a value, just like encoding a regular
+embedded Tuple.  If however there is a list of types, then this
+defines the list for each item in the entire array, and just the
 values can be listed.  This precludes individual items in the array
 having ``NULL`` values.
 
@@ -359,7 +360,30 @@ in this column without re-parsing.
   ``string`` *K*\ :subscript:`N` ``float`` *V*\
   :subscript:`N` ``pop``
 
+Heterogenous Arrays
+^^^^^^^^^^^^^^^^^^^
 
+Like with hetereogenous tuples above, passing no type to List allows
+for a different encoding, where no types are assumed, and each value
+in the array requires a type bit.  The result is a tuple, which is
+filled into the list which defines the value, by column number.
+
+For instance, to encode this list:
+
+  (42, 31, 16, "hut!", null, [1,2,3])
+
+You'd use:
+
+  *List<>* ``pop`` ``varint`` 42 ``varint`` 31 ``varint`` 16
+  ``string`` 4 "``hut!``" :sup:`+1`\ *List<>* ``varint`` 3 1 2 3 ``pop``
+  ``pop``
+
+The :sup:`+1`\ *List<>* in the above is the *List<>* type, with the
+column offset of "+1" to mean, skip one column, leaving the null.
+
+This is the only way to encode lists/arrays with nulls; the other form
+assumes an even n-dimensional array with all values of a common
+encoding.
 
 Schema changes
 --------------
