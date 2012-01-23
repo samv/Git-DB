@@ -1,0 +1,81 @@
+[
+ /* every table links back to the 'namespace' eventually.
+    First, with type, by ns_name */
+   {
+     "ns_name": "meta",
+     "type_name": "type",
+     "key_name": "type_ns_name_exists",
+     "key_inherit": true,
+     "key_attr_index": [0],
+     "foreign_key_name": "namespace_ns_name_idx",
+     "foreign_help": "Type's Namespace does not exist",
+   },
+ /* Then, with attr, by ns_name and type_name */
+   {
+     "ns_name": "meta",
+     "type_name": "attr",
+     "key_name": "attr_ns_name_type_name_exists",
+     "key_inherit": true,
+     "key_attr_index": [0,1],
+     "foreign_key_name": "type_ns_name_type_name_idx",
+     "foreign_help": "Attribute's NS or Type Name unknown",
+   },
+ /* Then, with key, by ns_name and type_name */
+   {
+     "ns_name": "meta",
+     "type_name": "key",
+     "key_name": "key_ns_name_type_name_exists",
+     "key_inherit": true,
+     "key_attr_index": [0,1],
+     "foreign_key_name": "type_ns_name_type_name_idx",
+     "foreign_help": "Attribute's NS or Type Name unknown",
+   },
+   /* We are concluded with the foreign keys within primary keys */
+
+   /* now we are onto further integrity assertions */
+
+   /* First - the attributes that a key points to exist */
+     /* furthermore: inherited attributes should be expanded
+      * before this constraint is useful */
+   {
+     "ns_name": "meta",
+     "type_name": "key",
+     "key_name": "attr_ns_name_type_name_attr_index_unique",
+     "key_inherit": true,
+     "key_attr_index": [0,1,4]
+     "foreign_key_name": "type_ns_name_type_name_idx",
+     "foreign_help": "Key refers to unknown Type or Attribute Index",
+   },
+   /* Second - the key that a foreign key points to exists */
+   {
+     "ns_name": "meta",
+     "type_name": "foreign",
+     "key_name": "foreign_ns_name_foreign_key_name_exists",
+     "key_inherit": true,
+     "key_attr_index": [0,6],
+     "foreign_key_name": "key_ns_name_key_name_idx",
+     "foreign_help": "Key's Foreign key refers an unknown key name",
+   },
+
+   /* The types that tuples inherit from must exist */
+   {
+     "ns_name": "meta",
+     "type_name": "tuple",
+     "key_name": "tuple_ns_name_tuple_super_exists",
+     "key_inherit": true,
+     "key_attr_index": [0,10],
+     "foreign_key_name": "type_ns_name_type_name_idx",
+     "foreign_help": "Tuple inherits from an unknown tuple type name",
+   },
+
+ /* An attr's type must exist: */
+   {
+     "ns_name": "meta",
+     "type_name": "attr",
+     "key_name": "attr_ns_name_attr_type_exists",
+     "key_inherit": true,
+     "key_attr_index": [0,1],
+     "foreign_key_name": "type_ns_name_type_name_idx",
+     "foreign_help": "Attribute's Type not defined",
+   },
+]

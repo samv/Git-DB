@@ -1,0 +1,8 @@
+[ /* a foreign key is linked with another identically typed unique key */
+ {
+     "attr_index": 6,
+     "attr_name": "foreign_key_name",
+     "attr_type": "string",
+     "attr_required": true,
+ },
+],
