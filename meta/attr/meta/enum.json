@@ -1,0 +1,9 @@
+[
+ {
+     "attr_index": 2,
+     "attr_name": "enum_values",
+     "attr_type": "string",
+     "attr_required": false,
+     "attr_dim": 1,
+ },
+]
