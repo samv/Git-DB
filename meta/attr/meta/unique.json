@@ -1,0 +1,7 @@
+[ /* unique is a sub-type of key, but adds no columns other than type
+     information.  For polymorphic select to work (eg, selecting all
+     from key and getting *specialized* rows back), only one sub-type
+     of a tuple is allowed to add no attributes. */
+ /* unique still inherits 5 columns and a primary key definition from
+    'key' */
+],

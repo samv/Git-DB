@@ -1,0 +1,49 @@
+[ /* these are all essentially constraints.  To fsck a store, you would need 
+     to go through and check all these are true. */
+ {
+     "ns_name": "meta",
+     "type_name": "namespace",
+     "key_name": "namespace_ns_url_rev_idx",
+     "key_inherit": true,
+     "key_attr_index": [1,2],
+ },
+
+ /* These unique constraints are inherited by all of the types which
+  * inherit from them.
+  */
+ {
+     "ns_name": "meta",
+     "type_name": "type",
+     "key_name": "type_ns_name_type_name_idx",
+     "key_inherit": true,
+     "key_attr_index": [0,1],
+ },
+ {
+     "ns_name": "meta",
+     "type_name": "key",
+     "key_name": "key_ns_name_key_name_idx",
+     "key_inherit": true,
+     "key_attr_index": [0,2],
+ },
+
+ /* each attribute has an index, and this unique index asserts that no
+    two attributes defined on a type have the same index position.
+ */
+ {
+     "ns_name": "meta",
+     "type_name": "attr",
+     "key_name": "attr_ns_name_type_name_attr_index_unique",
+     "key_inherit": true,
+     "key_attr_index": [0,1,2],
+ },
+
+ /* implement one schema-wide namespace for index names */
+ {
+     "ns_name": "meta",
+     "type_name": "key",
+     "key_name": "key_ns_name_key_name_idx",
+     "key_inherit": true,
+     "key_attr_index": [0,2],
+ },
+
+],
