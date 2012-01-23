@@ -33,7 +33,7 @@ basic keys.
 
 There are four groups of ``meta`` tables:
 
-**schema**
+**namespace**
 
    The objects in this table are top-level containers for all the
    schema objects relating to a particular version of the application.
@@ -69,40 +69,63 @@ There are four groups of ``meta`` tables:
    source table.  There are no indexes in this version of gitdb.
 
 
-The Schema table (``meta.schema``)
-==================================
+The Namespace table (``meta.namespace``)
+========================================
 
-The schema table defines local names of the schemas used.  This
-controls the path where the data lives in the top level of the
-repository.  It also allows for schema revisioning.  The repository
-revision is a ``num``, which can be any number; integer, decimal,
-float etc.  This number can be used for schema revisioning.
+The namespace table is a local surrogate key given to the schema,
+which is used as the first member of the primary key for all the other
+types in the ``meta`` schema.
 
-::
+The namespace maps to a URL and revision pair.  The URL is a
+distinguishing feature of the schema.  The revision number is
+increased as the schema is modified going forward.  The meta schema
+itself can store multiple revisions of a single application's database
+schema, under different names.
 
-  meta.schema:
-    ns_url text not null
-    ns_rev num not null
-    primary key (ns_url, ns_rev)
-    ns_name str not null
-    foreign key (ns_name) references :ns_name_idx
+.. list-table::
+   :widths: 10 5 5 10
+   :header-rows: 1
+
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
+
+   * - ``ns_name``
+     - string
+     - no
+     - Primary
+
+   * - ``ns_url``
+     - string
+     - no
+     - Unique (with ns_rev)
+
+   * - ``ns_rev``
+     - num
+     - no
+     - Unique (with ns_rev)
  
-  meta.schema:ns_name_idx
-    ns_name str not null
-    primary key (ns_name)
-
 Specified in a more Avro-like JSON syntax, that would be:
 
 ::
 
-   { "name": "schema",
-     "type": "tuple",
-     "fields": [
-        { "attr_name": "ns_url", "type": "string", "required": 1 },
-        { "name": "ns_rev", "type": "num", "required": 1 },
-        { "name": "ns_name", "type": "string", "required": 1 },
+   { "type_name": "namespace",
+     "tuple_fields": [
+        { "attr_name": "ns_name",
+          "attr_type": "string",
+          "attr_required": 1,
+         },
+        { "attr_name": "ns_url",
+          "attr_type": "string",
+          "attr_required": 0,
+        },
+        { "attr_name": "ns_rev",
+          "attr_type": "num",
+          "attr_required": 1,
+        },
      ],
-     "keys": [
+     "table_keys": [
         { "primary": true,
           "fields": [ "ns_url", "ns_rev" ] },
         { "unique": true,
@@ -111,11 +134,14 @@ Specified in a more Avro-like JSON syntax, that would be:
      ],
    }
 
+Actually, the keys and attributes will appear in the "primary",
+"unique" and "attr" tables.
+
 The values, for the ``meta`` schema, are:
 
 ::
 
-   [ "http://github.com/samv/Git-DB", 0.1, "meta" ]
+   [ "meta", "http://github.com/samv/Git-DB", 0.1 ]
 
 Which would be encoded as:
 
