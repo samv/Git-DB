@@ -10,7 +10,7 @@ MetaFormat: specifying data structure
 .. figure:: ../files/meta-uml-simple.png
    :width: 40%
    :figwidth: 80%
-   :alt: UML diagram showing relationship between meta concepts
+   :alt: UML diagram showing relationship between meta class heirarchies
    :align: right
 
    **Figure 1.** How the various ``meta`` types relate to each other,
@@ -83,7 +83,7 @@ itself can store multiple revisions of a single application's database
 schema, under different names.
 
 .. list-table::
-   :widths: 10 5 5 10
+   :widths: 20 5 5 40
    :header-rows: 1
 
    * - Column
@@ -106,50 +106,19 @@ schema, under different names.
      - no
      - Unique (with ns_rev)
  
-Specified in a more Avro-like JSON syntax, that would be:
-
-::
-
-   { "type_name": "namespace",
-     "tuple_fields": [
-        { "attr_name": "ns_name",
-          "attr_type": "string",
-          "attr_required": 1,
-         },
-        { "attr_name": "ns_url",
-          "attr_type": "string",
-          "attr_required": 0,
-        },
-        { "attr_name": "ns_rev",
-          "attr_type": "num",
-          "attr_required": 1,
-        },
-     ],
-     "table_keys": [
-        { "primary": true,
-          "fields": [ "ns_url", "ns_rev" ] },
-        { "unique": true,
-          "fields": [ "ns_name" ],
-         },
-     ],
-   }
-
-Actually, the keys and attributes will appear in the "primary",
-"unique" and "attr" tables.
-
-The values, for the ``meta`` schema, are:
+The values, for the ``meta`` schema, are (encoded as JSON):
 
 ::
 
    [ "meta", "http://github.com/samv/Git-DB", 0.1 ]
 
-Which would be encoded as:
+If encoded in a binary row or stream this would be:
 
 ::
 
-  00000000  021d 6874 7470 3a2f 2f67 6974 6875 622e  ␂␝http://github.
-  00000010  636f 6d2f 7361 6d76 2f47 6974 2d44 4203  com/samv/Git-DB␃
-  00000020  7f01 0204 6d65 7461                      ␡␁␂␄meta
+  00000000  0204 6d65 7461 021d 6874 7470 3a2f 2f67 ␂␄meta␂␝http://g
+  00000010  6974 6875 622e 636f 6d2f 7361 6d76 2f47 ithub.com/samv/Gi
+  00000020  6974 2d44 4203 7f01                     t-DB␃␡␁
 
 This shows a curious situation, in that it is possible to include
 information in the ``meta`` tables about the ``meta`` schema itself.
@@ -171,35 +140,32 @@ Types are abstract, in that you can't just have a type, it has to be a
 particular kind of type.  When reading the row, which kind of type you
 have can be distinguished from which attributes it posesses.
 
-The ``type`` tuple exists only to keep a registry of type names, and
-index values.  To allow for renaming without having to alter table
-content, there is a normative index, an integer, and a type name.
+The ``type`` tuple exists only to keep a registry of type names within
+a namespace.  The primary namespace for types is their names and not a
+surrogate index, which makes type renaming more complex, but makes the
+schema overall nicer to work with.  Numbered surrogates are used for
+the ``attr`` table, only, as they are necessary for the binary column
+format.
 
-::
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
 
-  { "tuple_name": "type",
-    "attr": [
-       { "name": "ns_url", "type": "string", "required": true },
-       { "name": "ns_rev", "type": "num", "required": true },
-       { "name": "type_index", "type": "int", "required": true },
-       { "name": "type_name", "type": "string", "required": true },
-    ],
-    "keys": [
-       { "primary": true,
-         "key_fields": [ "ns_url", "ns_rev", "tuple_index" ]
-       },
-       { "foreign": true,
-         "fields": [ "ns_url", "ns_rev" ],
-         "references": {
-             "tuple_name": "schema",
-             "key": "__primary__",
-         }
-       }
-    ]
-  }
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
 
-.. thought: are primary keys not also tuples, perhaps called
-   ``ns.table.__primary__`` ?
+   * - ``ns_name``
+     - string
+     - no
+     - Primary (with ``type_name``) and Foreign to ``namespace``
+
+   * - ``type_name``
+     - string
+     - no
+     - Primary (with ``ns_name``)
+
 
 Value Types (``meta.value``)
 ----------------------------
@@ -209,22 +175,132 @@ a single set of allowable column formats, and well-known set of
 functions for converting from the value to representations such as the
 tree format and the column format.
 
-::
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
 
-  { "tuple_name": "value",
-    "tuple_inherit": [ "type" ],
-    "attr": [
-        { "name": "value_formats", type: "int", "required": true },
-        { "name": "value_dump_f", type: "string", "required": false },
-        { "name": "value_load_f", type: "string", "required": false },
-        { "name": "value_choose_f", type: "string", "required": false },
-        { "name": "value_cmp_f", type: "string", "required": false },
-        { "name": "value_print_f", type: "string", "required": false },
-        { "name": "value_scan_f", type: "string", "required": false },
-    ],
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
+
+   * - ``ns_name``
+     - string
+     - no
+     - Primary (with ``type_name``); foreign key inherited from
+       ``type``
+
+   * - ``type_name``
+     - string
+     - no
+     - Primary (with ``ns_name``)
+
+   * - ``value_formats``
+     - ``column_formats``
+     - no
+     - \-
+
+   * - ``value_dump_f``
+     - string
+     - yes
+     - \-
+
+   * - ``value_load_f``
+     - string
+     - yes
+     - \-
+
+   * - ``value_choose_f``
+     - string
+     - yes
+     - \-
+
+   * - ``value_cmp_f``
+     - string
+     - yes
+     - \-
+
+   * - ``value_print_f``
+     - string
+     - yes
+     - \-
+
+   * - ``value_scan_f``
+     - string
+     - yes
+     - \-
 
 Value Type definitions are relatively mundane, so the meanings of
-these columns is described elsewhere, in `Value Types`_.
+these columns is described elsewhere, in `Value Types`_.  You can
+include this in your schema to assist others in working with the new
+data types that get defined, should you feel the need.
+
+Enum Types (``meta.enum``)
+--------------------------
+
+Enums.  Useful enough to include on a first cut.
+
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
+
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
+
+   * - ``ns_name``
+     - string
+     - no
+     - Primary (with ``type_name``); foreign key inherited from
+       ``type``
+
+   * - ``type_name``
+     - string
+     - no
+     - Primary (with ``ns_name``)
+
+   * - ``enum_values``
+     - string[]
+     - no
+     - \-
+
+``enum_values`` is a column with 1 dimension, that is, an array.  The
+contents of this array relate to 'int' values.
+
+Field Types (``meta.field``)
+----------------------------
+
+Fields are like 'enum's but stored bitwise, either in an int or a
+block of bytes.  May be mapped to an array of values, or a 'FOO|BAR'
+C-style rendering, depending on the IO functions specified.
+
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
+
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
+
+   * - ``ns_name``
+     - string
+     - no
+     - Primary (with ``type_name``); foreign key inherited from
+       ``type``
+
+   * - ``type_name``
+     - string
+     - no
+     - Primary (with ``ns_name``)
+
+   * - ``field_bits``
+     - string[]
+     - no
+     - \-
+
+Fields are included mainly because there is one in the meta schema.
 
 Tuples (``meta.tuple``)
 -----------------------
@@ -236,40 +312,44 @@ or result sets in other contexts.
 Similar to the situation in Postgres, they are not necessarily
 intended for use as real tables, and can be used as column types in
 the case of nested data types.  This allows for deeply nested data in
-rows, though it is still strictly typed.
+rows, while retaining the ability to use strict typing.
+
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
+
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
+
+   * - ``ns_name``
+     - string
+     - no
+     - Primary (with ``type_name``); foreign key inherited from
+       ``type``
+
+   * - ``type_name``
+     - string
+     - no
+     - Primary (with ``ns_name``)
+
+   * - ``tuple_super``
+     - string[]
+     - yes
+     - Foreign, with ``ns_name``, to ``type`` primary key
 
 Tuples can inherit from other tuples, but they must add at least one
 required attribute in order to distinguish themselves in storage.
-This restriction allows typical cases to work naturally, and avoid
-unnecessary typing information having to be specified in the column
-format.
-
-Types within an inheritance heirarchy share attribute numbering
-ranges.
-
-::
-
-   { "tuple_name": "tuple",
-     "tuple_inherit": [ "type" ],
-     "attr": [
-        { "name": "tuple_super", "type": "int", "dimensions": 1,
-          "required": 0 },
-     ],
-     "keys": [
-        { "foreign": "1",
-          "fields": [ "ns_url", "ns_rev", "tuple_super" ],
-          "references": {
-              "type_name": "tuple",
-              "key_name": "__primary__",
-          }
-        },
-     ],
-   },
+This restriction allows row data to be merged between tables by simple
+concatenation and avoids storing schema information in the data. In
+other words, types within an inheritance heirarchy share attribute
+numbering ranges.
 
 Storage Tables (``meta.table``)
 -------------------------------
-
-A tuple with storage is called a table.
+A tuple with storage is called a table, and this requires a primary
+key.
 
 By default, its storage path is ``/ns_name/type_name`` - but this can
 be overridden by a non-null value in the ``table_path`` column.  The
@@ -277,72 +357,97 @@ only fixed path in the repository is therefore ``/meta`` - though you
 can call this path ``/_meta`` or ``/.meta`` if you prefer.  On
 connection, they should be tried in that order, and the first one
 found used.  If a ``value_name`` is used in the schema, but not listed
-in ``meta.types``, then the above definitions are used.
+in ``meta.types``, then 'standard' definitions from the relevant
+version of the git-db spec may be used.
 
-::
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
 
-   { "tuple_name": "table",
-     "tuple_inherit": [ "tuple" ],
-     "attr": [
-        { "name": "table_path", "type": "string", "required": 1 },
-     ],
-   }
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
 
+   * - ``ns_name``
+     - string
+     - no
+     - Primary (with ``type_name``); foreign key inherited from
+       ``type``
+
+   * - ``type_name``
+     - string
+     - no
+     - Primary (with ``ns_name``)
+
+   * - ``tuple_super``
+     - string[]
+     - yes
+     - (inherited from tuple)
+
+   * - ``tuple_path``
+     - string
+     - no
+     - none
 
 The Attribute table (``meta.attr``)
 ===================================
 
-Tuples are lists of attributes.  For now, the attributes table is a
-foreign key against the "tuple" table.
+Tuples are ordered lists of attributes.
 
-::
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
 
-  { "name": "attr",
-    "type": "tuple",
-     "fields": [
-        { "name": "ns_url", "type": "string", "required": 1 },
-        { "name": "ns_rev", "type": "num", "required": 1 },
-        { "name": "tuple_index", "type": "int", "required": 1 },
-        { "name": "attr_index", "type": "string", "required": 1 },
-        /* attr_name: unique, so deleted columns have no name */
-        { "name": "attr_name", "type": "string", "required": 0 },
-        /* type can reference tuple, because tuples are types */
-        { "name": "attr_type", "type": "text", "required": 1 },
-        /* dimensions: if the attribute is an array */
-        { "name": "attr_dim", "type": "int", "required": 0 },
-     ],
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
 
-     "keys": [
-        { "keytype": "primary",
-          "fields": [ "ns_url", "ns_rev", "tuple_index", "attr_index" ],
-        },
-        { "keytype": "unique",
-          "fields": [ "ns_url", "ns_rev", "tuple_name", "attr_name" ],
-        },
-        { "keytype": "foreign",
-          "fields": [ "ns_url", "ns_rev", "tuple_index" ],
-          "references": {
-              "ns_name": "meta",
-              "tuple_name": "tuple",
-          }
-        },
-        { "keytype": "foreign",
-          "fields": [ "ns_url", "ns_rev", "attr_type" ],
-          "references": {
-              "ns_name": "meta",
-              "tuple_name": "type",
-              "fields": [ "ns_url", "ns_rev", "attr_type" ],
-          }
-        },
-     ],
-  }
+   * - ``ns_name``
+     - string
+     - no
+     - Primary (1/3)
 
-To explain all this;
+   * - ``type_name``
+     - string
+     - no
+     - Primary (2/3); Foreign with ``ns_name`` to ``type`` or
+       ``tuple``
 
-``ns_url``, ``ns_rev``, ``tuple_index``
+   * - ``attr_index``
+     - int
+     - no
+     - Primary (3/3)
 
-    These are the foreign keys to the ``tuple`` table.  They specify
-    the ``meta.tuple`` that the entry describes.
+   * - ``attr_name``
+     - int
+     - yes
+     - Unique with ``ns_name`` and ``type_name``
+
+   * - ``attr_type``
+     - string
+     - yes
+     - Foreign with ``ns_name`` to ``type`` primary key index
+
+   * - ``attr_dim``
+     - int
+     - yes
+     - none
+
+   * - ``attr_required``
+     - bool
+     - no
+     - none
+
+
+``ns_name``, ``type_name``
+
+    These parts of the primary key are a foreign keys to the ``tuple``
+    table (or the ``type`` table, but they really only may add
+    attributes to tuple types, as value types cannot have extra type
+    encoded).  They specify the ``meta.tuple`` that the entry
+    describes.
 
 ``attr_index``
 
@@ -356,14 +461,17 @@ To explain all this;
     This is the logical name that is ascribed to the property, and
     should be the important one as far as applications are concerned.
     As there is a unique constraint, attributes which are deleted
-    should have this ``attr_name`` set to null.
+    should have ``attr_name`` not set.
 
 ``attr_type``
 
     This specifies the type of the attribute.  It is a reference to
-    the ``meta.types`` table.  Through inheritance, this may also
+    the ``meta.type`` heirarchy.  Through inheritance, this may also
     refer to tuples in the ``meta.tuple`` table - even itself.
-    Cross-schema type references are not allowed.
+    Cross-namespace type references are not allowed.
+
+    If this field is not set then the attribute is untyped.  The
+    standard JSON-like transform rules will apply.
 
 ``attr_dim``
 
@@ -372,90 +480,139 @@ To explain all this;
     If it is 1, then it is an array.  If 2 or higher, a
     multi-dimensional array.
 
-    One key caveat here is that array attributes must be homogenous,
-    or at least have a common base type, such that 
+``attr_required``
 
-KEYS & UNIQUE CONSTRAINTS
-=========================
+    A most basic constraint, whether the value can be NULL or not.  If
+    not set, then the value may be NULL.  No primary key attributes
+    may be NULL.
+
+Constraints and Keys
+====================
 
 There are three types of indexes: primary keys, unique keys, and
-foreign keys.
+foreign keys.  These are all specializations of the 'key' tuple:
 
-::
+The Key Tuple (``meta.key``)
+----------------------------
 
-  { "name": "key",
-    "type": "tuple",
-     "fields": [
-        { "name": "ns_url", "type": "string", "required": 1 },
-        { "name": "ns_rev", "type": "num", "required": 1 },
-        { "name": "tuple_index", "type": "int", "required": 1 },
-        { "name": "key_name", "type": "string", "required": 1 },
-        { "name": "key_unique", "type": "boolean", "required": 1 },
-        { "name": "key_primary", "type": "boolean", "required": 1 },
-        { "name": "key_foreign", "type": "boolean", "required": 1 },
-        { "name": "key_inherit", "type": "boolean", "required": 1 },
-        { "name": "key_source_tuple", "type": "int", "required": 1 },
-        { "name": "key_source_idx", "type": "int", "dimensions": 1,
-          "required": 1 },
-        { "name": "key_dest_tuple", "type": "int", "required": 1 },
-        { "name": "key_dest_idx", "type": "int", "dimensions": 1,
-          "required": 1 }
-     ],
-     "keys": [
-        { "keytype": "primary",
-          "fields": [ "ns_url", "ns_rev", "tuple_index", "key_name" ],
-        },
-        { "keytype": "foreign",
-          "fields": [ "ns_url", "ns_rev", "tuple_index" ],
-          "references": {
-              "ns_name": "meta",
-              "tuple_name": "tuple",
-          }
-        },
-        { "keytype": "foreign",
-          "fields": [ "ns_url", "ns_rev", "key_source_tuple",
-                      "key_source_idx" ],
-          "references": {
-              "ns_name": "meta",
-              "tuple_name": "attr",
-              "fields": [ "ns_url", "ns_rev", "tuple_index",
-                          "attr_index" ]
-          }
-        },
-        { "keytype": "foreign",
-          "fields": [ "ns_url", "ns_rev", "key_dest_tuple",
-                      "key_dest_idx" ],
-          "references": {
-              "ns_name": "meta",
-              "tuple_name": "attr",
-              "fields": [ "ns_url", "ns_rev", "tuple_index",
-                          "attr_index" ]
-          }
-        }
-     ]
-  }
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
 
-   Unique keys add the notion of constraint on the source table, and
-   add a required field: whether or not the required index is in
-   storage or not.  For applications where the storage or transmission
-   size of the database is the most important concern, this will be
-   false.  If it is stored, it is stored in TreeFormat (and therefore,
-   may have a storage path).
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
 
-   .. the primary key defines a tuple as being a table.  discuss.
+   * - ``ns_name``
+     - string
+     - no
+     - Primary (1/3)
 
-   The only difference between the primary key and a unique key is
-   that it is used as the primary identity for rows in the table.  As
-   there are no real extra fields, the primary key is distinguished by
-   a ``key_primary`` boolean attribute, and in storage they are the
-   same type ID.
+   * - ``type_name``
+     - string
+     - no
+     - Primary (2/3); Foreign with ``ns_name`` to ``type`` or
+       ``tuple``
 
-   Finally, there is the ``foreign`` key type.  Foreign keys refer to
-   another key.  If they refer to a unique or primary key, a
-   traditional foreign key relationship is established.  Foreign keys
-   which refer to each other imply the existence test, but place no
-   constraint on uniqueness of either side.
+   * - ``key_name``
+     - int
+     - no
+     - Primary (3/3); Unique with ``ns_name``
 
+   * - ``key_inherit``
+     - bool
+     - yes
+     - This rule doesn't apply to sub-types.
+
+   * - ``key_attr_index``
+     - int[]
+     - yes
+     - Foreign with ``ns_name`` and ``type_name`` to
+       ``attr_ns_name_type_name_attr_index_unique``
+
+Unique Keys (``meta.unique``)
+-----------------------------
+Unique keys add the notion of constraint on the source table.
+
+It has a table, which has no extra columns compared to the tuple.
+
+Primary Keys (``meta.primary``)
+-------------------------------
+The only difference between the primary key and a unique key is that
+it is used as the primary identity for rows in the table.  It stores
+one extra fact, the location of the table in the store.
+
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
+
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
+
+   * - ``ns_name``, ``type_name``, ``key_name``, ``key_inherit``,
+       ``key_attr_index``
+     - various
+     - various
+     - Inherited from 'key' tuple
+
+   * - ``primary_path``
+     - string
+     - no
+     - no key, must exist
+
+There are two fields where the path is recorded; this one records the
+location of the TreeFormat structure.  Technically, the ``table``
+class' ``table_path`` attribute records which TreeFormat structure
+that this table is saving its rows in.
+
+Foreign Keys (``meta.foreign``)
+-------------------------------
+
+Finally, there is the ``foreign`` key type.  Foreign keys refer to
+another key.  If they refer to a unique or primary key, a traditional
+foreign key relationship is established.  Foreign keys which refer to
+each other imply the existence test, but place no constraint on
+uniqueness of either side.
+
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
+
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
+
+   * - ``ns_name``, ``type_name``, ``key_name``, ``key_inherit``,
+       ``key_attr_index``
+     - various
+     - various
+     - Inherited from 'key' tuple
+
+   * - ``foreign_key_name``
+     - string
+     - no
+     - Foreign to ``key`` with ``ns_name``
+
+Summary
+=======
+
+The schema so far is capable of storing typed and untyped data, as
+well as achieving several of the various levels of normal form.  An
+important test is that the schema completely describes itself, and
+naturally fits within itself.
+
+.. figure:: ../files/meta-uml-full.png
+   :width: 60%
+   :figwidth: 90%
+   :alt: UML diagram showing relationship between all meta classes
+   :align: right
+
+   **Figure 2.** A UML diagram of *all* of the ``meta`` types and how
+   they relate to each other.
 
 .. _TreeFormat:
    ./treeformat.html

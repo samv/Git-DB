@@ -9,8 +9,8 @@
    xmlns="http://www.w3.org/2000/svg"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="504.54684"
-   height="303.31744"
+   width="586.44861"
+   height="303.31186"
    id="svg2"
    version="1.1"
    inkscape:version="0.48.2 r9819"
@@ -27,9 +27,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.8333283"
-     inkscape:cx="252.27342"
-     inkscape:cy="75.848666"
+     inkscape:zoom="1"
+     inkscape:cx="395.99952"
+     inkscape:cy="184.93749"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -58,7 +58,7 @@
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(-227.86107,-189.51478)">
+     transform="translate(-145.95322,-189.518)">
     <g
        id="g3759"
        transform="matrix(0.74168184,0,0,0.74168184,246.34601,68.110752)">
@@ -72,14 +72,14 @@
       <text
          sodipodi:linespacing="125%"
          id="text3755"
-         y="219.79076"
-         x="214"
-         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Mono;-inkscape-font-specification:Mono"
+         y="214.64273"
+         x="189.73077"
+         style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Lucida Console;-inkscape-font-specification:Lucida Console Bold"
          xml:space="preserve"><tspan
-           y="219.79076"
-           x="214"
+           y="214.64273"
+           x="189.73077"
            id="tspan3757"
-           sodipodi:role="line">Schema</tspan></text>
+           sodipodi:role="line">namespace</tspan></text>
     </g>
     <text
        xml:space="preserve"
@@ -91,7 +91,7 @@
          sodipodi:role="line"
          id="tspan3791"
          x="317.14285"
-         y="386.64789"></tspan></text>
+         y="386.64789" /></text>
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans"
@@ -118,7 +118,7 @@
          id="text3947"
          y="219.79076"
          x="214"
-         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Mono;-inkscape-font-specification:Mono"
+         style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:125%;letter-spacing:0px;word-spacing:0px;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Lucida Console;-inkscape-font-specification:Lucida Console Bold"
          xml:space="preserve"><tspan
            y="219.79076"
            x="214"
@@ -126,7 +126,7 @@
            sodipodi:role="line">attr</tspan></text>
     </g>
     <g
-       transform="matrix(0.74168184,0,0,0.74168184,96.560228,169.82562)"
+       transform="matrix(0.74168184,0,0,0.74168184,95.469316,169.28016)"
        id="g3833">
       <rect
          style="fill:none;stroke:#000000;stroke-width:5.91217756;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
@@ -137,7 +137,7 @@
          y="166.6479" />
       <text
          xml:space="preserve"
-         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Mono;-inkscape-font-specification:Mono"
+         style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:125%;letter-spacing:0px;word-spacing:0px;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Lucida Console;-inkscape-font-specification:Lucida Console Bold"
          x="214"
          y="219.79076"
          id="text3837"
@@ -199,7 +199,7 @@
          y="166.6479" />
       <text
          xml:space="preserve"
-         style="font-size:40px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Mono;-inkscape-font-specification:Mono"
+         style="font-size:40px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;text-indent:0;text-align:start;text-decoration:none;line-height:125%;letter-spacing:0px;word-spacing:0px;text-transform:none;direction:ltr;block-progression:tb;writing-mode:lr-tb;text-anchor:start;baseline-shift:baseline;color:#000000;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;marker:none;visibility:visible;display:inline;overflow:visible;enable-background:accumulate;font-family:Lucida Console;-inkscape-font-specification:Lucida Console Bold"
          x="214"
          y="219.79076"
          id="text4020"
@@ -251,15 +251,15 @@
     <text
        xml:space="preserve"
        style="font-size:40px;font-style:italic;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Italic"
-       x="420.85751"
-       y="306.20776"
+       x="430.85751"
+       y="309.20776"
        id="text4123"
        sodipodi:linespacing="125%"><tspan
          sodipodi:role="line"
          id="tspan4125"
-         x="420.85751"
-         y="306.20776"
-         style="font-size:11px;font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Serif;-inkscape-font-specification:Serif Italic">Attributes have a type</tspan></text>
+         x="430.85751"
+         y="309.20776"
+         style="font-size:11px;font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Serif;-inkscape-font-specification:Serif Italic">Attributes have types</tspan></text>
     <g
        id="g4205"
        transform="translate(218,-266)">
@@ -310,5 +310,46 @@
          x="395.85751"
          y="484.20776"
          style="font-size:11px;font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Serif;-inkscape-font-specification:Serif Italic">Some types have attributes</tspan></text>
+    <g
+       id="g3745"
+       transform="matrix(0,-0.74168184,-0.74168184,0,686.10726,332.95773)">
+      <path
+         sodipodi:nodetypes="cccccccccc"
+         inkscape:connector-curvature="0"
+         id="path3747"
+         d="M 15.697756,649.11599 -0.66757399,634.23274 14.019246,615.98548 l 14.24177,16.9121 -12.46155,15.13188 0,27.77511 16.795924,-0.25924 57.244646,-0.99467 0.616436,-85.56928 -34.684268,0.47619"
+         style="fill:none;stroke:#000000;stroke-width:4;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none"
+         inkscape:transform-center-x="-92.571499"
+         inkscape:transform-center-y="-28.483538" />
+      <path
+         style="fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:1px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1"
+         d="M 13.217468,618.70336 0,635.06785 13.846871,647.02651 26.434935,632.55023 z"
+         id="path3749"
+         inkscape:connector-curvature="0" />
+    </g>
+    <text
+       xml:space="preserve"
+       style="font-size:40px;font-style:italic;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Italic"
+       x="144.85751"
+       y="258.20776"
+       id="text3774"
+       sodipodi:linespacing="125%"><tspan
+         sodipodi:role="line"
+         id="tspan3776"
+         x="144.85751"
+         y="258.20776"
+         style="font-size:11px;font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Serif;-inkscape-font-specification:Serif Italic">Some types extend types</tspan></text>
+    <text
+       sodipodi:linespacing="125%"
+       id="text3778"
+       y="208.20776"
+       x="219.85754"
+       style="font-size:40px;font-style:italic;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;font-family:Sans;-inkscape-font-specification:Sans Italic"
+       xml:space="preserve"><tspan
+         style="font-size:11px;font-style:italic;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Serif;-inkscape-font-specification:Serif Italic"
+         y="208.20776"
+         x="219.85754"
+         id="tspan3780"
+         sodipodi:role="line">namespaces own types </tspan></text>
   </g>
 </svg>
