@@ -1,9 +1,9 @@
 Cannot find Psyco, skipping it
 rest2web version 0.5.1
 Running rest2web the Site Builder.
-Wed Nov 23 16:28:28 2011
+Sun Feb 12 12:12:24 2012
 
-Starting in "/Users/svilain/src/Git-DB" directory.
+Starting in "/Users/samv/src/Git-DB" directory.
 
 Processing "root" directory.
 Reading "code.txt".
@@ -21,15 +21,15 @@ Guessing encoding. We guessed: ISO8859-1
 Processing indexfile.
 Guessing encoding. We guessed: ISO8859-1
 Building code.html
-Writing code.html
+Skipping "code.html". Identical file exists.
 Building copyright.html
-Writing copyright.html
+Skipping "copyright.html". Identical file exists.
 Building scalability.html
-Writing scalability.html
+Skipping "scalability.html". Identical file exists.
 Building todo.html
-Writing todo.html
+Skipping "todo.html". Identical file exists.
 Building index.html
-Writing index.html
+Skipping "index.html". Identical file exists.
 
 Processing "var" directory.
 
@@ -58,19 +58,19 @@ Guessing encoding. We guessed: ISO8859-1
 Processing indexfile.
 Guessing encoding. We guessed: ISO8859-1
 Building design/columnformat.html
-Writing columnformat.html
+Skipping "columnformat.html". Identical file exists.
 Building design/distribution.html
-Writing distribution.html
+Skipping "distribution.html". Identical file exists.
 Building design/encoding.html
-Writing encoding.html
+Skipping "encoding.html". Identical file exists.
 Building design/filenames.html
-Writing filenames.html
+Skipping "filenames.html". Identical file exists.
 Building design/meta.html
-Writing meta.html
+Skipping "meta.html". Identical file exists.
 Building design/treeformat.html
-Writing treeformat.html
+Skipping "treeformat.html". Identical file exists.
 Building design/tx.html
-Writing tx.html
+Skipping "tx.html". Identical file exists.
 Building design/index.html
 Skipping "index.html". Identical file exists.
 
@@ -92,7 +92,15 @@ Processing ".git/objects/pack" directory.
 
 Processing ".git/objects/info" directory.
 
-Processing ".git/objects/f7" directory.
+Processing ".git/objects/fe" directory.
+
+Processing ".git/objects/f5" directory.
+
+Processing ".git/objects/f1" directory.
+
+Processing ".git/objects/ef" directory.
+
+Processing ".git/objects/ed" directory.
 
 Processing ".git/objects/ec" directory.
 
@@ -104,133 +112,211 @@ Processing ".git/objects/e7" directory.
 
 Processing ".git/objects/e5" directory.
 
+Processing ".git/objects/e4" directory.
+
+Processing ".git/objects/e3" directory.
+
+Processing ".git/objects/e2" directory.
+
+Processing ".git/objects/e1" directory.
+
+Processing ".git/objects/df" directory.
+
+Processing ".git/objects/de" directory.
+
+Processing ".git/objects/db" directory.
+
+Processing ".git/objects/d9" directory.
+
+Processing ".git/objects/d8" directory.
+
+Processing ".git/objects/d6" directory.
+
+Processing ".git/objects/d4" directory.
+
 Processing ".git/objects/d2" directory.
 
 Processing ".git/objects/d1" directory.
 
+Processing ".git/objects/d0" directory.
+
+Processing ".git/objects/cf" directory.
+
 Processing ".git/objects/ce" directory.
 
-Processing ".git/objects/cc" directory.
-
-Processing ".git/objects/cb" directory.
+Processing ".git/objects/cd" directory.
 
 Processing ".git/objects/ca" directory.
 
+Processing ".git/objects/c6" directory.
+
+Processing ".git/objects/c5" directory.
+
 Processing ".git/objects/bf" directory.
+
+Processing ".git/objects/be" directory.
 
 Processing ".git/objects/bc" directory.
 
+Processing ".git/objects/bb" directory.
+
 Processing ".git/objects/ba" directory.
+
+Processing ".git/objects/b7" directory.
 
 Processing ".git/objects/b6" directory.
 
+Processing ".git/objects/b3" directory.
+
+Processing ".git/objects/b2" directory.
+
 Processing ".git/objects/b0" directory.
 
-Processing ".git/objects/af" directory.
+Processing ".git/objects/ad" directory.
+
+Processing ".git/objects/ac" directory.
+
+Processing ".git/objects/aa" directory.
+
+Processing ".git/objects/a8" directory.
 
 Processing ".git/objects/a6" directory.
 
-Processing ".git/objects/a4" directory.
-
 Processing ".git/objects/a3" directory.
 
-Processing ".git/objects/a0" directory.
+Processing ".git/objects/a2" directory.
 
-Processing ".git/objects/9d" directory.
+Processing ".git/objects/9e" directory.
 
-Processing ".git/objects/9b" directory.
+Processing ".git/objects/9c" directory.
+
+Processing ".git/objects/99" directory.
+
+Processing ".git/objects/96" directory.
+
+Processing ".git/objects/95" directory.
 
 Processing ".git/objects/94" directory.
 
-Processing ".git/objects/8e" directory.
+Processing ".git/objects/90" directory.
 
-Processing ".git/objects/8d" directory.
+Processing ".git/objects/8e" directory.
 
 Processing ".git/objects/8b" directory.
 
-Processing ".git/objects/88" directory.
-
 Processing ".git/objects/87" directory.
 
-Processing ".git/objects/86" directory.
+Processing ".git/objects/84" directory.
 
 Processing ".git/objects/83" directory.
 
 Processing ".git/objects/80" directory.
 
+Processing ".git/objects/7d" directory.
+
 Processing ".git/objects/7b" directory.
 
+Processing ".git/objects/7a" directory.
+
+Processing ".git/objects/79" directory.
+
 Processing ".git/objects/78" directory.
+
+Processing ".git/objects/76" directory.
+
+Processing ".git/objects/75" directory.
+
+Processing ".git/objects/72" directory.
+
+Processing ".git/objects/71" directory.
+
+Processing ".git/objects/6f" directory.
+
+Processing ".git/objects/6e" directory.
 
 Processing ".git/objects/6d" directory.
 
 Processing ".git/objects/6c" directory.
 
-Processing ".git/objects/6a" directory.
-
-Processing ".git/objects/67" directory.
-
 Processing ".git/objects/66" directory.
 
-Processing ".git/objects/62" directory.
+Processing ".git/objects/63" directory.
 
-Processing ".git/objects/60" directory.
+Processing ".git/objects/5b" directory.
 
-Processing ".git/objects/53" directory.
+Processing ".git/objects/5a" directory.
 
-Processing ".git/objects/51" directory.
+Processing ".git/objects/58" directory.
+
+Processing ".git/objects/56" directory.
+
+Processing ".git/objects/52" directory.
+
+Processing ".git/objects/50" directory.
+
+Processing ".git/objects/4e" directory.
 
 Processing ".git/objects/4d" directory.
+
+Processing ".git/objects/49" directory.
 
 Processing ".git/objects/46" directory.
 
 Processing ".git/objects/40" directory.
 
-Processing ".git/objects/3d" directory.
-
 Processing ".git/objects/3b" directory.
 
-Processing ".git/objects/38" directory.
+Processing ".git/objects/3a" directory.
+
+Processing ".git/objects/39" directory.
 
 Processing ".git/objects/37" directory.
 
+Processing ".git/objects/36" directory.
+
 Processing ".git/objects/33" directory.
 
-Processing ".git/objects/32" directory.
-
-Processing ".git/objects/31" directory.
+Processing ".git/objects/30" directory.
 
 Processing ".git/objects/2e" directory.
 
-Processing ".git/objects/2c" directory.
-
-Processing ".git/objects/2b" directory.
+Processing ".git/objects/2d" directory.
 
 Processing ".git/objects/2a" directory.
 
 Processing ".git/objects/28" directory.
 
-Processing ".git/objects/25" directory.
-
-Processing ".git/objects/23" directory.
-
-Processing ".git/objects/22" directory.
-
 Processing ".git/objects/20" directory.
+
+Processing ".git/objects/1d" directory.
+
+Processing ".git/objects/1c" directory.
+
+Processing ".git/objects/19" directory.
+
+Processing ".git/objects/18" directory.
+
+Processing ".git/objects/17" directory.
 
 Processing ".git/objects/16" directory.
 
+Processing ".git/objects/15" directory.
+
 Processing ".git/objects/13" directory.
 
+Processing ".git/objects/10" directory.
+
+Processing ".git/objects/0e" directory.
+
 Processing ".git/objects/0c" directory.
+
+Processing ".git/objects/0b" directory.
 
 Processing ".git/objects/08" directory.
 
 Processing ".git/objects/07" directory.
 
 Processing ".git/objects/04" directory.
-
-Processing ".git/objects/03" directory.
 
 Processing ".git/objects/00" directory.
 
@@ -250,5 +336,5 @@ Processing ".git/hooks" directory.
 
 Processing ".git/branches" directory.
 
-Time taken to build site was 0.836 seconds.
+Time taken to build site was 1.458 seconds.
 16 files processed.

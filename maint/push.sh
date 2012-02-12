@@ -7,10 +7,11 @@ then
 fi
 old=$(git symbolic-ref HEAD)
 git symbolic-ref HEAD refs/heads/gh-pages
+git read-tree HEAD
 git checkout HEAD .gitignore
 git add .
 git update-ref refs/heads/gh-pages $(echo "autopublish html" | git commit-tree `git write-tree` -p HEAD -p $old)
-git push origin HEAD website
+git push origin gh-pages
 git symbolic-ref HEAD $old
 git read-tree HEAD
 git checkout HEAD .gitignore
