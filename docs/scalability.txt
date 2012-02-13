@@ -1,0 +1,98 @@
+..
+
+  restindex
+      crumb: Design
+      page-description:
+         The design of gitdb
+      /description
+  /restindex
+
+==================
+git db scalability
+==================
+
+This standard is primarily intended to be scalable from small to
+large, while still giving the convenience of being able to 'check out'
+repositories and inspect their contents, while being fully auditable.
+
+
+Embedded use cases
+==================
+In the embedded case, table primitives used for a git DB
+implementation are used directly.  This allows for useful applications
+from early implementations even before query systems are developed.
+
+"embedded" this usually means "phone" these days, and mobile
+applications should benefit from the small data size requirements of
+git-db tables and efficient synchronization.
+
+A basic implementation need only care for `encoding`_ and `tree
+format`_, and its `meta.`_ schema can be fixed.  On connection, it
+just has to compare the ``meta`` schema to its own data, or perhaps
+even just the revision/URL stored in the ``meta.namespace`` table.
+
+
+SQLite use case
+===============
+
+In this case, a C-ISAM-type library like SQLite is engineered to
+connect to the git db store using shared libraries.  In this picture
+the application would be linked with a git db library and libgit2, and
+access the git store directly.  Unlike C-ISAM, it could support
+concurrent writers.  Also unlike C-ISAM, it would use an append-only
+store, which is much less subject to jamming.
+
+The command-line "sqlite" utility could work, as it can read the
+application's table structure from the `meta.`_ application schema,
+and know what tables and properties exist in the store.
+
+
+RDBMS use case
+==============
+
+In this case, git db tables are engineered underneath an RDBMS as a
+storage layer.  This could be as a MySQL engine, or even a port of
+Postgres to it.
+
+As there is an RDBMS engine present, it handles transactional
+integrity on contents itself.  The main benefit of this is
+replication for readers.
+
+
+Clustered RDBMS use case
+========================
+
+In this case, the RDBMS above is also taught how to replicate the
+store and negotiate writers which have successful updates to the
+database state (ie, commits).  This allows some horizontal scaling of
+complex update transactions (assuming every node can hold a clone of
+the repository).
+
+
+Sharded partition use case
+==========================
+
+So, in this mode, the store is broken up into submodules, with writes
+to each submodule managed by a different independent worker process or
+even computing node.
+
+As the `tree format`_ specifies that trees can be split into arbitrary
+nesting, data sets with natural partition boundaries (eg, users,
+sites, domains) can be sharded by ranges of primary keys.
+
+
+Whole Hadoop use case
+=====================
+
+In this mode, the system is distributed at the object store layer; no
+re-use of low level components such as libgit2 are possible.  The
+application should also suit this style of implementation.  The
+simplest use case would be equivalent in functionality to the
+"Embedded" case, above.
+
+.. _encoding: design/encoding.html
+
+.. _tree format: design/treeformat.html
+
+.. _meta.: design/meta.html
+

@@ -47,6 +47,17 @@ body {
 	padding-left: 1em;
 }
 
+#breadcrumbs {
+    margin: 0;
+    padding: 0.2em 0 0 2em;
+    background: #f0f8ff;  /* AliceBlue */
+}
+
+#breadcrumbs li {
+    display: inline;
+    padding-left: 1em;
+}
+
 h1, h2, h3, h4, h5, h6 {
       font-family: "FreeSans", "Helvetica", sans-serif;
 }

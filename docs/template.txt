@@ -31,13 +31,14 @@
     <div class="menuItem">
       <a href="<% path_to_root %>code.html" class="menu">Code</a>
     </div>
-  <div id="breadcrumbs">
-    <ul>
-      <# print_crumbs(breadcrumbs) #>
-    </ul>
-  </div>
+    <div class="menuItem">
+      <a href="<% path_to_root %>examples.html" class="menu">Examples</a>
+    </div>
   </div><!-- id="navbar" -->
 
+    <ul id="breadcrumbs">
+      <# print_crumbs(breadcrumbs) #>
+    </ul>
 
   <div id="body">
     <% body %>

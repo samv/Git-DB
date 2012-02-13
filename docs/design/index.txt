@@ -86,3 +86,10 @@ distributed computing system might use all of them.
 .. _scalability page:
    ../scalability.html
 
+Hopefully, the basic layers will be simple enough to be a useful
+back-end for SQLite or embedded uses.  A a traditional multi-user
+RDBMS might want to use layers 1 through 5 as a backing store; a
+distributed computing system might use all of them.  For more on this
+see scalability_
+
+.. _scalability: ../scalability.html

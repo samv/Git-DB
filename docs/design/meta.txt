@@ -21,6 +21,9 @@ schema of the tables itself; these are identified with the ``meta.``
 schema name.  Optionally there are rows in the schema which represent
 the schema of the ``meta.`` store itself.
 
+One way to understand how this works is to see how it works out with
+a simple example schema.
+
 Meta Tables
 ===========
 
@@ -76,43 +79,68 @@ The namespace table is a local surrogate key given to the schema,
 which is used as the first member of the primary key for all the other
 types in the ``meta`` schema.
 
-The namespace maps to a URL and revision pair.  The URL is a
+The namespace has a URL and revision pair.  The URL is a
 distinguishing feature of the schema.  The revision number is
 increased as the schema is modified going forward.  The meta schema
 itself can store multiple revisions of a single application's database
 schema, under different names.
 
-.. list-table::
-   :widths: 20 5 5 40
-   :header-rows: 1
-
-   * - Column
-     - Type
-     - Nullable
-     - Key(s)
-
-   * - ``ns_name``
-     - string
-     - no
-     - Primary
-
-   * - ``ns_url``
-     - string
-     - no
-     - Unique (with ns_rev)
-
-   * - ``ns_rev``
-     - num
-     - no
-     - Unique (with ns_rev)
- 
-The values, for the ``meta`` schema, are (encoded as JSON):
+Here is a table describing the structure.  The first four colums of
+this table are equivalent to a query like:
 
 ::
 
-   [ "meta", "http://github.com/samv/Git-DB", 0.1 ]
+   select 
+      attr_index, attr_name, attr_type, attr_required
+   from meta.attr
+   where ns_name = 'meta'
+     and type_name = 'namespace'
 
-If encoded in a binary row or stream this would be:
+.. list-table::
+   :widths: 5 10 10 5 20 10
+   :header-rows: 1
+
+   * - attr_index
+     - attr_name
+     - attr_type
+     - attr_required
+     - Description
+     - Key(s)
+
+   * - 0
+     - ``ns_name``
+     - ``string``
+     - yes
+     - local schema name
+     - Primary
+
+   * - 1
+     - ``ns_url``
+     - ``string``
+     - yes
+     - uniquely identitying URL (may be empty)
+     - Unique (with ns_rev)
+
+   * - 2
+     - ``ns_rev``
+     - ``num``
+     - yes
+     - schema iteration number
+     - Unique (with ns_rev)
+ 
+If you are storing in a verbose encoding such as JSON, then the
+attribute indices are not important and property names are used
+instead.  For example, the ``meta`` schema could be declared with this
+entry in ``/meta/namespace.json`` (or ``/meta/namespace/meta.json``):
+
+::
+
+  { "ns_name": "meta",
+    "ns_url": "http://github.com/samv/Git-DB",
+    "ns_rev": 0.1,
+  }
+
+It could also be encoded in binary as:
 
 ::
 

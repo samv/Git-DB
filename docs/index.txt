@@ -1,0 +1,50 @@
+..
+
+  restindex
+  /restindex
+
+=============
+introduction
+=============
+
+git db is an experimental research project, aiming to combine a number
+of emergent technologies to enable a new platform of social-networking
+building, buzzword-coining computing.
+
+Seriously though, its essence is a hybrid/relational data store, built
+to run on top of the git source control management system.  The idea
+is to use this distributed store for data-centric applications from
+turn-based games to public databases such as Freebase, to social
+applications from photo-sharing sites to your contacts database.
+
+Being based on git gives a large advantage when it comes to read-only
+replication, as this is almost the simplest operation the store
+supports.  Already this allows a huge amount of horizontal scalability
+of applications.  It's also very convenient for synchronising, as any
+developer who has ever had to work on multiple computers and
+experienced the liberation of distributed version control knows.  As
+every computing result can be completely represented and audited by a
+single SHA1 ID, there are also benefits with processing parallel
+updates, with transaction integrity able to be parallelized by writers
+and not by a central point¹.
+
+This flexible system allows for a number of clustering options for
+updates, safe modes from single writer to multi-master with quorum, to
+BASE arrangements which tolerate network partitions by providing rules
+for handling data differences.  For more on this see scalability_.
+
+For more information on its design, see the `design page`_.
+
+There is also a list of `features excluded from the first
+specification`_.
+
+¹ - an as-yet unproven postulation, it is true.
+
+.. _design page:
+   design/index.html
+
+.. _scalability:
+   scalability.html
+
+.. _features excluded from the first specification:
+   todo.html
