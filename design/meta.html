@@ -28,8 +28,12 @@
     <div class="menuItem">
       <a href="../code.html" class="menu">Code</a>
     </div>
-  <div id="breadcrumbs">
-    <ul>
+    <div class="menuItem">
+      <a href="../examples.html" class="menu">Examples</a>
+    </div>
+  </div><!-- id="navbar" -->
+
+    <ul id="breadcrumbs">
       <li><a href="../index.html">Index</a></li>
 <li>&gt;</li>
 <li><a href="index.html">Design</a></li>
@@ -37,9 +41,6 @@
 <li>MetaFormat: specifying data structure</li>
 
     </ul>
-  </div>
-  </div><!-- id="navbar" -->
-
 
   <div id="body">
     <div class="document" id="metaformat-specifying-data-structure">
@@ -48,6 +49,8 @@
 schema of the tables itself; these are identified with the <tt class="docutils literal">meta.</tt>
 schema name.  Optionally there are rows in the schema which represent
 the schema of the <tt class="docutils literal">meta.</tt> store itself.</p>
+<p>One way to understand how this works is to see how it works out with
+a simple example schema.</p>
 <div class="section" id="meta-tables">
 <h1>Meta Tables</h1>
 <p>As the intrinsic storage building block, the <tt class="docutils literal">meta.</tt> Tables have the
@@ -71,8 +74,8 @@ directly inspect the catalog).</blockquote>
 itself, including all of the relevant constraints that you would
 expect to operate on the data structure.</p>
 </div>
-<div class="section" id="the-schema-or-namespace-table">
-<h1>The &quot;Schema&quot; or &quot;Namespace&quot; table</h1>
+<div class="section" id="the-namespace-table">
+<h1>The &quot;Namespace&quot; table</h1>
 <p>The schema table defines local names of the schemas used.  This
 controls the path where the data lives in the top level of the
 repository.  It also allows for schema revisioning.  The repository

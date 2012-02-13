@@ -3,7 +3,7 @@
 <head>
     <title>introduction</title>
     <link rel="stylesheet" href="gitdb.css" type="text/css" />
-    <meta http-equiv="Content-Type" content="text/html; charset=ISO8859-1" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <meta name="description" content="gitdb - decentralized, replicating transactional store" />
     <meta name="author" content="Sam Vilain" />
     <meta name="copyright" content="&copy; 2009-2011 Sam Vilain" />
@@ -28,14 +28,15 @@
     <div class="menuItem">
       <a href="code.html" class="menu">Code</a>
     </div>
-  <div id="breadcrumbs">
-    <ul>
+    <div class="menuItem">
+      <a href="examples.html" class="menu">Examples</a>
+    </div>
+  </div><!-- id="navbar" -->
+
+    <ul id="breadcrumbs">
       <li>Index</li>
 
     </ul>
-  </div>
-  </div><!-- id="navbar" -->
-
 
   <div id="body">
     <div class="document" id="introduction">
@@ -44,10 +45,28 @@
 of emergent technologies to enable a new platform of social-networking
 building, buzzword-coining computing.</p>
 <p>Seriously though, its essence is a hybrid/relational data store, built
-to run on top of the git source control management system.  For more
-information on its design, see the <a class="reference external" href="design/index.html">design page</a>.</p>
+to run on top of the git source control management system.  The idea
+is to use this distributed store for data-centric applications from
+turn-based games to public databases such as Freebase, to social
+applications from photo-sharing sites to your contacts database.</p>
+<p>Being based on git gives a large advantage when it comes to read-only
+replication, as this is almost the simplest operation the store
+supports.  Already this allows a huge amount of horizontal scalability
+of applications.  It's also very convenient for synchronising, as any
+developer who has ever had to work on multiple computers and
+experienced the liberation of distributed version control knows.  As
+every computing result can be completely represented and audited by a
+single SHA1 ID, there are also benefits with processing parallel
+updates, with transaction integrity able to be parallelized by writers
+and not by a central point¹.</p>
+<p>This flexible system allows for a number of clustering options for
+updates, safe modes from single writer to multi-master with quorum, to
+BASE arrangements which tolerate network partitions by providing rules
+for handling data differences.  For more on this see <a class="reference external" href="scalability.html">scalability</a>.</p>
+<p>For more information on its design, see the <a class="reference external" href="design/index.html">design page</a>.</p>
 <p>There is also a list of <a class="reference external" href="todo.html">features excluded from the first
-specification</a>.  If you get lost, my apologies.</p>
+specification</a>.</p>
+<p>¹ - an as-yet unproven postulation, it is true.</p>
 </div>
 
   </div>

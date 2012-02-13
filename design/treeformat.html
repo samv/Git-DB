@@ -28,8 +28,12 @@
     <div class="menuItem">
       <a href="../code.html" class="menu">Code</a>
     </div>
-  <div id="breadcrumbs">
-    <ul>
+    <div class="menuItem">
+      <a href="../examples.html" class="menu">Examples</a>
+    </div>
+  </div><!-- id="navbar" -->
+
+    <ul id="breadcrumbs">
       <li><a href="../index.html">Index</a></li>
 <li>&gt;</li>
 <li><a href="index.html">Design</a></li>
@@ -37,9 +41,6 @@
 <li>TreeFormat: arranging data</li>
 
     </ul>
-  </div>
-  </div><!-- id="navbar" -->
-
 
   <div id="body">
     <div class="document" id="treeformat-arranging-data">
@@ -52,10 +53,10 @@ sort number, a space and a UTF-8 representation of the value of the
 primary key(s) of the row (or a UUID if there is no primary key) as
 the filename within the tree for the relation.</p>
 <p>eg</p>
-<!--  -->
-<blockquote>
-tracker/ticket/1 1
-tracker/ticket/2 2</blockquote>
+<pre class="literal-block">
+tracker/ticket/1 1.row
+tracker/ticket/2 2.row
+</pre>
 <p>The exact mechanism for converting from a value to the above
 representation is type-dependent, and covered by the &lt;a
 href=&quot;[%link('design/filenames.tt')%]&quot;&gt;Filename format&lt;/a&gt;).  The
@@ -69,10 +70,10 @@ contains fixed directories such as &quot;class&quot;, &quot;types&quot; and &quo
 <p>For relations with a lot of contents, trees can be used.  This is
 equivalent to use of nodes in a B-Tree.  The name of a tree can either
 be a single value or a range.</p>
-<!--  -->
-<blockquote>
-tracker/ticket/1 1-1000/1 1
-tracker/ticket/2 1001-2000/1 1001</blockquote>
+<pre class="literal-block">
+tracker/ticket/1 1-1000/1 1.row
+tracker/ticket/2 1001-2000/1 1001.row
+</pre>
 <p>If it is a value, it must correspond to an entire key column (and
 there must be subsequent primary key columns).</p>
 <p>The problem of deciding when to divide a large directory, and when to
@@ -108,8 +109,7 @@ make the neighbours also relatively balanced with each other.</p>
 <p>Assuming such a large fan-out, random access needs to be fast, but
 unless the entries in the tree are in order, it is impossible to use
 binary search to locate the item or range you are looking for.
-Hash-based solutions solve the problems, but can't be used for all
-cases.</p>
+Hash-based solutions are not applicable to the B-Tree.</p>
 <p>Unfortunately, there is no way to specify the order of entries in a
 git tree.  They are always sorted by string value.  And only a very
 few types will naturally sort correctly after conversion and escaping.</p>
@@ -118,13 +118,13 @@ to override the filename, so that the entries will always be stored in
 the correct order.  When writing a tree for the first time, the
 appropriate number of digits are used, zero padded, and starting at 1.</p>
 <p>eg</p>
-<!--  -->
-<blockquote>
-role/voter/1 Jones,Bob
-role/voter/2 MacDonald,Ronald
-role/voter/3 Mace,The
-role/voter/4 MacGuyver,James
-role/voter/5 Nelson,Willie</blockquote>
+<pre class="literal-block">
+role/voter/1 Jones,Bob.row
+role/voter/2 MacDonald,Ronald.row
+role/voter/3 Mace,The.row
+role/voter/4 MacGuyver,James.row
+role/voter/5 Nelson,Willie.row
+</pre>
 <p>Let's say that a new entry, &quot;Woody Allen&quot; comes along.  We need to
 insert a new number at the beginning.  At this point, one of two
 things happens:</p>
@@ -134,32 +134,32 @@ entries in that tree.  This can still be fast enough and is simple
 string operations to enact.  It only affects the tree which is being
 inserted into, which has to be re-written back to the object
 database anyway:</p>
-<!--  -->
-<blockquote>
-<p>role/voter/1 Allen,Woody
-role/voter/2 Jones,Bob
-role/voter/3 MacDonald,Ronald
-role/voter/4 Mace,The
-role/voter/5 MacGuyver,James
-role/voter/6 Nelson,Willie</p>
-</blockquote>
+<pre class="literal-block">
+role/voter/1 Allen,Woody.row
+role/voter/2 Jones,Bob.row
+role/voter/3 MacDonald,Ronald.row
+role/voter/4 Mace,The.row
+role/voter/5 MacGuyver,James.row
+role/voter/6 Nelson,Willie.row
+</pre>
 </li>
 <li><p class="first">However if it does matter, because either there is an index which
 would otherwise have to be updated and recursively moved sub-entries
 around, or perhaps just it is desired to make directories which
 delta more efficiently, then it can insert a new entry before: ..</p>
-<blockquote>
-<p>role/voter/05 Allen,Woody
-role/voter/1 Jones,Bob
-role/voter/2 MacDonald,Ronald
-role/voter/3 Mace,The
-role/voter/4 MacGuyver,James
-role/voter/5 Nelson,Willie</p>
-</blockquote>
+<pre class="literal-block">
+role/voter/05 Allen,Woody.row
+role/voter/1 Jones,Bob.row
+role/voter/2 MacDonald,Ronald.row
+role/voter/3 Mace,The.row
+role/voter/4 MacGuyver,James.row
+role/voter/5 Nelson,Willie.row
+</pre>
 <p>This works, of course, because &quot;<tt class="docutils literal">05 xxx</tt>&quot; sorts before &quot;<tt class="docutils literal">1
 yyy</tt>&quot;, regardless of the values of &quot;<tt class="docutils literal">xxx</tt>&quot; and &quot;<tt class="docutils literal">yyy</tt>&quot;.  So, as
 you can see, there are an infinite number of numbers before and
-after every non-zero number you can summon...</p>
+after every non-zero number you can summon.</p>
+<p>The sort number may never be all zeroes.</p>
 <p>If the primary key of the table is a hash or UUID, or its type
 otherwise guarantees that its filename representation matches the
 sort order of the type, then the sort numbers may be safely omitted.
@@ -171,8 +171,9 @@ They are enabled or disabled in the schema.</p>
 <h1>Official row filenames</h1>
 <p>As noted in the <a class="reference external" href="./filenames.html">Filename layer</a>, the &quot;official&quot; filename of the row
 is that which is stripped of all of these divisions (and sort numbers)
-along the way.  This is important for heirarchical references to rows,
-which are always by the &quot;official&quot; filename.</p>
+along the way, and with no extension.  This is important for
+heirarchical references to rows, which are always by the &quot;official&quot;
+filename.</p>
 </div>
 <div class="section" id="row-format">
 <h1>Row format</h1>
@@ -185,19 +186,21 @@ have a non-zero increment value.</p>
 </div>
 <div class="section" id="page-format">
 <h1>Page format</h1>
-<p>Especially if there is a lot of relatively static rows (ie, OLAP
-systems), it may make sense to write out &quot;pages&quot;, which are a single
-emission of packed rows.</p>
-<p>This is indicated in the tree by a filename which is a range, but
+<p>Especially if there is a lot of relatively static rows, it may make
+sense to write out &quot;pages&quot;, which are a single emission of packed
+rows.</p>
+<p>This is indicated in the tree by a filename which is a range, and
 which is a blob (file) and not a tree (folder/directory).  Another
 possibility is that the filename does not completely have all the keys
 in the schema listed yet; eg if there are 3 primary key columns, and
 you encounter the blob while scanning:</p>
-<!--  -->
-<blockquote>
-myschema/mytable/customerid,projectid</blockquote>
+<pre class="literal-block">
+myschema/mytable/customerid,projectid.page
+</pre>
 <p>The third key is still expected and so the system knows that the blob
-is a page and contains the remaining columns.</p>
+is a page and contains the remaining columns.  So, the <tt class="docutils literal">.page</tt> part
+is really just a hint; other encodings which can hold multiple rows
+may not have a distinction in their filename.</p>
 <p>For bulk inserts, emitting pages as you go is fair game.</p>
 <p>If a row in a page needs to be removed, or a value in between added,
 then the page must be split or rewritten.  Most random writers will

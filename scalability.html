@@ -28,41 +28,82 @@
     <div class="menuItem">
       <a href="code.html" class="menu">Code</a>
     </div>
-  <div id="breadcrumbs">
-    <ul>
+    <div class="menuItem">
+      <a href="examples.html" class="menu">Examples</a>
+    </div>
+  </div><!-- id="navbar" -->
+
+    <ul id="breadcrumbs">
       <li><a href="index.html">Index</a></li>
 <li>&gt;</li>
 <li>Design</li>
 
     </ul>
-  </div>
-  </div><!-- id="navbar" -->
-
 
   <div id="body">
     <div class="document" id="git-db-scalability">
 <h1 class="title">git db scalability</h1>
-<div class="section" id="the-goal">
-<h1>The goal</h1>
-<p>Hopefully, the basic layers will be simple enough to be a useful
-back-end for SQLite or embedded uses.  A a traditional multi-user
-RDBMS might want to use layers 1 through 5 as a backing store; a
-distributed computing system might use all of them.</p>
-</div>
+<p>This standard is primarily intended to be scalable from small to
+large, while still giving the convenience of being able to 'check out'
+repositories and inspect their contents, while being fully auditable.</p>
 <div class="section" id="embedded-use-cases">
 <h1>Embedded use cases</h1>
+<p>In the embedded case, table primitives used for a git DB
+implementation are used directly.  This allows for useful applications
+from early implementations even before query systems are developed.</p>
+<p>&quot;embedded&quot; this usually means &quot;phone&quot; these days, and mobile
+applications should benefit from the small data size requirements of
+git-db tables and efficient synchronization.</p>
+<p>A basic implementation need only care for <a class="reference external" href="design/encoding.html">encoding</a> and <a class="reference external" href="design/treeformat.html">tree
+format</a>, and its <a class="reference external" href="design/meta.html">meta.</a> schema can be fixed.  On connection, it
+just has to compare the <tt class="docutils literal">meta</tt> schema to its own data, or perhaps
+even just the revision/URL stored in the <tt class="docutils literal">meta.namespace</tt> table.</p>
 </div>
 <div class="section" id="sqlite-use-case">
 <h1>SQLite use case</h1>
+<p>In this case, a C-ISAM-type library like SQLite is engineered to
+connect to the git db store using shared libraries.  In this picture
+the application would be linked with a git db library and libgit2, and
+access the git store directly.  Unlike C-ISAM, it could support
+concurrent writers.  Also unlike C-ISAM, it would use an append-only
+store, which is much less subject to jamming.</p>
+<p>The command-line &quot;sqlite&quot; utility could work, as it can read the
+application's table structure from the <a class="reference external" href="design/meta.html">meta.</a> application schema,
+and know what tables and properties exist in the store.</p>
 </div>
 <div class="section" id="rdbms-use-case">
 <h1>RDBMS use case</h1>
+<p>In this case, git db tables are engineered underneath an RDBMS as a
+storage layer.  This could be as a MySQL engine, or even a port of
+Postgres to it.</p>
+<p>As there is an RDBMS engine present, it handles transactional
+integrity on contents itself.  The main benefit of this is
+replication for readers.</p>
 </div>
 <div class="section" id="clustered-rdbms-use-case">
 <h1>Clustered RDBMS use case</h1>
+<p>In this case, the RDBMS above is also taught how to replicate the
+store and negotiate writers which have successful updates to the
+database state (ie, commits).  This allows some horizontal scaling of
+complex update transactions (assuming every node can hold a clone of
+the repository).</p>
 </div>
-<div class="section" id="partitioned-base-sharded-use-case">
-<h1>Partitioned BASE ('sharded') use case</h1>
+<div class="section" id="sharded-partition-use-case">
+<h1>Sharded partition use case</h1>
+<p>So, in this mode, the store is broken up into submodules, with writes
+to each submodule managed by a different independent worker process or
+even computing node.</p>
+<p>As the <a class="reference external" href="design/treeformat.html">tree format</a> specifies that trees can be split into arbitrary
+nesting, data sets with natural partition boundaries (eg, users,
+sites, domains) can be sharded by ranges of primary keys.</p>
+</div>
+<div class="section" id="whole-hadoop-use-case">
+<h1>Whole Hadoop use case</h1>
+<p>In this mode, the system is distributed at the object store layer; no
+re-use of low level components such as libgit2 are possible.  The
+application should also suit this style of implementation.  The
+simplest use case would be equivalent in functionality to the
+&quot;Embedded&quot; case, above.</p>
 </div>
 </div>
 

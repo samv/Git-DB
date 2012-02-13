@@ -1,7 +1,7 @@
 Cannot find Psyco, skipping it
 rest2web version 0.5.1
 Running rest2web the Site Builder.
-Sun Feb 12 16:09:18 2012
+Sun Feb 12 18:51:44 2012
 
 Starting in "/Users/samv/src/Git-DB/docs" directory.
 
@@ -18,7 +18,7 @@ Reading "template.txt".
 Reading "todo.txt".
 Guessing encoding. We guessed: ISO8859-1
 Processing indexfile.
-Guessing encoding. We guessed: ISO8859-1
+Guessing encoding. We guessed: UTF-8
 Building code.html
 Writing code.html
 Building copyright.html
@@ -51,7 +51,6 @@ Guessing encoding. We guessed: ISO8859-1
 Processing indexfile.
 Guessing encoding. We guessed: ISO8859-1
 Building design/columnformat.html
-Creating Directory : /Users/samv/src/Git-DB/design
 Writing columnformat.html
 Building design/distribution.html
 Writing distribution.html
@@ -68,5 +67,5 @@ Writing tx.html
 Building design/index.html
 Writing index.html
 
-Time taken to build site was 1.438 seconds.
+Time taken to build site was 1.444 seconds.
 15 files processed.

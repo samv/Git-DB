@@ -28,8 +28,12 @@
     <div class="menuItem">
       <a href="../code.html" class="menu">Code</a>
     </div>
-  <div id="breadcrumbs">
-    <ul>
+    <div class="menuItem">
+      <a href="../examples.html" class="menu">Examples</a>
+    </div>
+  </div><!-- id="navbar" -->
+
+    <ul id="breadcrumbs">
       <li><a href="../index.html">Index</a></li>
 <li>&gt;</li>
 <li><a href="index.html">Design</a></li>
@@ -37,9 +41,6 @@
 <li>Encoding: value types to binary</li>
 
     </ul>
-  </div>
-  </div><!-- id="navbar" -->
-
 
   <div id="body">
     <div class="document" id="encoding-value-types-to-binary">
@@ -74,7 +75,9 @@ words anyway.</p>
 <div class="section" id="encoding-signed-integers">
 <h1>Encoding Signed Integers</h1>
 <p>In various places, it is possible to encode a number which may be
-negative.</p>
+negative.  In JSON, the values are just stored in base 10.  Signed
+integers appear in other parts of the Column Format as
+variable-length, twos-complement quantities.</p>
 <div class="figure align-right" style="width: 25em">
 <img alt="diagram showing binary representation of several signed integers" src="../files/varint.png" style="width: 20em;" />
 <p class="caption"><strong>Figure 2.</strong> The variable-length signed integer encoding used by
@@ -128,34 +131,46 @@ are all built on the integer formats.  Currently they all involve
 storing two variable length, signed integers.</p>
 <table border="1" class="docutils">
 <colgroup>
-<col width="20%" />
-<col width="20%" />
-<col width="60%" />
+<col width="14%" />
+<col width="14%" />
+<col width="43%" />
+<col width="29%" />
 </colgroup>
 <thead valign="bottom">
 <tr><th class="head">Name</th>
 <th class="head">Formula</th>
 <th class="head">Description</th>
+<th class="head">JSON</th>
 </tr>
 </thead>
 <tbody valign="top">
 <tr><td>float</td>
 <td><em>N</em> × 2<sup>*M*</sup></td>
 <td>Floating point: general purpose, &quot;real&quot; numbers</td>
+<td>(none)</td>
 </tr>
 <tr><td>decimal</td>
 <td><em>N</em> × 10<sup>*M*</sup></td>
 <td>Decimal precision values (eg money or IEEE decimal formats)</td>
+<td><tt class="docutils literal">100.1</tt>, <tt class="docutils literal">1.2345e+5</tt></td>
 </tr>
 <tr><td>rational</td>
 <td>N ÷ M</td>
 <td>Arbitrary precision rational numbers</td>
+<td><tt class="docutils literal">4/37</tt>, <tt class="docutils literal">12345/23941</tt></td>
 </tr>
 </tbody>
 </table>
 <p>Converting from the two integers N and M to a corresponding floating
 point value is trivial in each case; though see the below section for
 how &quot;special&quot; IEEE floating point values are encoded.</p>
+<p>In JSON data form, there is no 'float', but instead 'decimal' is used.
+This is because in JSON you cannot have literals in hexadecimal, such
+as &quot;0x1.ef0fp+0&quot;, as in C, Python, etc.  It's possible to encode a
+true rational as a JavaScript expression, and you can express all
+floating point numbers precisely as a rational, but this is not
+recommended for general applications.  Few if any JSON parsers will
+read it without exception anyway.</p>
 <p>Architecture-dependent floats can be easily transformed into the
 underlying integers, through either directly accessing the bit fields
 of the floating point word (eg, from C), or using a relatively IEEE

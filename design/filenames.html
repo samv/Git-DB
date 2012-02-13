@@ -28,8 +28,12 @@
     <div class="menuItem">
       <a href="../code.html" class="menu">Code</a>
     </div>
-  <div id="breadcrumbs">
-    <ul>
+    <div class="menuItem">
+      <a href="../examples.html" class="menu">Examples</a>
+    </div>
+  </div><!-- id="navbar" -->
+
+    <ul id="breadcrumbs">
       <li><a href="../index.html">Index</a></li>
 <li>&gt;</li>
 <li><a href="index.html">Design</a></li>
@@ -37,9 +41,6 @@
 <li>Filenames: locating packed values</li>
 
     </ul>
-  </div>
-  </div><!-- id="navbar" -->
-
 
   <div id="body">
     <div class="document" id="filenames-locating-packed-values">
@@ -141,18 +142,15 @@ string values and joining the lot together with commas.</p>
 <h1>Escaping Rules</h1>
 <p>These rules apply to marshalling out all values, however they only
 really affect text strings and the unary '-' which may appear in a
-numbers (eg, twice in the value <tt class="docutils literal"><span class="pre">-5.6e-15</span></tt>);</p>
+number (eg, twice in the value <tt class="docutils literal"><span class="pre">-5.6e-15</span></tt>);</p>
 <ol class="arabic">
 <li><p class="first">Any reserved or otherwise problematic ASCII punctuation character
 is converted to its fullwidth form, by adding 0xFEE0 to their
 codepoint value.  This list of characters minimally includes the
 colon, the comma, and the ASCII whorlygig characters:</p>
-<!-- beware of the Ohm: -->
 <!--  -->
 <blockquote>
-<ul class="simple">
-<li>| / : ,</li>
-</ul>
+<p>- \ | / : ,</p>
 </blockquote>
 <p>On marshall in, <em>all</em> of the characters in the full-width plane are
 always converted back to their ASCII versions, by subtracting
@@ -248,6 +246,18 @@ or <tt class="docutils literal">⑊␀ ⑊␇ ⑊␈</tt></td>
 </tbody>
 </table>
 </div>
+<div class="section" id="file-extensions">
+<h1>File extensions</h1>
+<p>All data files have an extension which indicates the format being used
+for that row/page.</p>
+<p>If it is the binary form indicated by this standard, the file
+extension will be <tt class="docutils literal">row</tt> or <tt class="docutils literal">page</tt>, depending on how many rows are
+in the file.</p>
+<p>Rows which are encoded using other row encoding systems, like JSON
+(<tt class="docutils literal">.json</tt>), YAML, protocol buffers, avro, etc are also possible.  It
+is suggested to deliver the <tt class="docutils literal">meta</tt> schema in commented JSON form
+where it does not incur a significant overhead.</p>
+</div>
 <div class="section" id="checkouts-on-non-unix-and-macos-filesystems">
 <h1>Checkouts on non-UNIX and MacOS filesystems</h1>
 <p>There are a number of issues with using 'git checkout' of the contents
@@ -284,10 +294,13 @@ like this is to full scan when in doubt.  It's slower, but it works.</p>
 <h1>Ranges</h1>
 <p>If a range of values is required to be specified, these are separated
 by a <tt class="docutils literal">-</tt>; ranges can cover multiple columns, eg</p>
-<!--  -->
+<p><tt class="docutils literal"><span class="pre">1,1-5,50</span></tt></p>
 <blockquote>
-1,1-5,50
-5,52-9,2</blockquote>
+A two-part primary key: this directory or page will contain all
+rows between (1, 1) and (5, 50)</blockquote>
+<p><tt class="docutils literal"><span class="pre">5,52-9,2</span></tt></p>
+<blockquote>
+all rows between (5, 52) and (9, 2)</blockquote>
 <p>Ranges may appear when using paged rows, or breaking up large
 directories.  See the <a class="reference external" href="./treeformat.html">TreeFormat</a> for more information.</p>
 </div>
