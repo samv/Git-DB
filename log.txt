@@ -1,9 +1,9 @@
 Cannot find Psyco, skipping it
 rest2web version 0.5.1
 Running rest2web the Site Builder.
-Sun Feb 12 12:12:24 2012
+Sun Feb 12 16:09:18 2012
 
-Starting in "/Users/samv/src/Git-DB" directory.
+Starting in "/Users/samv/src/Git-DB/docs" directory.
 
 Processing "root" directory.
 Reading "code.txt".
@@ -12,7 +12,6 @@ Reading "copyright.txt".
 Guessing encoding. We guessed: ISO8859-1
 Reading "design/index.txt".
 Guessing encoding. We guessed: ISO8859-1
-Reading "log.txt".
 Reading "scalability.txt".
 Guessing encoding. We guessed: ISO8859-1
 Reading "template.txt".
@@ -21,23 +20,17 @@ Guessing encoding. We guessed: ISO8859-1
 Processing indexfile.
 Guessing encoding. We guessed: ISO8859-1
 Building code.html
-Skipping "code.html". Identical file exists.
+Writing code.html
 Building copyright.html
-Skipping "copyright.html". Identical file exists.
+Writing copyright.html
 Building scalability.html
-Skipping "scalability.html". Identical file exists.
+Writing scalability.html
 Building todo.html
-Skipping "todo.html". Identical file exists.
+Writing todo.html
 Building index.html
-Skipping "index.html". Identical file exists.
-
-Processing "var" directory.
-
-Processing "maint" directory.
+Writing index.html
 
 Processing "licenses" directory.
-
-Processing "files" directory.
 
 Processing "design" directory.
 Reading "design/arrays-tuples.txt".
@@ -58,283 +51,22 @@ Guessing encoding. We guessed: ISO8859-1
 Processing indexfile.
 Guessing encoding. We guessed: ISO8859-1
 Building design/columnformat.html
-Skipping "columnformat.html". Identical file exists.
+Creating Directory : /Users/samv/src/Git-DB/design
+Writing columnformat.html
 Building design/distribution.html
-Skipping "distribution.html". Identical file exists.
+Writing distribution.html
 Building design/encoding.html
-Skipping "encoding.html". Identical file exists.
+Writing encoding.html
 Building design/filenames.html
-Skipping "filenames.html". Identical file exists.
+Writing filenames.html
 Building design/meta.html
-Skipping "meta.html". Identical file exists.
+Writing meta.html
 Building design/treeformat.html
-Skipping "treeformat.html". Identical file exists.
+Writing treeformat.html
 Building design/tx.html
-Skipping "tx.html". Identical file exists.
+Writing tx.html
 Building design/index.html
-Skipping "index.html". Identical file exists.
+Writing index.html
 
-Processing ".git" directory.
-
-Processing ".git/refs" directory.
-
-Processing ".git/refs/tags" directory.
-
-Processing ".git/refs/remotes" directory.
-
-Processing ".git/refs/remotes/origin" directory.
-
-Processing ".git/refs/heads" directory.
-
-Processing ".git/objects" directory.
-
-Processing ".git/objects/pack" directory.
-
-Processing ".git/objects/info" directory.
-
-Processing ".git/objects/fe" directory.
-
-Processing ".git/objects/f5" directory.
-
-Processing ".git/objects/f1" directory.
-
-Processing ".git/objects/ef" directory.
-
-Processing ".git/objects/ed" directory.
-
-Processing ".git/objects/ec" directory.
-
-Processing ".git/objects/ea" directory.
-
-Processing ".git/objects/e8" directory.
-
-Processing ".git/objects/e7" directory.
-
-Processing ".git/objects/e5" directory.
-
-Processing ".git/objects/e4" directory.
-
-Processing ".git/objects/e3" directory.
-
-Processing ".git/objects/e2" directory.
-
-Processing ".git/objects/e1" directory.
-
-Processing ".git/objects/df" directory.
-
-Processing ".git/objects/de" directory.
-
-Processing ".git/objects/db" directory.
-
-Processing ".git/objects/d9" directory.
-
-Processing ".git/objects/d8" directory.
-
-Processing ".git/objects/d6" directory.
-
-Processing ".git/objects/d4" directory.
-
-Processing ".git/objects/d2" directory.
-
-Processing ".git/objects/d1" directory.
-
-Processing ".git/objects/d0" directory.
-
-Processing ".git/objects/cf" directory.
-
-Processing ".git/objects/ce" directory.
-
-Processing ".git/objects/cd" directory.
-
-Processing ".git/objects/ca" directory.
-
-Processing ".git/objects/c6" directory.
-
-Processing ".git/objects/c5" directory.
-
-Processing ".git/objects/bf" directory.
-
-Processing ".git/objects/be" directory.
-
-Processing ".git/objects/bc" directory.
-
-Processing ".git/objects/bb" directory.
-
-Processing ".git/objects/ba" directory.
-
-Processing ".git/objects/b7" directory.
-
-Processing ".git/objects/b6" directory.
-
-Processing ".git/objects/b3" directory.
-
-Processing ".git/objects/b2" directory.
-
-Processing ".git/objects/b0" directory.
-
-Processing ".git/objects/ad" directory.
-
-Processing ".git/objects/ac" directory.
-
-Processing ".git/objects/aa" directory.
-
-Processing ".git/objects/a8" directory.
-
-Processing ".git/objects/a6" directory.
-
-Processing ".git/objects/a3" directory.
-
-Processing ".git/objects/a2" directory.
-
-Processing ".git/objects/9e" directory.
-
-Processing ".git/objects/9c" directory.
-
-Processing ".git/objects/99" directory.
-
-Processing ".git/objects/96" directory.
-
-Processing ".git/objects/95" directory.
-
-Processing ".git/objects/94" directory.
-
-Processing ".git/objects/90" directory.
-
-Processing ".git/objects/8e" directory.
-
-Processing ".git/objects/8b" directory.
-
-Processing ".git/objects/87" directory.
-
-Processing ".git/objects/84" directory.
-
-Processing ".git/objects/83" directory.
-
-Processing ".git/objects/80" directory.
-
-Processing ".git/objects/7d" directory.
-
-Processing ".git/objects/7b" directory.
-
-Processing ".git/objects/7a" directory.
-
-Processing ".git/objects/79" directory.
-
-Processing ".git/objects/78" directory.
-
-Processing ".git/objects/76" directory.
-
-Processing ".git/objects/75" directory.
-
-Processing ".git/objects/72" directory.
-
-Processing ".git/objects/71" directory.
-
-Processing ".git/objects/6f" directory.
-
-Processing ".git/objects/6e" directory.
-
-Processing ".git/objects/6d" directory.
-
-Processing ".git/objects/6c" directory.
-
-Processing ".git/objects/66" directory.
-
-Processing ".git/objects/63" directory.
-
-Processing ".git/objects/5b" directory.
-
-Processing ".git/objects/5a" directory.
-
-Processing ".git/objects/58" directory.
-
-Processing ".git/objects/56" directory.
-
-Processing ".git/objects/52" directory.
-
-Processing ".git/objects/50" directory.
-
-Processing ".git/objects/4e" directory.
-
-Processing ".git/objects/4d" directory.
-
-Processing ".git/objects/49" directory.
-
-Processing ".git/objects/46" directory.
-
-Processing ".git/objects/40" directory.
-
-Processing ".git/objects/3b" directory.
-
-Processing ".git/objects/3a" directory.
-
-Processing ".git/objects/39" directory.
-
-Processing ".git/objects/37" directory.
-
-Processing ".git/objects/36" directory.
-
-Processing ".git/objects/33" directory.
-
-Processing ".git/objects/30" directory.
-
-Processing ".git/objects/2e" directory.
-
-Processing ".git/objects/2d" directory.
-
-Processing ".git/objects/2a" directory.
-
-Processing ".git/objects/28" directory.
-
-Processing ".git/objects/20" directory.
-
-Processing ".git/objects/1d" directory.
-
-Processing ".git/objects/1c" directory.
-
-Processing ".git/objects/19" directory.
-
-Processing ".git/objects/18" directory.
-
-Processing ".git/objects/17" directory.
-
-Processing ".git/objects/16" directory.
-
-Processing ".git/objects/15" directory.
-
-Processing ".git/objects/13" directory.
-
-Processing ".git/objects/10" directory.
-
-Processing ".git/objects/0e" directory.
-
-Processing ".git/objects/0c" directory.
-
-Processing ".git/objects/0b" directory.
-
-Processing ".git/objects/08" directory.
-
-Processing ".git/objects/07" directory.
-
-Processing ".git/objects/04" directory.
-
-Processing ".git/objects/00" directory.
-
-Processing ".git/logs" directory.
-
-Processing ".git/logs/refs" directory.
-
-Processing ".git/logs/refs/remotes" directory.
-
-Processing ".git/logs/refs/remotes/origin" directory.
-
-Processing ".git/logs/refs/heads" directory.
-
-Processing ".git/info" directory.
-
-Processing ".git/hooks" directory.
-
-Processing ".git/branches" directory.
-
-Time taken to build site was 1.458 seconds.
-16 files processed.
+Time taken to build site was 1.438 seconds.
+15 files processed.
