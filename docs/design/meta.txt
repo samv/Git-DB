@@ -52,46 +52,40 @@ repository.  It also allows for schema revisioning.  The repository
 revision is a ``num``, which can be any number; integer, decimal,
 float etc.
 
-::
+.. list-table::
+   :widths: 5 10 10 8 20
 
-  meta.schema:
-    ns_url text not null
-    ns_rev num not null
-    primary key (ns_url, ns_rev)
-    ns_name str not null
-    foreign key (ns_name) references :ns_name_idx
- 
-  meta.schema:ns_name_idx
-    ns_name str not null
-    primary key (ns_name)
-
-Specified in a more Avro-like JSON syntax, that would be:
-
-::
-
-   { "name": "schema",
-     "type": "tuple",
-     "fields": [
-        { "name": "ns_url", "type": "string", "required": 1 },
-        { "name": "ns_rev", "type": "num", "required": 1 },
-        { "name": "ns_name", "type": "string", "required": 1 },
-     ],
-     "keys": [
-        { "primary": "1",
-          "fields": [ "ns_url", "ns_rev" ] },
-        { "unique": "1",
-          "fields": [ "ns_name" ],
-         },
-     ],
-   }
+   * - ``attr_index``
+     - ``attr_name``
+     - ``attr_type``
+     - ``attr_required``
+     - description
+   * - 0
+     - ``ns_name``
+     - ``string``
+     - true
+     - name of the schema in the store
+   * - 1
+     - ``ns_url``
+     - ``string``
+     - false
+     - identifier for the application
+   * - 2
+     - ``ns_url``
+     - ``string``
+     - true
+     - with the URL, uniquely identifies the schema revision
 
 The values, for the ``meta`` schema, are:
 
 ::
 
-   [ "http://github.com/samv/Git-DB", 0.1, "meta" ]
+  { "ns_name": "meta",
+    "ns_url": "http://github.com/samv/Git-DB",
+    "ns_rev": 0.1,
+  }
 
-Which would be encoded as:
+Which could be encoded in binary as:
 
 ::
 
@@ -99,6 +93,13 @@ Which would be encoded as:
   00000010  636f 6d2f 7361 6d76 2f47 6974 2d44 4203  com/samv/Git-DB␃
   00000020  7f01 0204 6d65 7461                      ␡␁␂␄meta
 
+
+-----
+
+Information below here is out of date; see the gidb.meta branch for
+a "real" description of the meta schema structure.
+
+-----
 
 The "Tuple" table
 =================
