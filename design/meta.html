@@ -81,47 +81,59 @@ controls the path where the data lives in the top level of the
 repository.  It also allows for schema revisioning.  The repository
 revision is a <tt class="docutils literal">num</tt>, which can be any number; integer, decimal,
 float etc.</p>
-<pre class="literal-block">
-meta.schema:
-  ns_url text not null
-  ns_rev num not null
-  primary key (ns_url, ns_rev)
-  ns_name str not null
-  foreign key (ns_name) references :ns_name_idx
-
-meta.schema:ns_name_idx
-  ns_name str not null
-  primary key (ns_name)
-</pre>
-<p>Specified in a more Avro-like JSON syntax, that would be:</p>
-<pre class="literal-block">
-{ &quot;name&quot;: &quot;schema&quot;,
-  &quot;type&quot;: &quot;tuple&quot;,
-  &quot;fields&quot;: [
-     { &quot;name&quot;: &quot;ns_url&quot;, &quot;type&quot;: &quot;string&quot;, &quot;required&quot;: 1 },
-     { &quot;name&quot;: &quot;ns_rev&quot;, &quot;type&quot;: &quot;num&quot;, &quot;required&quot;: 1 },
-     { &quot;name&quot;: &quot;ns_name&quot;, &quot;type&quot;: &quot;string&quot;, &quot;required&quot;: 1 },
-  ],
-  &quot;keys&quot;: [
-     { &quot;primary&quot;: &quot;1&quot;,
-       &quot;fields&quot;: [ &quot;ns_url&quot;, &quot;ns_rev&quot; ] },
-     { &quot;unique&quot;: &quot;1&quot;,
-       &quot;fields&quot;: [ &quot;ns_name&quot; ],
-      },
-  ],
-}
-</pre>
+<table border="1" class="docutils">
+<colgroup>
+<col width="9%" />
+<col width="19%" />
+<col width="19%" />
+<col width="15%" />
+<col width="38%" />
+</colgroup>
+<tbody valign="top">
+<tr><td><tt class="docutils literal">attr_index</tt></td>
+<td><tt class="docutils literal">attr_name</tt></td>
+<td><tt class="docutils literal">attr_type</tt></td>
+<td><tt class="docutils literal">attr_required</tt></td>
+<td>description</td>
+</tr>
+<tr><td>0</td>
+<td><tt class="docutils literal">ns_name</tt></td>
+<td><tt class="docutils literal">string</tt></td>
+<td>true</td>
+<td>name of the schema in the store</td>
+</tr>
+<tr><td>1</td>
+<td><tt class="docutils literal">ns_url</tt></td>
+<td><tt class="docutils literal">string</tt></td>
+<td>false</td>
+<td>identifier for the application</td>
+</tr>
+<tr><td>2</td>
+<td><tt class="docutils literal">ns_url</tt></td>
+<td><tt class="docutils literal">string</tt></td>
+<td>true</td>
+<td>with the URL, uniquely identifies the schema revision</td>
+</tr>
+</tbody>
+</table>
 <p>The values, for the <tt class="docutils literal">meta</tt> schema, are:</p>
 <pre class="literal-block">
-[ &quot;http://github.com/samv/Git-DB&quot;, 0.1, &quot;meta&quot; ]
+{ &quot;ns_name&quot;: &quot;meta&quot;,
+  &quot;ns_url&quot;: &quot;http://github.com/samv/Git-DB&quot;,
+  &quot;ns_rev&quot;: 0.1,
+}
 </pre>
-<p>Which would be encoded as:</p>
+<p>Which could be encoded in binary as:</p>
 <pre class="literal-block">
 00000000  021d 6874 7470 3a2f 2f67 6974 6875 622e  ␂␝http://github.
 00000010  636f 6d2f 7361 6d76 2f47 6974 2d44 4203  com/samv/Git-DB␃
 00000020  7f01 0204 6d65 7461                      ␡␁␂␄meta
 </pre>
+<hr class="docutils" />
+<p>Information below here is out of date; see the gidb.meta branch for
+a &quot;real&quot; description of the meta schema structure.</p>
 </div>
+<hr class="docutils" />
 <div class="section" id="the-tuple-table">
 <h1>The &quot;Tuple&quot; table</h1>
 <p>The &quot;paths&quot; table defines which schemas are active at which paths
