@@ -123,7 +123,7 @@ read from.
 The locking protocol will insert entries like this into the commit
 record:
 
-..
+::
 
     Locks: /foobar/1015,1050,1329,1950
 
@@ -135,7 +135,7 @@ for the READ COMMITTED level).
 
 The protocol also allows for ranges to be specified;
 
-..
+::
 
     Locks: /foobar/1000-1019
 
@@ -159,7 +159,7 @@ that were not present.
 What this means is that if a query is issued - searching over a range
 of primary keys - that range of rows are locked.
 
-..
+::
 
      Locks: /foobar/1000-2000
 
