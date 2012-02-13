@@ -12,6 +12,9 @@ schema of the tables itself; these are identified with the ``meta.``
 schema name.  Optionally there are rows in the schema which represent
 the schema of the ``meta.`` store itself.
 
+One way to understand how this works is to see how it works out with
+a simple example schema.
+
 Meta Tables
 ===========
 
@@ -40,8 +43,8 @@ This is being presented like this in order to satisfy the
 itself, including all of the relevant constraints that you would
 expect to operate on the data structure.
 
-The "Schema" or "Namespace" table
-=================================
+The "Namespace" table
+=====================
 
 The schema table defines local names of the schemas used.  This
 controls the path where the data lives in the top level of the

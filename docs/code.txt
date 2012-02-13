@@ -36,15 +36,23 @@ It is hoped that a C version can be completed in parallel, basing
 itself on libgit2_ and therefore being a lot more portable, embeddable
 etc.  This will be key for, eg, integrating with SQLite etc.
 
-Javascript Status
-=================
-Not started.
+Javascript Progress
+===================
+
+A Javascript binding would probably be dependent on a REST-like server
+API accessed via AJAX or similar.
+
 
 Python Status
 =============
 
 This refers to the `Django REST framework`_ as well as a "second pass"
-of the Perl implementation in a more strict language/
+of the Perl implementation in a more strict language.
+
+Java/ObjC Status
+================
+These implementations are important for the embedded port.
+
 
 .. _Git-DB on github: http://github.com/samv/Git-DB
 

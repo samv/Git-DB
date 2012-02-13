@@ -18,10 +18,10 @@ the filename within the tree for the relation.
 
 eg
 
-..
+::
 
-   tracker/ticket/1 1
-   tracker/ticket/2 2
+   tracker/ticket/1 1.row
+   tracker/ticket/2 2.row
 
 The exact mechanism for converting from a value to the above
 representation is type-dependent, and covered by the <a
@@ -38,10 +38,10 @@ For relations with a lot of contents, trees can be used.  This is
 equivalent to use of nodes in a B-Tree.  The name of a tree can either
 be a single value or a range.
 
-..
+::
 
-   tracker/ticket/1 1-1000/1 1
-   tracker/ticket/2 1001-2000/1 1001
+   tracker/ticket/1 1-1000/1 1.row
+   tracker/ticket/2 1001-2000/1 1001.row
 
 If it is a value, it must correspond to an entire key column (and
 there must be subsequent primary key columns).
@@ -85,8 +85,7 @@ make the neighbours also relatively balanced with each other.
 Assuming such a large fan-out, random access needs to be fast, but
 unless the entries in the tree are in order, it is impossible to use
 binary search to locate the item or range you are looking for.
-Hash-based solutions solve the problems, but can't be used for all
-cases.
+Hash-based solutions are not applicable to the B-Tree.
 
 Unfortunately, there is no way to specify the order of entries in a
 git tree.  They are always sorted by string value.  And only a very
@@ -99,13 +98,13 @@ appropriate number of digits are used, zero padded, and starting at 1.
 
 eg
 
-..
+::
 
-   role/voter/1 Jones,Bob
-   role/voter/2 MacDonald,Ronald
-   role/voter/3 Mace,The
-   role/voter/4 MacGuyver,James
-   role/voter/5 Nelson,Willie
+   role/voter/1 Jones,Bob.row
+   role/voter/2 MacDonald,Ronald.row
+   role/voter/3 Mace,The.row
+   role/voter/4 MacGuyver,James.row
+   role/voter/5 Nelson,Willie.row
 
 Let's say that a new entry, "Woody Allen" comes along.  We need to
 insert a new number at the beginning.  At this point, one of two
@@ -117,31 +116,35 @@ things happens:
   inserted into, which has to be re-written back to the object
   database anyway:
 
-  ..
+  ::
 
-     role/voter/1 Allen,Woody
-     role/voter/2 Jones,Bob
-     role/voter/3 MacDonald,Ronald
-     role/voter/4 Mace,The
-     role/voter/5 MacGuyver,James
-     role/voter/6 Nelson,Willie
+     role/voter/1 Allen,Woody.row
+     role/voter/2 Jones,Bob.row
+     role/voter/3 MacDonald,Ronald.row
+     role/voter/4 Mace,The.row
+     role/voter/5 MacGuyver,James.row
+     role/voter/6 Nelson,Willie.row
 
 * However if it does matter, because either there is an index which
   would otherwise have to be updated and recursively moved sub-entries
   around, or perhaps just it is desired to make directories which
   delta more efficiently, then it can insert a new entry before: ..
 
-   role/voter/05 Allen,Woody
-   role/voter/1 Jones,Bob
-   role/voter/2 MacDonald,Ronald
-   role/voter/3 Mace,The
-   role/voter/4 MacGuyver,James
-   role/voter/5 Nelson,Willie
+  ::
+
+   role/voter/05 Allen,Woody.row
+   role/voter/1 Jones,Bob.row
+   role/voter/2 MacDonald,Ronald.row
+   role/voter/3 Mace,The.row
+   role/voter/4 MacGuyver,James.row
+   role/voter/5 Nelson,Willie.row
 
   This works, of course, because "``05 xxx``" sorts before "``1
   yyy``", regardless of the values of "``xxx``" and "``yyy``".  So, as
   you can see, there are an infinite number of numbers before and
-  after every non-zero number you can summon... 
+  after every non-zero number you can summon.
+
+  The sort number may never be all zeroes.
 
   If the primary key of the table is a hash or UUID, or its type
   otherwise guarantees that its filename representation matches the
@@ -153,8 +156,9 @@ Official row filenames
 
 As noted in the `Filename layer`_, the "official" filename of the row
 is that which is stripped of all of these divisions (and sort numbers)
-along the way.  This is important for heirarchical references to rows,
-which are always by the "official" filename.
+along the way, and with no extension.  This is important for
+heirarchical references to rows, which are always by the "official"
+filename.
 
 Row format
 ==========
@@ -171,22 +175,24 @@ have a non-zero increment value.
 Page format
 ===========
 
-Especially if there is a lot of relatively static rows (ie, OLAP
-systems), it may make sense to write out "pages", which are a single
-emission of packed rows.
+Especially if there is a lot of relatively static rows, it may make
+sense to write out "pages", which are a single emission of packed
+rows.
 
-This is indicated in the tree by a filename which is a range, but
+This is indicated in the tree by a filename which is a range, and
 which is a blob (file) and not a tree (folder/directory).  Another
 possibility is that the filename does not completely have all the keys
 in the schema listed yet; eg if there are 3 primary key columns, and
 you encounter the blob while scanning:
 
-..
+::
 
-  myschema/mytable/customerid,projectid
+  myschema/mytable/customerid,projectid.page
 
 The third key is still expected and so the system knows that the blob
-is a page and contains the remaining columns.
+is a page and contains the remaining columns.  So, the ``.page`` part
+is really just a hint; other encodings which can hold multiple rows
+may not have a distinction in their filename.
 
 For bulk inserts, emitting pages as you go is fair game.
 

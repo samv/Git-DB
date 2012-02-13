@@ -46,7 +46,9 @@ Encoding Signed Integers
 ========================
 
 In various places, it is possible to encode a number which may be
-negative.
+negative.  In JSON, the values are just stored in base 10.  Signed
+integers appear in other parts of the Column Format as
+variable-length, twos-complement quantities.
 
 .. figure:: ../files/varint.png
    :width: 20em
@@ -113,25 +115,37 @@ are all built on the integer formats.  Currently they all involve
 storing two variable length, signed integers.
 
 .. list-table::
-   :widths: 10 10 30
+   :widths: 10 10 30 20
    :header-rows: 1
 
    * - Name
      - Formula
      - Description
+     - JSON
    * - float
      - *N* × 2\ :superscript:`*M*`
      - Floating point: general purpose, "real" numbers
+     - (none)
    * - decimal
      - *N* × 10\ :superscript:`*M*`
      - Decimal precision values (eg money or IEEE decimal formats)
+     - ``100.1``, ``1.2345e+5``
    * - rational
      - N ÷ M
      - Arbitrary precision rational numbers
+     - ``4/37``, ``12345/23941``
 
 Converting from the two integers N and M to a corresponding floating
 point value is trivial in each case; though see the below section for
 how "special" IEEE floating point values are encoded.
+
+In JSON data form, there is no 'float', but instead 'decimal' is used.
+This is because in JSON you cannot have literals in hexadecimal, such
+as "0x1.ef0fp+0", as in C, Python, etc.  It's possible to encode a
+true rational as a JavaScript expression, and you can express all
+floating point numbers precisely as a rational, but this is not
+recommended for general applications.  Few if any JSON parsers will
+read it without exception anyway.
 
 Architecture-dependent floats can be easily transformed into the
 underlying integers, through either directly accessing the bit fields
