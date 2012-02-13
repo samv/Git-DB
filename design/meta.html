@@ -45,6 +45,11 @@
   <div id="body">
     <div class="document" id="metaformat-specifying-data-structure">
 <h1 class="title">MetaFormat: specifying data structure</h1>
+<div class="figure align-right" style="width: 80%">
+<img alt="UML diagram showing relationship between meta class heirarchies" src="../files/meta-uml-simple.png" style="width: 40%;" />
+<p class="caption"><strong>Figure 1.</strong> How the various <tt class="docutils literal">meta</tt> types relate to each other,
+as UML.  This is a simplified overview.</p>
+</div>
 <p>There is a special schema in the git db store which represents the
 schema of the tables itself; these are identified with the <tt class="docutils literal">meta.</tt>
 schema name.  Optionally there are rows in the schema which represent
@@ -53,403 +58,660 @@ the schema of the <tt class="docutils literal">meta.</tt> store itself.</p>
 a simple example schema.</p>
 <div class="section" id="meta-tables">
 <h1>Meta Tables</h1>
-<p>As the intrinsic storage building block, the <tt class="docutils literal">meta.</tt> Tables have the
-following restrictions;</p>
-<p><strong>column types</strong></p>
+<p>As the intrinsic storage building block, the <tt class="docutils literal">meta.</tt> schema defines
+the tables that exist in the store.</p>
+<p>The <tt class="docutils literal">meta.</tt> schema is rich enough to express itself, as well as a
+number of useful features such as inheritance, nested tuples, and
+basic keys.</p>
+<p>There are four groups of <tt class="docutils literal">meta</tt> tables:</p>
+<p><strong>namespace</strong></p>
 <blockquote>
-All columns <em>must</em> be defined in terms of types from the standard
-type library.</blockquote>
+The objects in this table are top-level containers for all the
+schema objects relating to a particular version of the application.
+When querying, this specifies the name that can be used to specify
+the schema for objects.</blockquote>
+<p><strong>types</strong></p>
+<blockquote>
+<p>The type system uses (strict) inheritance, with all types sharing a
+common (abstract) base type, <tt class="docutils literal">meta.types</tt>.</p>
+<p>As is described later, this also implies that they share a primary
+key.  This is different to Postgres, on which inherited types do
+not share keys.  In the <tt class="docutils literal">meta</tt> schema, they will also share the
+same storage path, <tt class="docutils literal">/meta/types</tt>.</p>
+<p>Types can be value types (<tt class="docutils literal">meta.value</tt>), tuples (<tt class="docutils literal">meta.tuple</tt>)
+or storage tables (<tt class="docutils literal">meta.table</tt>).</p>
+</blockquote>
+<p><strong>attributes</strong></p>
+<blockquote>
+<p>Tuples are comprised of an ordered set of attributes.  Taken
+together, these attributes define the tuple type.</p>
+<p>Each attribute has a type, which can be a basic type or a tuple, as
+described above.</p>
+</blockquote>
 <p><strong>keys</strong></p>
 <blockquote>
-All tables in <tt class="docutils literal">meta.</tt> space <em>must</em> have a primary key.  Primary
-key columns must come first.</blockquote>
-<p><strong>unique constraints</strong></p>
-<blockquote>
-Non-primary unique constraints are specified in terms of foreign
-key constraints to specially named tables.  In a regular database
-these tables are hidden (but you can see them in Postgres, if you
-directly inspect the catalog).</blockquote>
-<p>This is being presented like this in order to satisfy the
-<em>bootstrapping</em> requirement of the schema; it should be able to store
-itself, including all of the relevant constraints that you would
-expect to operate on the data structure.</p>
+There are three types of keys.  Primary keys, foreign keys, and
+unique keys.  Every key belongs to a table (called the <em>source</em>
+table), and all the attributes that it refers to are found in the
+source table.  There are no indexes in this version of gitdb.</blockquote>
 </div>
-<div class="section" id="the-namespace-table">
-<h1>The &quot;Namespace&quot; table</h1>
-<p>The schema table defines local names of the schemas used.  This
-controls the path where the data lives in the top level of the
-repository.  It also allows for schema revisioning.  The repository
-revision is a <tt class="docutils literal">num</tt>, which can be any number; integer, decimal,
-float etc.</p>
+<div class="section" id="the-namespace-table-meta-namespace">
+<h1>The Namespace table (<tt class="docutils literal">meta.namespace</tt>)</h1>
+<p>The namespace table is a local surrogate key given to the schema,
+which is used as the first member of the primary key for all the other
+types in the <tt class="docutils literal">meta</tt> schema.</p>
+<p>The namespace has a URL and revision pair.  The URL is a
+distinguishing feature of the schema.  The revision number is
+increased as the schema is modified going forward.  The meta schema
+itself can store multiple revisions of a single application's database
+schema, under different names.</p>
+<p>Here is a table describing the structure.  The first four colums of
+this table are equivalent to a query like:</p>
+<pre class="literal-block">
+select
+   attr_index, attr_name, attr_type, attr_required
+from meta.attr
+where ns_name = 'meta'
+  and type_name = 'namespace'
+</pre>
 <table border="1" class="docutils">
 <colgroup>
-<col width="9%" />
-<col width="19%" />
-<col width="19%" />
-<col width="15%" />
-<col width="38%" />
+<col width="8%" />
+<col width="17%" />
+<col width="17%" />
+<col width="8%" />
+<col width="33%" />
+<col width="17%" />
 </colgroup>
-<tbody valign="top">
-<tr><td><tt class="docutils literal">attr_index</tt></td>
-<td><tt class="docutils literal">attr_name</tt></td>
-<td><tt class="docutils literal">attr_type</tt></td>
-<td><tt class="docutils literal">attr_required</tt></td>
-<td>description</td>
+<thead valign="bottom">
+<tr><th class="head">attr_index</th>
+<th class="head">attr_name</th>
+<th class="head">attr_type</th>
+<th class="head">attr_required</th>
+<th class="head">Description</th>
+<th class="head">Key(s)</th>
 </tr>
+</thead>
+<tbody valign="top">
 <tr><td>0</td>
 <td><tt class="docutils literal">ns_name</tt></td>
 <td><tt class="docutils literal">string</tt></td>
-<td>true</td>
-<td>name of the schema in the store</td>
+<td>yes</td>
+<td>local schema name</td>
+<td>Primary</td>
 </tr>
 <tr><td>1</td>
 <td><tt class="docutils literal">ns_url</tt></td>
 <td><tt class="docutils literal">string</tt></td>
-<td>false</td>
-<td>identifier for the application</td>
+<td>yes</td>
+<td>uniquely identitying URL (may be empty)</td>
+<td>Unique (with ns_rev)</td>
 </tr>
 <tr><td>2</td>
-<td><tt class="docutils literal">ns_url</tt></td>
-<td><tt class="docutils literal">string</tt></td>
-<td>true</td>
-<td>with the URL, uniquely identifies the schema revision</td>
+<td><tt class="docutils literal">ns_rev</tt></td>
+<td><tt class="docutils literal">num</tt></td>
+<td>yes</td>
+<td>schema iteration number</td>
+<td>Unique (with ns_rev)</td>
 </tr>
 </tbody>
 </table>
-<p>The values, for the <tt class="docutils literal">meta</tt> schema, are:</p>
+<p>If you are storing in a verbose encoding such as JSON, then the
+attribute indices are not important and property names are used
+instead.  For example, the <tt class="docutils literal">meta</tt> schema could be declared with this
+entry in <tt class="docutils literal">/meta/namespace.json</tt> (or <tt class="docutils literal">/meta/namespace/meta.json</tt>):</p>
 <pre class="literal-block">
 { &quot;ns_name&quot;: &quot;meta&quot;,
   &quot;ns_url&quot;: &quot;http://github.com/samv/Git-DB&quot;,
   &quot;ns_rev&quot;: 0.1,
 }
 </pre>
-<p>Which could be encoded in binary as:</p>
+<p>It could also be encoded in binary as:</p>
 <pre class="literal-block">
-00000000  021d 6874 7470 3a2f 2f67 6974 6875 622e  ␂␝http://github.
-00000010  636f 6d2f 7361 6d76 2f47 6974 2d44 4203  com/samv/Git-DB␃
-00000020  7f01 0204 6d65 7461                      ␡␁␂␄meta
+00000000  0204 6d65 7461 021d 6874 7470 3a2f 2f67 ␂␄meta␂␝http://g
+00000010  6974 6875 622e 636f 6d2f 7361 6d76 2f47 ithub.com/samv/Gi
+00000020  6974 2d44 4203 7f01                     t-DB␃␡␁
 </pre>
-<hr class="docutils" />
-<p>Information below here is out of date; see the gidb.meta branch for
-a &quot;real&quot; description of the meta schema structure.</p>
+<p>This shows a curious situation, in that it is possible to include
+information in the <tt class="docutils literal">meta</tt> tables about the <tt class="docutils literal">meta</tt> schema itself.
+This is a well-known chicken-and-egg situation, found in type theory,
+metaprogramming, etc.</p>
+<p>To keep things simple when connecting, all that is required is a
+single row which includes the <tt class="docutils literal">meta</tt> schema URL and revision - and
+if the implementation does not know how what that means, it cannot
+process the rest of the schema metadata, and therefore should not
+continue.  If the data is provided, then it should be compared against
+the known good data, and any discrepancies treated as a fatal error.</p>
 </div>
-<hr class="docutils" />
-<div class="section" id="the-tuple-table">
-<h1>The &quot;Tuple&quot; table</h1>
-<p>The &quot;paths&quot; table defines which schemas are active at which paths
-within the git tree.  Multiple versions of the same schema can be
-deployed, but they have to have unique ns_name's.</p>
-<pre class="literal-block">
-{ &quot;name&quot;: &quot;tuple&quot;,
-  &quot;type&quot;: &quot;tuple&quot;,
-  &quot;fields&quot;: [
-     { &quot;name&quot;: &quot;ns_url&quot;, &quot;type&quot;: &quot;string&quot;, &quot;required&quot;: 1 },
-     { &quot;name&quot;: &quot;ns_rev&quot;, &quot;type&quot;: &quot;num&quot;, &quot;required&quot;: 1 },
-     { &quot;name&quot;: &quot;tuple_index&quot;, &quot;type&quot;: &quot;int&quot;, &quot;required&quot;: 1 },
-     { &quot;name&quot;: &quot;tuple_name&quot;, &quot;type&quot;: &quot;string&quot;, &quot;required&quot;: 1 },
-  ],
-  &quot;keys&quot;: [
-     { &quot;primary&quot;: &quot;1&quot;,
-       &quot;fields&quot;: [ &quot;ns_url&quot;, &quot;ns_rev&quot;, &quot;tuple_index&quot; ],
-     },
-     { &quot;foreign&quot;: &quot;1&quot;,
-       &quot;fields&quot;: [ &quot;ns_url&quot;, &quot;ns_rev&quot; ],
-       &quot;references&quot;: {
-           &quot;ns_name&quot;: &quot;meta&quot;,
-           &quot;tuple_name&quot;: &quot;schema&quot;,
-       }
-     },
-     { &quot;unique&quot;: &quot;1&quot;,
-       &quot;fields&quot;: [ &quot;ns_url&quot;, &quot;ns_rev&quot;, &quot;tuple_name&quot; ],
-     },
-  ],
-},
-</pre>
+<div class="section" id="types-meta-type">
+<h1>Types (<tt class="docutils literal">meta.type</tt>)</h1>
+<p>Types are abstract, in that you can't just have a type, it has to be a
+particular kind of type.  When reading the row, which kind of type you
+have can be distinguished from which attributes it posesses.</p>
+<p>The <tt class="docutils literal">type</tt> tuple exists only to keep a registry of type names within
+a namespace.  The primary namespace for types is their names and not a
+surrogate index, which makes type renaming more complex, but makes the
+schema overall nicer to work with.  Numbered surrogates are used for
+the <tt class="docutils literal">attr</tt> table, only, as they are necessary for the binary column
+format.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="7%" />
+<col width="7%" />
+<col width="57%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Column</th>
+<th class="head">Type</th>
+<th class="head">Nullable</th>
+<th class="head">Key(s)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td><tt class="docutils literal">ns_name</tt></td>
+<td>string</td>
+<td>no</td>
+<td>Primary (with <tt class="docutils literal">type_name</tt>) and Foreign to <tt class="docutils literal">namespace</tt></td>
+</tr>
+<tr><td><tt class="docutils literal">type_name</tt></td>
+<td>string</td>
+<td>no</td>
+<td>Primary (with <tt class="docutils literal">ns_name</tt>)</td>
+</tr>
+</tbody>
+</table>
+<div class="section" id="value-types-meta-value">
+<h2>Value Types (<tt class="docutils literal">meta.value</tt>)</h2>
+<p>Value Types are a kind of type that are simple and concrete: they have
+a single set of allowable column formats, and well-known set of
+functions for converting from the value to representations such as the
+tree format and the column format.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="7%" />
+<col width="7%" />
+<col width="57%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Column</th>
+<th class="head">Type</th>
+<th class="head">Nullable</th>
+<th class="head">Key(s)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td><tt class="docutils literal">ns_name</tt></td>
+<td>string</td>
+<td>no</td>
+<td>Primary (with <tt class="docutils literal">type_name</tt>); foreign key inherited from
+<tt class="docutils literal">type</tt></td>
+</tr>
+<tr><td><tt class="docutils literal">type_name</tt></td>
+<td>string</td>
+<td>no</td>
+<td>Primary (with <tt class="docutils literal">ns_name</tt>)</td>
+</tr>
+<tr><td><tt class="docutils literal">value_formats</tt></td>
+<td><tt class="docutils literal">column_formats</tt></td>
+<td>no</td>
+<td>-</td>
+</tr>
+<tr><td><tt class="docutils literal">value_dump_f</tt></td>
+<td>string</td>
+<td>yes</td>
+<td>-</td>
+</tr>
+<tr><td><tt class="docutils literal">value_load_f</tt></td>
+<td>string</td>
+<td>yes</td>
+<td>-</td>
+</tr>
+<tr><td><tt class="docutils literal">value_choose_f</tt></td>
+<td>string</td>
+<td>yes</td>
+<td>-</td>
+</tr>
+<tr><td><tt class="docutils literal">value_cmp_f</tt></td>
+<td>string</td>
+<td>yes</td>
+<td>-</td>
+</tr>
+<tr><td><tt class="docutils literal">value_print_f</tt></td>
+<td>string</td>
+<td>yes</td>
+<td>-</td>
+</tr>
+<tr><td><tt class="docutils literal">value_scan_f</tt></td>
+<td>string</td>
+<td>yes</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p>Value Type definitions are relatively mundane, so the meanings of
+these columns is described elsewhere, in <a class="reference external" href="./values.html">Value Types</a>.  You can
+include this in your schema to assist others in working with the new
+data types that get defined, should you feel the need.</p>
 </div>
-<div class="section" id="the-store-table">
-<h1>The &quot;Store&quot; table</h1>
-<p>The tuple table defines types, but they do not necessarily &quot;deploy&quot;
-them.  Tuples can be defined merely for use within other parts of the
-schema, so this extra table connects tuples with <a class="reference external" href="./treeformat.html">TreeFormat</a> trees.</p>
-<p>The &quot;path&quot; field is actually optional, the default will be
-<tt class="docutils literal">/ns_name/tuple_name</tt> but this is provided as an extra flexibility.
-The only fixed path is therefore <tt class="docutils literal">/.meta</tt></p>
-<pre class="literal-block">
-{ &quot;name&quot;: &quot;store&quot;,
-  &quot;type&quot;: &quot;tuple&quot;,
-  &quot;fields&quot;: [
-     { &quot;name&quot;: &quot;ns_name&quot;, &quot;type&quot;: &quot;string&quot;, &quot;required&quot;: 1 },
-     { &quot;name&quot;: &quot;tuple_name&quot;, &quot;type&quot;: &quot;string&quot;, &quot;required&quot;: 1 },
-     { &quot;name&quot;: &quot;ns_url&quot;, &quot;type&quot;: &quot;string&quot;, &quot;required&quot;: 1 },
-     { &quot;name&quot;: &quot;ns_rev&quot;, &quot;type&quot;: &quot;num&quot;, &quot;required&quot;: 1 },
-     { &quot;name&quot;: &quot;tuple_index&quot;, &quot;type&quot;: &quot;int&quot;, &quot;required&quot;: 1 },
-     { &quot;name&quot;: &quot;path&quot;, &quot;type&quot;: &quot;string&quot;, &quot;required&quot;: 0 },
-  ],
-  &quot;keys&quot;: [
-     { &quot;primary&quot;: &quot;1&quot;,
-       &quot;fields&quot;: [ &quot;ns_name&quot;, &quot;tuple_name&quot; ],
-     },
-     { &quot;foreign&quot;: &quot;1&quot;,
-       &quot;fields&quot;: [ &quot;ns_url&quot;, &quot;ns_rev&quot;, &quot;tuple_index&quot; ],
-       &quot;references&quot;: &quot;meta.class&quot;,
-     },
-  ],
-},
-</pre>
+<div class="section" id="enum-types-meta-enum">
+<h2>Enum Types (<tt class="docutils literal">meta.enum</tt>)</h2>
+<p>Enums.  Useful enough to include on a first cut.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="7%" />
+<col width="7%" />
+<col width="57%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Column</th>
+<th class="head">Type</th>
+<th class="head">Nullable</th>
+<th class="head">Key(s)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td><tt class="docutils literal">ns_name</tt></td>
+<td>string</td>
+<td>no</td>
+<td>Primary (with <tt class="docutils literal">type_name</tt>); foreign key inherited from
+<tt class="docutils literal">type</tt></td>
+</tr>
+<tr><td><tt class="docutils literal">type_name</tt></td>
+<td>string</td>
+<td>no</td>
+<td>Primary (with <tt class="docutils literal">ns_name</tt>)</td>
+</tr>
+<tr><td><tt class="docutils literal">enum_values</tt></td>
+<td>string[]</td>
+<td>no</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p><tt class="docutils literal">enum_values</tt> is a column with 1 dimension, that is, an array.  The
+contents of this array relate to 'int' values.</p>
 </div>
-<div class="section" id="the-attributes-or-columns-table">
-<h1>The &quot;Attributes&quot; or &quot;Columns&quot; table</h1>
-<pre class="literal-block">
-# this table records the list of attributes/columns of a
-# class/table.
-meta.attr:
-  **ns_url text not null**
-  **ns_rev num not null**
-  **tuple_index int not null**
-  foreign key (ns_url, ns_rev, tuple_index)
-          references meta.class
-  **attr_index int not null**
-  primary key (ns_url, ns_rev, tuple_index, attr_index)
-  # if attr_name is null, the column is deleted.
-  **attr_name text null**
-  unique key (ns_url, ns_rev, tuple_index, attr_name)
-  **attr_type text not null**
-  foreign key (ns_url, ns_rev, attr_type) references meta.type
-       (ns_url, ns_rev, type_name)
-  **attr_required bool not null**
-  # a 'default' is somewhat problematic; *any* value can be placed
-  # here, and it is not known how to interpret it without looking up
-  # what the attr_type means; so, it may be seen as 'opaque'
-  **attr_default item null**
-
-# for unique key in above
-meta.attr:attr_name_idx
-  ns_url text not null
-  ns_rev num not null
-  tuple_index int not null
-  name text not null
-  primary key (ns_url, ns_rev, tuple_index, name)
-  attr_index int not null
-  foreign key (ns_url, ns_rev, tuple_index, attr_index)
-          references meta.attr
-</pre>
-<p>In Avro-like syntax:</p>
-<p>Precision/scale modifiers, such as <tt class="docutils literal">VARCHAR(2)</tt> etc are not
-supported directly; they're something of a bodge when proper
-generics/higher order type system is a more complete solution.  Done
-properly, a generics system can also be the starting point for
-features such as arrays (ARRAY [TYPE]) and composite types (eg TUPLE
-[TYPE, TYPE, TYPE]); so this will be left out initially, and the
-database will be fully arbitrary length throughout.</p>
+<div class="section" id="field-types-meta-field">
+<h2>Field Types (<tt class="docutils literal">meta.field</tt>)</h2>
+<p>Fields are like 'enum's but stored bitwise, either in an int or a
+block of bytes.  May be mapped to an array of values, or a 'FOO|BAR'
+C-style rendering, depending on the IO functions specified.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="7%" />
+<col width="7%" />
+<col width="57%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Column</th>
+<th class="head">Type</th>
+<th class="head">Nullable</th>
+<th class="head">Key(s)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td><tt class="docutils literal">ns_name</tt></td>
+<td>string</td>
+<td>no</td>
+<td>Primary (with <tt class="docutils literal">type_name</tt>); foreign key inherited from
+<tt class="docutils literal">type</tt></td>
+</tr>
+<tr><td><tt class="docutils literal">type_name</tt></td>
+<td>string</td>
+<td>no</td>
+<td>Primary (with <tt class="docutils literal">ns_name</tt>)</td>
+</tr>
+<tr><td><tt class="docutils literal">field_bits</tt></td>
+<td>string[]</td>
+<td>no</td>
+<td>-</td>
+</tr>
+</tbody>
+</table>
+<p>Fields are included mainly because there is one in the meta schema.</p>
 </div>
-<div class="section" id="keys-key-constraints">
-<h1>KEYS &amp; KEY CONSTRAINTS</h1>
-<pre class="literal-block">
-# the 'key' table describes unique and foreign key constraints as
-# well as listing recommended indexes (stored=false)
-meta.key:
-  **ns_url text not null**
-  **ns_rev num not null**
-  **tuple_index int not null**
-  foreign key (ns_url, ns_rev, tuple_index)
-          references meta.class
-  **key_name text not null**
-  primary key (ns_url, ns_rev, tuple_index, key_name)
-  **key_unique bool not null**
-  **key_primary bool not null**
-  **key_stored bool not null**
-  # whether this key also restricts subclasses of the parent.
-  # subclasses will have multiple key rows!
-  **key_heritable bool not null**
-
-# this slave table links the key to the (ordered) list of attributes
-# which are a part of the key, and if the key is a foreign key, then
-# also the columns of the foreign key.
-meta.key:attr
-  **ns_url text not null**
-  **ns_rev num not null**
-  **tuple_index int not null**
-  **key_name text not null**
-  foreign key (ns_url, ns_rev, tuple_index, key_name)
-          references meta.key
-  **key_pos int not null**
-  primary key (ns_url, ns_rev, tuple_index, name, key_pos)
-  attr_index int not null
-  foreign key (ns_url, ns_rev, tuple_index, attr_index)
-          references meta.attr
-  foreign_tuple_index int null
-  foreign key (ns_url, ns_rev, foreign_tuple_index)
-          references meta.class (ns_url, ns_rev, tuple_index)
-  foreign_attr_index int null
-  foreign key (ns_url, ns_rev, foreign_tuple_index, foreign_attr_index)
-          references meta.attr (ns_url, ns_rev, tuple_index, attr_index)
-</pre>
+<div class="section" id="tuples-meta-tuple">
+<h2>Tuples (<tt class="docutils literal">meta.tuple</tt>)</h2>
+<p>The tuple table defines what Postgres would call compound data types,
+and are usually called tables in the classic RDBMS, or perhaps classes
+or result sets in other contexts.</p>
+<p>Similar to the situation in Postgres, they are not necessarily
+intended for use as real tables, and can be used as column types in
+the case of nested data types.  This allows for deeply nested data in
+rows, while retaining the ability to use strict typing.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="7%" />
+<col width="7%" />
+<col width="57%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Column</th>
+<th class="head">Type</th>
+<th class="head">Nullable</th>
+<th class="head">Key(s)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td><tt class="docutils literal">ns_name</tt></td>
+<td>string</td>
+<td>no</td>
+<td>Primary (with <tt class="docutils literal">type_name</tt>); foreign key inherited from
+<tt class="docutils literal">type</tt></td>
+</tr>
+<tr><td><tt class="docutils literal">type_name</tt></td>
+<td>string</td>
+<td>no</td>
+<td>Primary (with <tt class="docutils literal">ns_name</tt>)</td>
+</tr>
+<tr><td><tt class="docutils literal">tuple_super</tt></td>
+<td>string[]</td>
+<td>yes</td>
+<td>Foreign, with <tt class="docutils literal">ns_name</tt>, to <tt class="docutils literal">type</tt> primary key</td>
+</tr>
+</tbody>
+</table>
+<p>Tuples can inherit from other tuples, but they must add at least one
+required attribute in order to distinguish themselves in storage.
+This restriction allows row data to be merged between tables by simple
+concatenation and avoids storing schema information in the data. In
+other words, types within an inheritance heirarchy share attribute
+numbering ranges.</p>
 </div>
-<div class="section" id="id1">
-<span id="types"></span><h1>Types</h1>
-<pre class="literal-block">
-# meta.type: this is basically a compatibility table and is optional
-# if using only predefined types.  'Functions' here are strings;
-# only the name, not the definition nor the function prototype are
-# represented.  They are to be well-known function names, but the
-# paranoid should prepare for them to be custom to the schema
-# ID/revision.
-meta.type:
-  **ns_url text not null**
-  **ns_rev num not null**
-  foreign key (id, ns_rev) references meta.schema
-  **type_name text not null**
-  primary key (id, ns_rev, type_name)
-  **type_formats int not null**
-  **type_dump_func text null**
-  **type_load_func text null**
-  **type_choose_func text null**
-  **type_cmp_func text null**
-  **type_print_func text null**
-  **type_scan_func text null**
-</pre>
-<p><tt class="docutils literal">type_formats</tt> is an integer which is interpreted bitwise, and
-represents the encodings which are allowed for that type in this
-store.  The values for the standard types, below, represent all of the
-encodings which are defined by this standard.  Using an encoding for a
-type which is not permitted by the <tt class="docutils literal">type_formats</tt> value in the
-<tt class="docutils literal">meta.type</tt> table is a data consistency error.  <tt class="docutils literal">type_formats</tt>
-roughly covers the <tt class="docutils literal">INTERNALLENGTH</tt> and <tt class="docutils literal">STORAGE</tt> properties in
-the equivalent Postgres feature, <tt class="docutils literal">CREATE TYPE</tt></p>
-<p>The functions are described as below:</p>
-<p><tt class="docutils literal">type_choose_func</tt></p>
+<div class="section" id="storage-tables-meta-table">
+<h2>Storage Tables (<tt class="docutils literal">meta.table</tt>)</h2>
+<p>A tuple with storage is called a table, and this requires a primary
+key.</p>
+<p>By default, its storage path is <tt class="docutils literal">/ns_name/type_name</tt> - but this can
+be overridden by a non-null value in the <tt class="docutils literal">table_path</tt> column.  The
+only fixed path in the repository is therefore <tt class="docutils literal">/meta</tt> - though you
+can call this path <tt class="docutils literal">/_meta</tt> or <tt class="docutils literal">/.meta</tt> if you prefer.  On
+connection, they should be tried in that order, and the first one
+found used.  If a <tt class="docutils literal">value_name</tt> is used in the schema, but not listed
+in <tt class="docutils literal">meta.types</tt>, then 'standard' definitions from the relevant
+version of the git-db spec may be used.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="7%" />
+<col width="7%" />
+<col width="57%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Column</th>
+<th class="head">Type</th>
+<th class="head">Nullable</th>
+<th class="head">Key(s)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td><tt class="docutils literal">ns_name</tt></td>
+<td>string</td>
+<td>no</td>
+<td>Primary (with <tt class="docutils literal">type_name</tt>); foreign key inherited from
+<tt class="docutils literal">type</tt></td>
+</tr>
+<tr><td><tt class="docutils literal">type_name</tt></td>
+<td>string</td>
+<td>no</td>
+<td>Primary (with <tt class="docutils literal">ns_name</tt>)</td>
+</tr>
+<tr><td><tt class="docutils literal">tuple_super</tt></td>
+<td>string[]</td>
+<td>yes</td>
+<td>(inherited from tuple)</td>
+</tr>
+<tr><td><tt class="docutils literal">tuple_path</tt></td>
+<td>string</td>
+<td>no</td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="the-attribute-table-meta-attr">
+<h1>The Attribute table (<tt class="docutils literal">meta.attr</tt>)</h1>
+<p>Tuples are ordered lists of attributes.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="7%" />
+<col width="7%" />
+<col width="57%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Column</th>
+<th class="head">Type</th>
+<th class="head">Nullable</th>
+<th class="head">Key(s)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td><tt class="docutils literal">ns_name</tt></td>
+<td>string</td>
+<td>no</td>
+<td>Primary (1/3)</td>
+</tr>
+<tr><td><tt class="docutils literal">type_name</tt></td>
+<td>string</td>
+<td>no</td>
+<td>Primary (2/3); Foreign with <tt class="docutils literal">ns_name</tt> to <tt class="docutils literal">type</tt> or
+<tt class="docutils literal">tuple</tt></td>
+</tr>
+<tr><td><tt class="docutils literal">attr_index</tt></td>
+<td>int</td>
+<td>no</td>
+<td>Primary (3/3)</td>
+</tr>
+<tr><td><tt class="docutils literal">attr_name</tt></td>
+<td>int</td>
+<td>yes</td>
+<td>Unique with <tt class="docutils literal">ns_name</tt> and <tt class="docutils literal">type_name</tt></td>
+</tr>
+<tr><td><tt class="docutils literal">attr_type</tt></td>
+<td>string</td>
+<td>yes</td>
+<td>Foreign with <tt class="docutils literal">ns_name</tt> to <tt class="docutils literal">type</tt> primary key index</td>
+</tr>
+<tr><td><tt class="docutils literal">attr_dim</tt></td>
+<td>int</td>
+<td>yes</td>
+<td>none</td>
+</tr>
+<tr><td><tt class="docutils literal">attr_required</tt></td>
+<td>bool</td>
+<td>no</td>
+<td>none</td>
+</tr>
+</tbody>
+</table>
+<p><tt class="docutils literal">ns_name</tt>, <tt class="docutils literal">type_name</tt></p>
 <blockquote>
-Some types get to choose the encoding based on the value to be
-encoded.  If that is true, this function will be defined,
-otherwise it will be null and only one <tt class="docutils literal">type_formats</tt> bit may be
-set.</blockquote>
-<p><tt class="docutils literal">type_dump_func</tt></p>
+These parts of the primary key are a foreign keys to the <tt class="docutils literal">tuple</tt>
+table (or the <tt class="docutils literal">type</tt> table, but they really only may add
+attributes to tuple types, as value types cannot have extra type
+encoded).  They specify the <tt class="docutils literal">meta.tuple</tt> that the entry
+describes.</blockquote>
+<p><tt class="docutils literal">attr_index</tt></p>
 <blockquote>
-The name of a function which marshalls the value out.  The
-function will take the value, an encoding, and return a value
-valid for that encoding.  This is similar to the <tt class="docutils literal">SEND</tt> function
-in Postgres.</blockquote>
-<p><tt class="docutils literal">type_load_func</tt></p>
+This specifies the column number in storage.  When new columns are
+added, they are given a new <tt class="docutils literal">attr_index</tt> number.  When they are
+renamed, the number stays the same, and finally, when they are
+deleted the entry remains.</blockquote>
+<p><tt class="docutils literal">attr_name</tt></p>
 <blockquote>
-The reverse, but marshalls the value in.  The encoding is a formal
-parameter.  This corresponds to <tt class="docutils literal">RECEIVE</tt> in Postgres.</blockquote>
-<p><tt class="docutils literal">type_cmp_func</tt></p>
+This is the logical name that is ascribed to the property, and
+should be the important one as far as applications are concerned.
+As there is a unique constraint, attributes which are deleted
+should have <tt class="docutils literal">attr_name</tt> not set.</blockquote>
+<p><tt class="docutils literal">attr_type</tt></p>
 <blockquote>
-The name of a function which can compare two values.  For primary
-key sorting purposes.  This corresponds to the <tt class="docutils literal">CREATE OPERATOR
-CLASS ... DEFAULT FOR TYPE ... USING BTREE</tt> command in Postgres.</blockquote>
-<p><tt class="docutils literal">type_print_func</tt></p>
+<p>This specifies the type of the attribute.  It is a reference to
+the <tt class="docutils literal">meta.type</tt> heirarchy.  Through inheritance, this may also
+refer to tuples in the <tt class="docutils literal">meta.tuple</tt> table - even itself.
+Cross-namespace type references are not allowed.</p>
+<p>If this field is not set then the attribute is untyped.  The
+standard JSON-like transform rules will apply.</p>
+</blockquote>
+<p><tt class="docutils literal">attr_dim</tt></p>
 <blockquote>
-The name of a function which converts the value to a primary
-key-form string, like <tt class="docutils literal">OUTPUT</tt> in Postgres.  This need not be
-reversible; if not, the standard types' function name starts with
-<tt class="docutils literal">hash_</tt></blockquote>
-<p><tt class="docutils literal">type_scan_func</tt></p>
+This specifies the number of dimensions of the attribute.  If it
+is 0 or not specified, then the attribute is a regular attribute.
+If it is 1, then it is an array.  If 2 or higher, a
+multi-dimensional array.</blockquote>
+<p><tt class="docutils literal">attr_required</tt></p>
 <blockquote>
-The reverse of <tt class="docutils literal">type_print_func</tt>; turns a formatted string back
-into a value, like <tt class="docutils literal">INPUT</tt> in Postgres.  If this is not
-reversible then the function will be converting the row value to a
-placeholder.</blockquote>
-<p>Types do not need to specify a hashing function as in Postgres; this
-is considered an internal implementation detail.  As truly custom
-types are not yet permitted, hashing may proceed on the basis of the
-encoded value.</p>
-<div class="section" id="standard-types">
-<h2>Standard Types</h2>
-<p>The <em>standard types</em> here represent a common set of well known
-data types in use in databases and programming, and a corresponding
-set of <em>well known functions</em> which perform the trivial IO
-operations, and for which reference implementations will be provided.</p>
-<p>Implementations need not support all types; however if opening a
-store, this table may be checked to see that the understanding of all
-parties as to the nature of the types is known.</p>
-<!-- list-table:
-:widths: 12 12 12 12 12 12 12 12
-
-* - ``type_name``
-  - ``type_formats``
-  - ``type_choose_func``
-  - ``type_dump_func``
-  - ``type_load_func``
-  - ``type_cmp_func``
-  - ``type_print_func``
-  - ``type_scan_func``
-* - bool
-  - 1100000b
-  - is_tf
-  - emit_bool
-  - read_bool
-  - false_first
-  - fmt_bool
-  - scan_bool
-* - integer
-  - 1b
-  - -
-  - emit_varint
-  - read_varint
-  - cmp_num
-  - fmt_int
-  - scan_int
-* - real
-  - 11011b
-  - pack_real
-  - emit_real
-  - read_real
-  - cmp_num
-  - fmt_real
-  - scan_real
-* - numeric
-  - 1000b
-  - -
-  - emit_real
-  - read_real
-  - cmp_num
-  - fmt_real
-  - scan_real
-* - bytea
-  - 1000100b
-  - large_value
-  - emit_bytea
-  - read_bytea
-  - cmp_bytes
-  - fmt_bytea_hex
-  - scan_bytea_hex
-* - text
-  - 1000100b
-  - large_value
-  - emit_text
-  - read_text
-  - cmp_text
-  - fmt_text
-  - scan_text
-* - nkd_text
-  - 1000100b
-  - large_value
-  - emit_nkd_text
-  - read_nkd_text
-  - cmp_nkd_text
-  - fmt_nkd_text
-  - scan_nkd_text
-* - nkc_text
-  - 1000100b
-  - large_value
-  - emit_nkc_text
-  - read_nkc_text
-  - cmp_nkc_text
-  - fmt_nkc_text
-  - scan_nkc_text
-* - json
-  - 1000100b
-  - large_json
-  - emit_json
-  - read_json
-  - cmp_struct_hash
-  - hash_json
-  - scan_hash -->
-<p>The functions are all described in detail in the reference
-implementation.  Most are very simple.</p>
-<p>If a <tt class="docutils literal">type_name</tt> is used in the schema, but not listed in
-<tt class="docutils literal">meta.types</tt>, then the above definitions are used.</p>
+A most basic constraint, whether the value can be NULL or not.  If
+not set, then the value may be NULL.  No primary key attributes
+may be NULL.</blockquote>
+</div>
+<div class="section" id="constraints-and-keys">
+<h1>Constraints and Keys</h1>
+<p>There are three types of indexes: primary keys, unique keys, and
+foreign keys.  These are all specializations of the 'key' tuple:</p>
+<div class="section" id="the-key-tuple-meta-key">
+<h2>The Key Tuple (<tt class="docutils literal">meta.key</tt>)</h2>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="7%" />
+<col width="7%" />
+<col width="57%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Column</th>
+<th class="head">Type</th>
+<th class="head">Nullable</th>
+<th class="head">Key(s)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td><tt class="docutils literal">ns_name</tt></td>
+<td>string</td>
+<td>no</td>
+<td>Primary (1/3)</td>
+</tr>
+<tr><td><tt class="docutils literal">type_name</tt></td>
+<td>string</td>
+<td>no</td>
+<td>Primary (2/3); Foreign with <tt class="docutils literal">ns_name</tt> to <tt class="docutils literal">type</tt> or
+<tt class="docutils literal">tuple</tt></td>
+</tr>
+<tr><td><tt class="docutils literal">key_name</tt></td>
+<td>int</td>
+<td>no</td>
+<td>Primary (3/3); Unique with <tt class="docutils literal">ns_name</tt></td>
+</tr>
+<tr><td><tt class="docutils literal">key_inherit</tt></td>
+<td>bool</td>
+<td>yes</td>
+<td>This rule doesn't apply to sub-types.</td>
+</tr>
+<tr><td><tt class="docutils literal">key_attr_index</tt></td>
+<td>int[]</td>
+<td>yes</td>
+<td>Foreign with <tt class="docutils literal">ns_name</tt> and <tt class="docutils literal">type_name</tt> to
+<tt class="docutils literal">attr_ns_name_type_name_attr_index_unique</tt></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="unique-keys-meta-unique">
+<h2>Unique Keys (<tt class="docutils literal">meta.unique</tt>)</h2>
+<p>Unique keys add the notion of constraint on the source table.</p>
+<p>It has a table, which has no extra columns compared to the tuple.</p>
+</div>
+<div class="section" id="primary-keys-meta-primary">
+<h2>Primary Keys (<tt class="docutils literal">meta.primary</tt>)</h2>
+<p>The only difference between the primary key and a unique key is that
+it is used as the primary identity for rows in the table.  It stores
+one extra fact, the location of the table in the store.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="7%" />
+<col width="7%" />
+<col width="57%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Column</th>
+<th class="head">Type</th>
+<th class="head">Nullable</th>
+<th class="head">Key(s)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td><tt class="docutils literal">ns_name</tt>, <tt class="docutils literal">type_name</tt>, <tt class="docutils literal">key_name</tt>, <tt class="docutils literal">key_inherit</tt>,
+<tt class="docutils literal">key_attr_index</tt></td>
+<td>various</td>
+<td>various</td>
+<td>Inherited from 'key' tuple</td>
+</tr>
+<tr><td><tt class="docutils literal">primary_path</tt></td>
+<td>string</td>
+<td>no</td>
+<td>no key, must exist</td>
+</tr>
+</tbody>
+</table>
+<p>There are two fields where the path is recorded; this one records the
+location of the TreeFormat structure.  Technically, the <tt class="docutils literal">table</tt>
+class' <tt class="docutils literal">table_path</tt> attribute records which TreeFormat structure
+that this table is saving its rows in.</p>
+</div>
+<div class="section" id="foreign-keys-meta-foreign">
+<h2>Foreign Keys (<tt class="docutils literal">meta.foreign</tt>)</h2>
+<p>Finally, there is the <tt class="docutils literal">foreign</tt> key type.  Foreign keys refer to
+another key.  If they refer to a unique or primary key, a traditional
+foreign key relationship is established.  Foreign keys which refer to
+each other imply the existence test, but place no constraint on
+uniqueness of either side.</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="29%" />
+<col width="7%" />
+<col width="7%" />
+<col width="57%" />
+</colgroup>
+<thead valign="bottom">
+<tr><th class="head">Column</th>
+<th class="head">Type</th>
+<th class="head">Nullable</th>
+<th class="head">Key(s)</th>
+</tr>
+</thead>
+<tbody valign="top">
+<tr><td><tt class="docutils literal">ns_name</tt>, <tt class="docutils literal">type_name</tt>, <tt class="docutils literal">key_name</tt>, <tt class="docutils literal">key_inherit</tt>,
+<tt class="docutils literal">key_attr_index</tt></td>
+<td>various</td>
+<td>various</td>
+<td>Inherited from 'key' tuple</td>
+</tr>
+<tr><td><tt class="docutils literal">foreign_key_name</tt></td>
+<td>string</td>
+<td>no</td>
+<td>Foreign to <tt class="docutils literal">key</tt> with <tt class="docutils literal">ns_name</tt></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="section" id="summary">
+<h1>Summary</h1>
+<p>The schema so far is capable of storing typed and untyped data, as
+well as achieving several of the various levels of normal form.  An
+important test is that the schema completely describes itself, and
+naturally fits within itself.</p>
+<div class="figure align-right" style="width: 90%">
+<img alt="UML diagram showing relationship between all meta classes" src="../files/meta-uml.png" style="width: 60%;" />
+<p class="caption"><strong>Figure 2.</strong> A UML diagram of <em>all</em> of the <tt class="docutils literal">meta</tt> types and how
+they relate to each other.</p>
 </div>
 </div>
 </div>

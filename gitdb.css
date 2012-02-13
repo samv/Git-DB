@@ -4,6 +4,10 @@ body {
      font-family: "Bitstream Charter", serif;
 }
 
+/*#-------------------------------------
+| # logo & title
+-*/
+
 #sitelogo {
      background: darkgreen;
      margin: 0em;
@@ -28,6 +32,10 @@ body {
      font-size: 10pt;
      font-style: italic;
 }
+
+/*#-------------------------------------
+| # navbar
+-*/
 
 #navbar {
 	padding: 0.4em;

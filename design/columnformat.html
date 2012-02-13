@@ -293,21 +293,22 @@ just arrays, hashes, strings and numbers yet still very useful.</p>
 <p>Boolean encoding types are not permitted in these types in any use
 case where the column type byte may be omitted.  Arrays of booleans
 can be represented as raw data blobs in the meantime.</p>
-<div class="section" id="encoding-arrays">
-<h3>Encoding Arrays</h3>
+<div class="section" id="homogenous-arrays">
+<h3>Homogenous Arrays</h3>
 <div class="figure align-right" style="width: 90%">
 <img alt="tbc" src="../files/array.png" style="width: 50%;" />
 <p class="caption"><strong>Figure 4.</strong> the column contains a 17-member list of <tt class="docutils literal">varint</tt>
 values.</p>
 </div>
-<p>With arrays, the values must all be of the same encoding type.  The
-first <tt class="docutils literal">varint</tt> to follow is a type specifier for the values,
-specified in exactly the same way as a column encoding; no offset
-should be specified.  For a multi-dimensional array, this may specify
-the <em>List&lt;&gt;</em> type again.  After the type comes a <tt class="docutils literal">varuint</tt>, which is
-the number of values expected.  The values appear directly afterwards.</p>
-<p>While it is not technically necessary, the <tt class="docutils literal">pop</tt> column specifier is
-to be found at the end of the list of values.</p>
+<p>With homogenous arrays, the values must all be of the same encoding
+type.  The first <tt class="docutils literal">varint</tt> to follow is a type specifier for the
+values, specified in exactly the same way as a column encoding; no
+offset should be specified.  For a multi-dimensional array, this may
+specify the <em>List&lt;&gt;</em> type again.  After the type comes a <tt class="docutils literal">varuint</tt>,
+which is the number of values expected.  The values appear directly
+afterwards.</p>
+<p>The <tt class="docutils literal">pop</tt> column specifier is to be found at the end of the list of
+values.</p>
 </div>
 <div class="section" id="encoding-tuples">
 <h3>Encoding Tuples</h3>
@@ -324,12 +325,12 @@ type appears, followed by more columns (numbered beginning with column
 </div>
 <div class="section" id="arrays-of-tuples">
 <h3>Arrays of Tuples</h3>
-<p>If the type of an array is <em>Tuple&lt;&gt;</em>, then a list of types is
-expected, terminated by a <tt class="docutils literal">pop</tt>.  If the list is empty, then each
-item in the array is a full (embedded) row, with each of its columns
-introduced with an encoding <tt class="docutils literal">varint</tt> and a value, just like encoding
-a regular embedded Tuple.  If however there is a list of types, then
-this defines the list for each item in the entire array, and just the
+<p>If the type of a list is <em>Tuple&lt;&gt;</em>, then a list of types is expected,
+terminated by a <tt class="docutils literal">pop</tt>.  If the list is empty, then each item in the
+array is a full (embedded) row, with each of its columns introduced
+with an encoding <tt class="docutils literal">varint</tt> and a value, just like encoding a regular
+embedded Tuple.  If however there is a list of types, then this
+defines the list for each item in the entire array, and just the
 values can be listed.  This precludes individual items in the array
 having <tt class="docutils literal">NULL</tt> values.</p>
 <p>For example, an array of (string, float) - able to encode a map from
@@ -348,6 +349,26 @@ in this column without re-parsing.</p>
 <p><tt class="docutils literal">string</tt> <em>K</em><sub>2</sub> <tt class="docutils literal">float</tt> <em>V</em><sub>2</sub> <tt class="docutils literal">eor</tt></p>
 <p><tt class="docutils literal">string</tt> <em>K</em><sub>N</sub> <tt class="docutils literal">float</tt> <em>V</em><sub>N</sub> <tt class="docutils literal">pop</tt></p>
 </blockquote>
+</div>
+<div class="section" id="heterogenous-arrays">
+<h3>Heterogenous Arrays</h3>
+<p>Like with hetereogenous tuples above, passing no type to List allows
+for a different encoding, where no types are assumed, and each value
+in the array requires a type bit.  The result is a tuple, which is
+filled into the list which defines the value, by column number.</p>
+<p>For instance, to encode this list:</p>
+<blockquote>
+(42, 31, 16, &quot;hut!&quot;, null, [1,2,3])</blockquote>
+<p>You'd use:</p>
+<blockquote>
+<em>List&lt;&gt;</em> <tt class="docutils literal">pop</tt> <tt class="docutils literal">varint</tt> 42 <tt class="docutils literal">varint</tt> 31 <tt class="docutils literal">varint</tt> 16
+<tt class="docutils literal">string</tt> 4 &quot;<tt class="docutils literal">hut!</tt>&quot; <sup>+1</sup><em>List&lt;&gt;</em> <tt class="docutils literal">varint</tt> 3 1 2 3 <tt class="docutils literal">pop</tt>
+<tt class="docutils literal">pop</tt></blockquote>
+<p>The <sup>+1</sup><em>List&lt;&gt;</em> in the above is the <em>List&lt;&gt;</em> type, with the
+column offset of &quot;+1&quot; to mean, skip one column, leaving the null.</p>
+<p>This is the only way to encode lists/arrays with nulls; the other form
+assumes an even n-dimensional array with all values of a common
+encoding.</p>
 </div>
 </div>
 <div class="section" id="schema-changes">
