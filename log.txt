@@ -1,7 +1,7 @@
 Cannot find Psyco, skipping it
 rest2web version 0.5.1
 Running rest2web the Site Builder.
-Sun Feb 12 18:51:44 2012
+Sun Feb 12 18:58:45 2012
 
 Starting in "/Users/samv/src/Git-DB/docs" directory.
 
@@ -20,15 +20,15 @@ Guessing encoding. We guessed: ISO8859-1
 Processing indexfile.
 Guessing encoding. We guessed: UTF-8
 Building code.html
-Writing code.html
+Skipping "code.html". Identical file exists.
 Building copyright.html
-Writing copyright.html
+Skipping "copyright.html". Identical file exists.
 Building scalability.html
-Writing scalability.html
+Skipping "scalability.html". Identical file exists.
 Building todo.html
-Writing todo.html
+Skipping "todo.html". Identical file exists.
 Building index.html
-Writing index.html
+Skipping "index.html". Identical file exists.
 
 Processing "licenses" directory.
 
@@ -51,21 +51,21 @@ Guessing encoding. We guessed: ISO8859-1
 Processing indexfile.
 Guessing encoding. We guessed: ISO8859-1
 Building design/columnformat.html
-Writing columnformat.html
+Skipping "columnformat.html". Identical file exists.
 Building design/distribution.html
-Writing distribution.html
+Skipping "distribution.html". Identical file exists.
 Building design/encoding.html
-Writing encoding.html
+Skipping "encoding.html". Identical file exists.
 Building design/filenames.html
-Writing filenames.html
+Skipping "filenames.html". Identical file exists.
 Building design/meta.html
-Writing meta.html
+Skipping "meta.html". Identical file exists.
 Building design/treeformat.html
-Writing treeformat.html
+Skipping "treeformat.html". Identical file exists.
 Building design/tx.html
-Writing tx.html
+Skipping "tx.html". Identical file exists.
 Building design/index.html
-Writing index.html
+Skipping "index.html". Identical file exists.
 
-Time taken to build site was 1.444 seconds.
+Time taken to build site was 1.434 seconds.
 15 files processed.

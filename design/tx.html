@@ -136,18 +136,18 @@ information put in the commit object, indicating which objects were
 read from.</p>
 <p>The locking protocol will insert entries like this into the commit
 record:</p>
-<!--  -->
-<blockquote>
-Locks: /foobar/1015,1050,1329,1950</blockquote>
+<pre class="literal-block">
+Locks: /foobar/1015,1050,1329,1950
+</pre>
 <p>This would indicate that four rows were read, but not updated - in the
 'foobar' class (actually, the class which maps to the '/foobar'
 directory), the rows with the four primary keys listed were locked.
 This does not require rows to be selected FOR UPDATE (a hint purely
 for the READ COMMITTED level).</p>
 <p>The protocol also allows for ranges to be specified;</p>
-<!--  -->
-<blockquote>
-Locks: /foobar/1000-1019</blockquote>
+<pre class="literal-block">
+Locks: /foobar/1000-1019
+</pre>
 <p>This isolation level will emit rows such as this, if the entire range
 of legal values were returned; it is just a short-hand notation.</p>
 <p>In addition to checking that the same rows were not updated by the
@@ -164,9 +164,9 @@ access, and requires that selects of multiple rows by ID lock rows
 that were not present.</p>
 <p>What this means is that if a query is issued - searching over a range
 of primary keys - that range of rows are locked.</p>
-<!--  -->
-<blockquote>
-Locks: /foobar/1000-2000</blockquote>
+<pre class="literal-block">
+Locks: /foobar/1000-2000
+</pre>
 <p>This doesn't mean that 1,001 rows were returned - it just means that
 there was a search by range of primary keys, with the range specified
 as between 1000 and 2000.</p>
