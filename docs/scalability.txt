@@ -50,7 +50,9 @@ and know what tables and properties exist in the store.
 Distributed Use Case
 ====================
 
-This is another 
+In this case, multiple nodes are capable of performing actions on the
+data.  There are many possible configurations which are explored on
+the distribution_ page.
 
 
 RDBMS use case
@@ -123,3 +125,4 @@ the "extracts".
 
 .. _meta.: design/meta.html
 
+.. _distribution: design/distribution.html
