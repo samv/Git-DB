@@ -11,6 +11,7 @@ Disclaimer: a lot of the information on this page is the result of the
 author's own knowledge and experience and should currently be counted
 as expert opinion grade but not yet proven or formally described.
 
+
 git db replication
 ====================
 
@@ -41,6 +42,7 @@ the git db.  Mixed modes are possible, but in general more restrictive
 systems will not be able to share information with less restrictive
 systems.
 
+
 Single Master Replication
 ===============================
 
@@ -60,6 +62,9 @@ updates does not change, there are no conflicts to resolve.
 
 This case matches the majority of traditional replication systems out
 there.
+
+The distribution protocol for this can be standard git protocol.
+
 
 Strict Multi-Master Replication
 ===============================
@@ -84,6 +89,11 @@ Examples of systems that work like this are clustered ACID databases
 (eg Oracle) and the transaction support in earlier versions of
 CouchDB.
 
+The interchange of messages relating to this replication could have a
+protocol designed for it, or likely a redundant message queue system
+like AQMP could just be re-used.
+
+
 Lax Multi-Master Replication
 ============================
 
@@ -96,6 +106,12 @@ This approach matches the replication approach of many
 stored-procedure based database replication systems, such as Bucardo.
 Also, current versions of CouchDB.
 
+An advantage of this style of replication is that it doesn't need a
+new protocol, you can just synchronize revisions and then apply the
+merge resolution rules.  It does however require a way to specify
+those merge resolution rules -- for instance, in-store functions.
+
+
 Democratic Computing
 ====================
 
@@ -105,6 +121,13 @@ system is used to resolve possible conflicts and auditing is possible.
 Additionally, it may be possible to relax strict requirements about
 knowing the input requests - answers to these questions should be
 available once more research is completed.
+
+This is a similar use case to the Strict Multi-Master protocol,
+however the use of an existing message queue system or some kind of
+cluster "supervisor" process are not allowed, and the system should be
+capable of operation with each node acting in rational self-interest
+only.
+
 
 Partitioning of Data
 ====================
@@ -118,33 +141,10 @@ the partitioned chunks - just the SHA1 sums - nodes with incomplete
 information can compute some limited results as if they had the full
 set.
 
-Distributed Result Processing using Map/Reduce
-==============================================
-
-Map/Reduce is where a problem is chunked up into parts, and then
-farmed out to many nodes, which all compute a part calculation ("map")
-and then the result is condensed into a result ("reduce").
-
-In the framework of git db, there are many facilities to allow this to
-occur.  The commit id represents a known, immutable database state and
-already solves many of the problems encountered by mutable state
-systems.  Nodes can process their result in terms of that commit ID,
-allowing for what are effectively long-running transactions.  Update
-jobs could potentially work incrementally at little extra incurred
-cost.
-
-Sharding
-========
-
-Sharding is another form of scaling, for very large data sets.
-
-Implementing this in git db will require backing the actual object
-storage layer to a distributed system, not simple local git.
-
-However once this infrastructure is available, the partitioning
-facility described above goes hand-in-hand with sharding.  Nodes can
-be masters of their own shard, and hand the condensed summary SHA1 to
-other nodes for their results.
+While this doesn't in principal require a new protocol, the entire
+query system will need to be structured so that it can divide the work
+by the submodules present in the repository, and farm them out to
+nodes which have those submodules.  This is likely a complex approach.
 
 .. _dividing tables:
    ./treeformat.html

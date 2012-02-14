@@ -47,6 +47,12 @@ application's table structure from the `meta.`_ application schema,
 and know what tables and properties exist in the store.
 
 
+Distributed Use Case
+====================
+
+This is another 
+
+
 RDBMS use case
 ==============
 
@@ -68,27 +74,48 @@ database state (ie, commits).  This allows some horizontal scaling of
 complex update transactions (assuming every node can hold a clone of
 the repository).
 
+This is something of a cross between the RDBMS case (where git-db does
+not get visibility of extra transactional integrity information), and
+the distributed use case.
+
 
 Sharded partition use case
 ==========================
 
-So, in this mode, the store is broken up into submodules, with writes
-to each submodule managed by a different independent worker process or
+In this mode, the store is broken up into submodules, with writes to
+each submodule managed by a different independent worker process or
 even computing node.
 
 As the `tree format`_ specifies that trees can be split into arbitrary
 nesting, data sets with natural partition boundaries (eg, users,
-sites, domains) can be sharded by ranges of primary keys.
+sites, domains) can be sharded by ranges of primary keys.  Node A
+might have keys from A-C, Node B keys from D-G, etc.
 
 
-Whole Hadoop use case
-=====================
+Whole Hadoop use case (Map/Reduce)
+==================================
 
-In this mode, the system is distributed at the object store layer; no
-re-use of low level components such as libgit2 are possible.  The
-application should also suit this style of implementation.  The
-simplest use case would be equivalent in functionality to the
-"Embedded" case, above.
+Map/Reduce is where a problem is chunked up into parts, and then
+farmed out to many nodes, which all compute a part calculation ("map")
+and then the result is condensed into a result ("reduce").  Hadoop is
+an open source implementation of this.
+
+In this mode, the system is distributed at the object store layer;
+re-use of low level components such as libgit2 are less likely, or
+lower level.  The simplest implementation would be equivalent in
+functionality to the "Embedded" case, above.
+
+git db has characteristics which suit this approach.  As the commit id
+summarizes a known and immutable database state, this already solves
+many of the problems encountered by mutable state systems.  Nodes can
+process their result in terms of that commit ID, allowing for what are
+effectively long-running transactions.  Update jobs could potentially
+work incrementally at little extra incurred cost.
+
+For very large data sets, there's no reason you really need to keep
+the history forever.  For ETL systems, you would probably only keep
+condensed summaries and not raw data in the actual clonable history;
+the "extracts".
 
 .. _encoding: design/encoding.html
 
