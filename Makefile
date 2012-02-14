@@ -18,3 +18,4 @@ publish: templates committed
 
 push: templates committed
 	maint/push.sh
+	git push origin website

@@ -7,6 +7,15 @@
 MetaFormat: specifying data structure
 =====================================
 
+.. figure:: ../files/meta-uml-simple.png
+   :width: 40%
+   :figwidth: 80%
+   :alt: UML diagram showing relationship between meta class heirarchies
+   :align: right
+
+   **Figure 1.** How the various ``meta`` types relate to each other,
+   as UML.  This is a simplified overview.
+
 There is a special schema in the git db store which represents the
 schema of the tables itself; these are identified with the ``meta.``
 schema name.  Optionally there are rows in the schema which represent
@@ -18,65 +27,111 @@ a simple example schema.
 Meta Tables
 ===========
 
-As the intrinsic storage building block, the ``meta.`` Tables have the
-following restrictions;
+As the intrinsic storage building block, the ``meta.`` schema defines
+the tables that exist in the store.
 
-**column types**
+The ``meta.`` schema is rich enough to express itself, as well as a
+number of useful features such as inheritance, nested tuples, and
+basic keys.
 
-    All columns *must* be defined in terms of types from the standard
-    type library.
+There are four groups of ``meta`` tables:
+
+**namespace**
+
+   The objects in this table are top-level containers for all the
+   schema objects relating to a particular version of the application.
+   When querying, this specifies the name that can be used to specify
+   the schema for objects.
+
+**types**
+
+   The type system uses (strict) inheritance, with all types sharing a
+   common (abstract) base type, ``meta.types``.
+
+   As is described later, this also implies that they share a primary
+   key.  This is different to Postgres, on which inherited types do
+   not share keys.  In the ``meta`` schema, they will also share the
+   same storage path, ``/meta/types``.
+
+   Types can be value types (``meta.value``), tuples (``meta.tuple``)
+   or storage tables (``meta.table``).
+
+**attributes**
+
+   Tuples are comprised of an ordered set of attributes.  Taken
+   together, these attributes define the tuple type.
+
+   Each attribute has a type, which can be a basic type or a tuple, as
+   described above.
 
 **keys**
 
-    All tables in ``meta.`` space *must* have a primary key.  Primary
-    key columns must come first.
+   There are three types of keys.  Primary keys, foreign keys, and
+   unique keys.  Every key belongs to a table (called the *source*
+   table), and all the attributes that it refers to are found in the
+   source table.  There are no indexes in this version of gitdb.
 
-**unique constraints**
 
-    Non-primary unique constraints are specified in terms of foreign
-    key constraints to specially named tables.  In a regular database
-    these tables are hidden (but you can see them in Postgres, if you
-    directly inspect the catalog).
-    
-This is being presented like this in order to satisfy the
-*bootstrapping* requirement of the schema; it should be able to store
-itself, including all of the relevant constraints that you would
-expect to operate on the data structure.
+The Namespace table (``meta.namespace``)
+========================================
 
-The "Namespace" table
-=====================
+The namespace table is a local surrogate key given to the schema,
+which is used as the first member of the primary key for all the other
+types in the ``meta`` schema.
 
-The schema table defines local names of the schemas used.  This
-controls the path where the data lives in the top level of the
-repository.  It also allows for schema revisioning.  The repository
-revision is a ``num``, which can be any number; integer, decimal,
-float etc.
+The namespace has a URL and revision pair.  The URL is a
+distinguishing feature of the schema.  The revision number is
+increased as the schema is modified going forward.  The meta schema
+itself can store multiple revisions of a single application's database
+schema, under different names.
+
+Here is a table describing the structure.  The first four colums of
+this table are equivalent to a query like:
+
+::
+
+   select 
+      attr_index, attr_name, attr_type, attr_required
+   from meta.attr
+   where ns_name = 'meta'
+     and type_name = 'namespace'
 
 .. list-table::
-   :widths: 5 10 10 8 20
+   :widths: 5 10 10 5 20 10
+   :header-rows: 1
 
-   * - ``attr_index``
-     - ``attr_name``
-     - ``attr_type``
-     - ``attr_required``
-     - description
+   * - attr_index
+     - attr_name
+     - attr_type
+     - attr_required
+     - Description
+     - Key(s)
+
    * - 0
      - ``ns_name``
      - ``string``
-     - true
-     - name of the schema in the store
+     - yes
+     - local schema name
+     - Primary
+
    * - 1
      - ``ns_url``
      - ``string``
-     - false
-     - identifier for the application
-   * - 2
-     - ``ns_url``
-     - ``string``
-     - true
-     - with the URL, uniquely identifies the schema revision
+     - yes
+     - uniquely identitying URL (may be empty)
+     - Unique (with ns_rev)
 
-The values, for the ``meta`` schema, are:
+   * - 2
+     - ``ns_rev``
+     - ``num``
+     - yes
+     - schema iteration number
+     - Unique (with ns_rev)
+ 
+If you are storing in a verbose encoding such as JSON, then the
+attribute indices are not important and property names are used
+instead.  For example, the ``meta`` schema could be declared with this
+entry in ``/meta/namespace.json`` (or ``/meta/namespace/meta.json``):
 
 ::
 
@@ -85,366 +140,510 @@ The values, for the ``meta`` schema, are:
     "ns_rev": 0.1,
   }
 
-Which could be encoded in binary as:
+It could also be encoded in binary as:
 
 ::
 
-  00000000  021d 6874 7470 3a2f 2f67 6974 6875 622e  ␂␝http://github.
-  00000010  636f 6d2f 7361 6d76 2f47 6974 2d44 4203  com/samv/Git-DB␃
-  00000020  7f01 0204 6d65 7461                      ␡␁␂␄meta
+  00000000  0204 6d65 7461 021d 6874 7470 3a2f 2f67 ␂␄meta␂␝http://g
+  00000010  6974 6875 622e 636f 6d2f 7361 6d76 2f47 ithub.com/samv/Gi
+  00000020  6974 2d44 4203 7f01                     t-DB␃␡␁
+
+This shows a curious situation, in that it is possible to include
+information in the ``meta`` tables about the ``meta`` schema itself.
+This is a well-known chicken-and-egg situation, found in type theory,
+metaprogramming, etc.
+
+To keep things simple when connecting, all that is required is a
+single row which includes the ``meta`` schema URL and revision - and
+if the implementation does not know how what that means, it cannot
+process the rest of the schema metadata, and therefore should not
+continue.  If the data is provided, then it should be compared against
+the known good data, and any discrepancies treated as a fatal error.
 
 
------
-
-Information below here is out of date; see the gidb.meta branch for
-a "real" description of the meta schema structure.
-
------
-
-The "Tuple" table
-=================
-
-The "paths" table defines which schemas are active at which paths
-within the git tree.  Multiple versions of the same schema can be
-deployed, but they have to have unique ns_name's.
-
-::
-
-   { "name": "tuple",
-     "type": "tuple",
-     "fields": [
-        { "name": "ns_url", "type": "string", "required": 1 },
-        { "name": "ns_rev", "type": "num", "required": 1 },
-        { "name": "tuple_index", "type": "int", "required": 1 },
-        { "name": "tuple_name", "type": "string", "required": 1 },
-     ],
-     "keys": [
-        { "primary": "1",
-          "fields": [ "ns_url", "ns_rev", "tuple_index" ],
-        },
-        { "foreign": "1",
-          "fields": [ "ns_url", "ns_rev" ],
-          "references": {
-              "ns_name": "meta",
-              "tuple_name": "schema",
-          }
-        },
-        { "unique": "1",
-          "fields": [ "ns_url", "ns_rev", "tuple_name" ],
-        },
-     ],
-   },
-
-The "Store" table
-=================
-
-The tuple table defines types, but they do not necessarily "deploy"
-them.  Tuples can be defined merely for use within other parts of the
-schema, so this extra table connects tuples with TreeFormat_ trees.
-
-The "path" field is actually optional, the default will be
-``/ns_name/tuple_name`` but this is provided as an extra flexibility.
-The only fixed path is therefore ``/.meta`` 
-
-::
-
-   { "name": "store",
-     "type": "tuple",
-     "fields": [
-        { "name": "ns_name", "type": "string", "required": 1 },
-        { "name": "tuple_name", "type": "string", "required": 1 },
-        { "name": "ns_url", "type": "string", "required": 1 },
-        { "name": "ns_rev", "type": "num", "required": 1 },
-        { "name": "tuple_index", "type": "int", "required": 1 },
-        { "name": "path", "type": "string", "required": 0 },
-     ],
-     "keys": [
-        { "primary": "1",
-          "fields": [ "ns_name", "tuple_name" ],
-        },
-        { "foreign": "1",
-          "fields": [ "ns_url", "ns_rev", "tuple_index" ],
-          "references": "meta.class",
-        },
-     ],
-   },
-
-The "Attributes" or "Columns" table
-===================================
-
-::
-
-  # this table records the list of attributes/columns of a
-  # class/table.
-  meta.attr:
-    **ns_url text not null**
-    **ns_rev num not null**
-    **tuple_index int not null**
-    foreign key (ns_url, ns_rev, tuple_index)
-            references meta.class
-    **attr_index int not null**
-    primary key (ns_url, ns_rev, tuple_index, attr_index)
-    # if attr_name is null, the column is deleted.
-    **attr_name text null**
-    unique key (ns_url, ns_rev, tuple_index, attr_name)
-    **attr_type text not null**
-    foreign key (ns_url, ns_rev, attr_type) references meta.type
-         (ns_url, ns_rev, type_name)
-    **attr_required bool not null**
-    # a 'default' is somewhat problematic; *any* value can be placed
-    # here, and it is not known how to interpret it without looking up
-    # what the attr_type means; so, it may be seen as 'opaque'
-    **attr_default item null**
-
-  # for unique key in above
-  meta.attr:attr_name_idx
-    ns_url text not null
-    ns_rev num not null
-    tuple_index int not null
-    name text not null
-    primary key (ns_url, ns_rev, tuple_index, name)
-    attr_index int not null
-    foreign key (ns_url, ns_rev, tuple_index, attr_index)
-            references meta.attr
-
-In Avro-like syntax:
-
-
-Precision/scale modifiers, such as ``VARCHAR(2)`` etc are not
-supported directly; they're something of a bodge when proper
-generics/higher order type system is a more complete solution.  Done
-properly, a generics system can also be the starting point for
-features such as arrays (ARRAY [TYPE]) and composite types (eg TUPLE
-[TYPE, TYPE, TYPE]); so this will be left out initially, and the
-database will be fully arbitrary length throughout.
-
-KEYS & KEY CONSTRAINTS
+Types (``meta.type``)
 ======================
 
-::
+Types are abstract, in that you can't just have a type, it has to be a
+particular kind of type.  When reading the row, which kind of type you
+have can be distinguished from which attributes it posesses.
 
-  # the 'key' table describes unique and foreign key constraints as
-  # well as listing recommended indexes (stored=false)
-  meta.key:
-    **ns_url text not null**
-    **ns_rev num not null**
-    **tuple_index int not null**
-    foreign key (ns_url, ns_rev, tuple_index)
-            references meta.class
-    **key_name text not null**
-    primary key (ns_url, ns_rev, tuple_index, key_name)
-    **key_unique bool not null**
-    **key_primary bool not null**
-    **key_stored bool not null**
-    # whether this key also restricts subclasses of the parent.
-    # subclasses will have multiple key rows!
-    **key_heritable bool not null**
+The ``type`` tuple exists only to keep a registry of type names within
+a namespace.  The primary namespace for types is their names and not a
+surrogate index, which makes type renaming more complex, but makes the
+schema overall nicer to work with.  Numbered surrogates are used for
+the ``attr`` table, only, as they are necessary for the binary column
+format.
 
-  # this slave table links the key to the (ordered) list of attributes
-  # which are a part of the key, and if the key is a foreign key, then
-  # also the columns of the foreign key.
-  meta.key:attr
-    **ns_url text not null**
-    **ns_rev num not null**
-    **tuple_index int not null**
-    **key_name text not null**
-    foreign key (ns_url, ns_rev, tuple_index, key_name)
-            references meta.key
-    **key_pos int not null**
-    primary key (ns_url, ns_rev, tuple_index, name, key_pos)
-    attr_index int not null
-    foreign key (ns_url, ns_rev, tuple_index, attr_index)
-            references meta.attr
-    foreign_tuple_index int null
-    foreign key (ns_url, ns_rev, foreign_tuple_index)
-            references meta.class (ns_url, ns_rev, tuple_index)
-    foreign_attr_index int null
-    foreign key (ns_url, ns_rev, foreign_tuple_index, foreign_attr_index)
-            references meta.attr (ns_url, ns_rev, tuple_index, attr_index)
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
 
-.. _types:
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
 
-Types
-=====
-
-::
-
-  # meta.type: this is basically a compatibility table and is optional
-  # if using only predefined types.  'Functions' here are strings;
-  # only the name, not the definition nor the function prototype are
-  # represented.  They are to be well-known function names, but the
-  # paranoid should prepare for them to be custom to the schema
-  # ID/revision.
-  meta.type:
-    **ns_url text not null**
-    **ns_rev num not null**
-    foreign key (id, ns_rev) references meta.schema
-    **type_name text not null**
-    primary key (id, ns_rev, type_name)
-    **type_formats int not null**
-    **type_dump_func text null**
-    **type_load_func text null**
-    **type_choose_func text null**
-    **type_cmp_func text null**
-    **type_print_func text null**
-    **type_scan_func text null**
-
-``type_formats`` is an integer which is interpreted bitwise, and
-represents the encodings which are allowed for that type in this
-store.  The values for the standard types, below, represent all of the
-encodings which are defined by this standard.  Using an encoding for a
-type which is not permitted by the ``type_formats`` value in the
-``meta.type`` table is a data consistency error.  ``type_formats``
-roughly covers the ``INTERNALLENGTH`` and ``STORAGE`` properties in
-the equivalent Postgres feature, ``CREATE TYPE``
-
-The functions are described as below:
-
-``type_choose_func``
-
-    Some types get to choose the encoding based on the value to be
-    encoded.  If that is true, this function will be defined,
-    otherwise it will be null and only one ``type_formats`` bit may be
-    set.
-  
-``type_dump_func``
-
-    The name of a function which marshalls the value out.  The
-    function will take the value, an encoding, and return a value
-    valid for that encoding.  This is similar to the ``SEND`` function
-    in Postgres.
-  
-``type_load_func``
-
-    The reverse, but marshalls the value in.  The encoding is a formal
-    parameter.  This corresponds to ``RECEIVE`` in Postgres.
-  
-``type_cmp_func``
-
-    The name of a function which can compare two values.  For primary
-    key sorting purposes.  This corresponds to the ``CREATE OPERATOR
-    CLASS ... DEFAULT FOR TYPE ... USING BTREE`` command in Postgres.
-  
-``type_print_func``
-
-    The name of a function which converts the value to a primary
-    key-form string, like ``OUTPUT`` in Postgres.  This need not be
-    reversible; if not, the standard types' function name starts with
-    ``hash_``
-  
-``type_scan_func``
-
-    The reverse of ``type_print_func``; turns a formatted string back
-    into a value, like ``INPUT`` in Postgres.  If this is not
-    reversible then the function will be converting the row value to a
-    placeholder.
-  
-Types do not need to specify a hashing function as in Postgres; this
-is considered an internal implementation detail.  As truly custom
-types are not yet permitted, hashing may proceed on the basis of the
-encoded value.
-
-Standard Types
---------------
-
-The *standard types* here represent a common set of well known
-data types in use in databases and programming, and a corresponding
-set of *well known functions* which perform the trivial IO
-operations, and for which reference implementations will be provided.
-
-Implementations need not support all types; however if opening a
-store, this table may be checked to see that the understanding of all
-parties as to the nature of the types is known.
-
-.. list-table:
-   :widths: 12 12 12 12 12 12 12 12
+   * - ``ns_name``
+     - string
+     - no
+     - Primary (with ``type_name``) and Foreign to ``namespace``
 
    * - ``type_name``
-     - ``type_formats``
-     - ``type_choose_func``
-     - ``type_dump_func``
-     - ``type_load_func``
-     - ``type_cmp_func``
-     - ``type_print_func``
-     - ``type_scan_func``
-   * - bool
-     - 1100000b
-     - is_tf
-     - emit_bool
-     - read_bool
-     - false_first
-     - fmt_bool
-     - scan_bool
-   * - integer
-     - 1b
-     - -
-     - emit_varint
-     - read_varint
-     - cmp_num
-     - fmt_int
-     - scan_int
-   * - real
-     - 11011b
-     - pack_real
-     - emit_real
-     - read_real
-     - cmp_num
-     - fmt_real
-     - scan_real
-   * - numeric
-     - 1000b
-     - -
-     - emit_real
-     - read_real
-     - cmp_num
-     - fmt_real
-     - scan_real
-   * - bytea
-     - 1000100b
-     - large_value
-     - emit_bytea
-     - read_bytea
-     - cmp_bytes
-     - fmt_bytea_hex
-     - scan_bytea_hex
-   * - text
-     - 1000100b
-     - large_value
-     - emit_text
-     - read_text
-     - cmp_text
-     - fmt_text
-     - scan_text
-   * - nkd_text
-     - 1000100b
-     - large_value
-     - emit_nkd_text
-     - read_nkd_text
-     - cmp_nkd_text
-     - fmt_nkd_text
-     - scan_nkd_text
-   * - nkc_text
-     - 1000100b
-     - large_value
-     - emit_nkc_text
-     - read_nkc_text
-     - cmp_nkc_text
-     - fmt_nkc_text
-     - scan_nkc_text
-   * - json
-     - 1000100b
-     - large_json
-     - emit_json
-     - read_json
-     - cmp_struct_hash
-     - hash_json
-     - scan_hash
+     - string
+     - no
+     - Primary (with ``ns_name``)
 
-The functions are all described in detail in the reference
-implementation.  Most are very simple.
 
-If a ``type_name`` is used in the schema, but not listed in
-``meta.types``, then the above definitions are used.
+Value Types (``meta.value``)
+----------------------------
+
+Value Types are a kind of type that are simple and concrete: they have
+a single set of allowable column formats, and well-known set of
+functions for converting from the value to representations such as the
+tree format and the column format.
+
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
+
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
+
+   * - ``ns_name``
+     - string
+     - no
+     - Primary (with ``type_name``); foreign key inherited from
+       ``type``
+
+   * - ``type_name``
+     - string
+     - no
+     - Primary (with ``ns_name``)
+
+   * - ``value_formats``
+     - ``column_formats``
+     - no
+     - \-
+
+   * - ``value_dump_f``
+     - string
+     - yes
+     - \-
+
+   * - ``value_load_f``
+     - string
+     - yes
+     - \-
+
+   * - ``value_choose_f``
+     - string
+     - yes
+     - \-
+
+   * - ``value_cmp_f``
+     - string
+     - yes
+     - \-
+
+   * - ``value_print_f``
+     - string
+     - yes
+     - \-
+
+   * - ``value_scan_f``
+     - string
+     - yes
+     - \-
+
+Value Type definitions are relatively mundane, so the meanings of
+these columns is described elsewhere, in `Value Types`_.  You can
+include this in your schema to assist others in working with the new
+data types that get defined, should you feel the need.
+
+Enum Types (``meta.enum``)
+--------------------------
+
+Enums.  Useful enough to include on a first cut.
+
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
+
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
+
+   * - ``ns_name``
+     - string
+     - no
+     - Primary (with ``type_name``); foreign key inherited from
+       ``type``
+
+   * - ``type_name``
+     - string
+     - no
+     - Primary (with ``ns_name``)
+
+   * - ``enum_values``
+     - string[]
+     - no
+     - \-
+
+``enum_values`` is a column with 1 dimension, that is, an array.  The
+contents of this array relate to 'int' values.
+
+Field Types (``meta.field``)
+----------------------------
+
+Fields are like 'enum's but stored bitwise, either in an int or a
+block of bytes.  May be mapped to an array of values, or a 'FOO|BAR'
+C-style rendering, depending on the IO functions specified.
+
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
+
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
+
+   * - ``ns_name``
+     - string
+     - no
+     - Primary (with ``type_name``); foreign key inherited from
+       ``type``
+
+   * - ``type_name``
+     - string
+     - no
+     - Primary (with ``ns_name``)
+
+   * - ``field_bits``
+     - string[]
+     - no
+     - \-
+
+Fields are included mainly because there is one in the meta schema.
+
+Tuples (``meta.tuple``)
+-----------------------
+
+The tuple table defines what Postgres would call compound data types,
+and are usually called tables in the classic RDBMS, or perhaps classes
+or result sets in other contexts.
+
+Similar to the situation in Postgres, they are not necessarily
+intended for use as real tables, and can be used as column types in
+the case of nested data types.  This allows for deeply nested data in
+rows, while retaining the ability to use strict typing.
+
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
+
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
+
+   * - ``ns_name``
+     - string
+     - no
+     - Primary (with ``type_name``); foreign key inherited from
+       ``type``
+
+   * - ``type_name``
+     - string
+     - no
+     - Primary (with ``ns_name``)
+
+   * - ``tuple_super``
+     - string[]
+     - yes
+     - Foreign, with ``ns_name``, to ``type`` primary key
+
+Tuples can inherit from other tuples, but they must add at least one
+required attribute in order to distinguish themselves in storage.
+This restriction allows row data to be merged between tables by simple
+concatenation and avoids storing schema information in the data. In
+other words, types within an inheritance heirarchy share attribute
+numbering ranges.
+
+Storage Tables (``meta.table``)
+-------------------------------
+A tuple with storage is called a table, and this requires a primary
+key.
+
+By default, its storage path is ``/ns_name/type_name`` - but this can
+be overridden by a non-null value in the ``table_path`` column.  The
+only fixed path in the repository is therefore ``/meta`` - though you
+can call this path ``/_meta`` or ``/.meta`` if you prefer.  On
+connection, they should be tried in that order, and the first one
+found used.  If a ``value_name`` is used in the schema, but not listed
+in ``meta.types``, then 'standard' definitions from the relevant
+version of the git-db spec may be used.
+
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
+
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
+
+   * - ``ns_name``
+     - string
+     - no
+     - Primary (with ``type_name``); foreign key inherited from
+       ``type``
+
+   * - ``type_name``
+     - string
+     - no
+     - Primary (with ``ns_name``)
+
+   * - ``tuple_super``
+     - string[]
+     - yes
+     - (inherited from tuple)
+
+   * - ``tuple_path``
+     - string
+     - no
+     - none
+
+The Attribute table (``meta.attr``)
+===================================
+
+Tuples are ordered lists of attributes.
+
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
+
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
+
+   * - ``ns_name``
+     - string
+     - no
+     - Primary (1/3)
+
+   * - ``type_name``
+     - string
+     - no
+     - Primary (2/3); Foreign with ``ns_name`` to ``type`` or
+       ``tuple``
+
+   * - ``attr_index``
+     - int
+     - no
+     - Primary (3/3)
+
+   * - ``attr_name``
+     - int
+     - yes
+     - Unique with ``ns_name`` and ``type_name``
+
+   * - ``attr_type``
+     - string
+     - yes
+     - Foreign with ``ns_name`` to ``type`` primary key index
+
+   * - ``attr_dim``
+     - int
+     - yes
+     - none
+
+   * - ``attr_required``
+     - bool
+     - no
+     - none
+
+
+``ns_name``, ``type_name``
+
+    These parts of the primary key are a foreign keys to the ``tuple``
+    table (or the ``type`` table, but they really only may add
+    attributes to tuple types, as value types cannot have extra type
+    encoded).  They specify the ``meta.tuple`` that the entry
+    describes.
+
+``attr_index``
+
+    This specifies the column number in storage.  When new columns are
+    added, they are given a new ``attr_index`` number.  When they are
+    renamed, the number stays the same, and finally, when they are
+    deleted the entry remains.
+
+``attr_name``
+
+    This is the logical name that is ascribed to the property, and
+    should be the important one as far as applications are concerned.
+    As there is a unique constraint, attributes which are deleted
+    should have ``attr_name`` not set.
+
+``attr_type``
+
+    This specifies the type of the attribute.  It is a reference to
+    the ``meta.type`` heirarchy.  Through inheritance, this may also
+    refer to tuples in the ``meta.tuple`` table - even itself.
+    Cross-namespace type references are not allowed.
+
+    If this field is not set then the attribute is untyped.  The
+    standard JSON-like transform rules will apply.
+
+``attr_dim``
+
+    This specifies the number of dimensions of the attribute.  If it
+    is 0 or not specified, then the attribute is a regular attribute.
+    If it is 1, then it is an array.  If 2 or higher, a
+    multi-dimensional array.
+
+``attr_required``
+
+    A most basic constraint, whether the value can be NULL or not.  If
+    not set, then the value may be NULL.  No primary key attributes
+    may be NULL.
+
+Constraints and Keys
+====================
+
+There are three types of indexes: primary keys, unique keys, and
+foreign keys.  These are all specializations of the 'key' tuple:
+
+The Key Tuple (``meta.key``)
+----------------------------
+
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
+
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
+
+   * - ``ns_name``
+     - string
+     - no
+     - Primary (1/3)
+
+   * - ``type_name``
+     - string
+     - no
+     - Primary (2/3); Foreign with ``ns_name`` to ``type`` or
+       ``tuple``
+
+   * - ``key_name``
+     - int
+     - no
+     - Primary (3/3); Unique with ``ns_name``
+
+   * - ``key_inherit``
+     - bool
+     - yes
+     - This rule doesn't apply to sub-types.
+
+   * - ``key_attr_index``
+     - int[]
+     - yes
+     - Foreign with ``ns_name`` and ``type_name`` to
+       ``attr_ns_name_type_name_attr_index_unique``
+
+Unique Keys (``meta.unique``)
+-----------------------------
+Unique keys add the notion of constraint on the source table.
+
+It has a table, which has no extra columns compared to the tuple.
+
+Primary Keys (``meta.primary``)
+-------------------------------
+The only difference between the primary key and a unique key is that
+it is used as the primary identity for rows in the table.  It stores
+one extra fact, the location of the table in the store.
+
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
+
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
+
+   * - ``ns_name``, ``type_name``, ``key_name``, ``key_inherit``,
+       ``key_attr_index``
+     - various
+     - various
+     - Inherited from 'key' tuple
+
+   * - ``primary_path``
+     - string
+     - no
+     - no key, must exist
+
+There are two fields where the path is recorded; this one records the
+location of the TreeFormat structure.  Technically, the ``table``
+class' ``table_path`` attribute records which TreeFormat structure
+that this table is saving its rows in.
+
+Foreign Keys (``meta.foreign``)
+-------------------------------
+
+Finally, there is the ``foreign`` key type.  Foreign keys refer to
+another key.  If they refer to a unique or primary key, a traditional
+foreign key relationship is established.  Foreign keys which refer to
+each other imply the existence test, but place no constraint on
+uniqueness of either side.
+
+.. list-table::
+   :widths: 20 5 5 40
+   :header-rows: 1
+
+   * - Column
+     - Type
+     - Nullable
+     - Key(s)
+
+   * - ``ns_name``, ``type_name``, ``key_name``, ``key_inherit``,
+       ``key_attr_index``
+     - various
+     - various
+     - Inherited from 'key' tuple
+
+   * - ``foreign_key_name``
+     - string
+     - no
+     - Foreign to ``key`` with ``ns_name``
+
+Summary
+=======
+
+The schema so far is capable of storing typed and untyped data, as
+well as achieving several of the various levels of normal form.  An
+important test is that the schema completely describes itself, and
+naturally fits within itself.
+
+.. figure:: ../files/meta-uml.png
+   :width: 60%
+   :figwidth: 90%
+   :alt: UML diagram showing relationship between all meta classes
+   :align: right
+
+   **Figure 2.** A UML diagram of *all* of the ``meta`` types and how
+   they relate to each other.
 
 .. _TreeFormat:
    ./treeformat.html
+
+.. _Value Types:
+   ./values.html

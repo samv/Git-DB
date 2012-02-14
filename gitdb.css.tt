@@ -4,9 +4,9 @@ body {
      font-family: "Bitstream Charter", serif;
 }
 
-/*#-------------------------------------
+[%#-------------------------------------
 | # logo & title
--*/
+-%]
 
 #sitelogo {
      background: darkgreen;
@@ -33,9 +33,9 @@ body {
      font-style: italic;
 }
 
-/*#-------------------------------------
+[%#-------------------------------------
 | # navbar
--*/
+-%]
 
 #navbar {
 	padding: 0.4em;
@@ -45,17 +45,6 @@ body {
 #navbar .menuItem {
 	display: inline;
 	padding-left: 1em;
-}
-
-#breadcrumbs {
-    margin: 0;
-    padding: 0.2em 0 0 2em;
-    background: #f0f8ff;  /* AliceBlue */
-}
-
-#breadcrumbs li {
-    display: inline;
-    padding-left: 1em;
 }
 
 h1, h2, h3, h4, h5, h6 {

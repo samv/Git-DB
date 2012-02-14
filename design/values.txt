@@ -1,0 +1,156 @@
+====================
+Defining Value Types
+====================
+
+``value_formats`` is an integer which is interpreted bitwise, and
+represents the encodings which are allowed for that value type in this
+store.  The values for the standard types, below, represent all of the
+encodings which are defined by this standard.  Using an encoding for a
+type which is not permitted by the ``value_formats`` value in the
+``meta.type`` table is a data consistency error.
+
+The functions are described as below:
+
+``value_choose_f``
+
+    Some types get to choose the encoding based on the value to be
+    encoded.  If that is true, this function will be defined,
+    otherwise it will be null and only one ``value_formats`` bit may be
+    set.
+  
+``value_dump_f``
+
+    The name of a function which marshalls the value out.  The
+    function will take the value, an encoding, and return a value
+    valid for that encoding.  This is similar to the ``SEND`` function
+    in Postgres.
+  
+``value_load_f``
+
+    The reverse, but marshalls the value in.  The encoding is a formal
+    parameter.  This corresponds to ``RECEIVE`` in Postgres.
+  
+``value_cmp_f``
+
+    The name of a function which can compare two values.  For primary
+    key sorting purposes.  This corresponds to the ``CREATE OPERATOR
+    CLASS ... DEFAULT FOR TYPE ... USING BTREE`` command in Postgres.
+  
+``value_print_f``
+
+    The name of a function which converts the value to a primary
+    key-form string, like ``OUTPUT`` in Postgres.  This need not be
+    reversible; if not, the standard types' function name starts with
+    ``hash_``
+  
+``value_scan_f``
+
+    The reverse of ``value_print_f``; turns a formatted string back
+    into a value, like ``INPUT`` in Postgres.  If this is not
+    reversible then the function will be converting the row value to a
+    placeholder.
+  
+Types do not need to specify a hashing function as in Postgres; this
+is considered an internal implementation detail.  As truly custom
+types are not yet permitted, hashing may proceed on the basis of the
+encoded value.
+
+Standard Types
+^^^^^^^^^^^^^^
+
+The *standard types* here represent a common set of well known
+data types in use in databases and programming, and a corresponding
+set of *well known functions* which perform the trivial IO
+operations, and for which reference implementations will be provided.
+
+Implementations need not support all types; however if opening a
+store, this table may be checked to see that the understanding of all
+parties as to the nature of the types is known.
+
+.. list-table::
+   :widths: 12 12 12 12 12 12 12 12
+
+   * - ``value_name``
+     - ``value_formats``
+     - ``value_choose_f``
+     - ``value_dump_f``
+     - ``value_load_f``
+     - ``value_cmp_f``
+     - ``value_print_f``
+     - ``value_scan_f``
+   * - bool
+     - 1100000b
+     - is_tf
+     - emit_bool
+     - read_bool
+     - false_first
+     - fmt_bool
+     - scan_bool
+   * - integer
+     - 1b
+     - -
+     - emit_varint
+     - read_varint
+     - cmp_num
+     - fmt_int
+     - scan_int
+   * - real
+     - 11011b
+     - pack_real
+     - emit_real
+     - read_real
+     - cmp_num
+     - fmt_real
+     - scan_real
+   * - numeric
+     - 1000b
+     - -
+     - emit_real
+     - read_real
+     - cmp_num
+     - fmt_real
+     - scan_real
+   * - bytea
+     - 1000100b
+     - large_value
+     - emit_bytea
+     - read_bytea
+     - cmp_bytes
+     - fmt_bytea_hex
+     - scan_bytea_hex
+   * - text
+     - 1000100b
+     - large_value
+     - emit_text
+     - read_text
+     - cmp_text
+     - fmt_text
+     - scan_text
+   * - nkd_text
+     - 1000100b
+     - large_value
+     - emit_nkd_text
+     - read_nkd_text
+     - cmp_nkd_text
+     - fmt_nkd_text
+     - scan_nkd_text
+   * - nkc_text
+     - 1000100b
+     - large_value
+     - emit_nkc_text
+     - read_nkc_text
+     - cmp_nkc_text
+     - fmt_nkc_text
+     - scan_nkc_text
+   * - json
+     - 1000100b
+     - large_json
+     - emit_json
+     - read_json
+     - cmp_struct_hash
+     - hash_json
+     - scan_hash
+
+The functions are all described in detail in the reference
+implementation.  Most are very simple.
+
