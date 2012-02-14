@@ -1,9 +1,9 @@
 Cannot find Psyco, skipping it
 rest2web version 0.5.1
 Running rest2web the Site Builder.
-Mon Feb 13 12:49:03 2012
+Tue Feb 14 09:03:20 2012
 
-Starting in "/Users/svilain/src/gitdb.github.com/docs" directory.
+Starting in "/Users/samv/src/Git-DB/docs" directory.
 
 Processing "root" directory.
 Reading "code.txt".
@@ -67,5 +67,5 @@ Skipping "tx.html". Identical file exists.
 Building design/index.html
 Skipping "index.html". Identical file exists.
 
-Time taken to build site was 1.139 seconds.
+Time taken to build site was 1.849 seconds.
 15 files processed.

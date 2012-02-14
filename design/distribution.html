@@ -89,6 +89,7 @@ promoted to be the master.</p>
 updates does not change, there are no conflicts to resolve.</p>
 <p>This case matches the majority of traditional replication systems out
 there.</p>
+<p>The distribution protocol for this can be standard git protocol.</p>
 </div>
 <div class="section" id="strict-multi-master-replication">
 <h1>Strict Multi-Master Replication</h1>
@@ -108,6 +109,9 @@ localized disasters.  Non-repudiating systems may take this form.</p>
 <p>Examples of systems that work like this are clustered ACID databases
 (eg Oracle) and the transaction support in earlier versions of
 CouchDB.</p>
+<p>The interchange of messages relating to this replication could have a
+protocol designed for it, or likely a redundant message queue system
+like AQMP could just be re-used.</p>
 </div>
 <div class="section" id="lax-multi-master-replication">
 <h1>Lax Multi-Master Replication</h1>
@@ -118,6 +122,10 @@ bacronym BASE).  More than one node may produce valid updates.</p>
 <p>This approach matches the replication approach of many
 stored-procedure based database replication systems, such as Bucardo.
 Also, current versions of CouchDB.</p>
+<p>An advantage of this style of replication is that it doesn't need a
+new protocol, you can just synchronize revisions and then apply the
+merge resolution rules.  It does however require a way to specify
+those merge resolution rules -- for instance, in-store functions.</p>
 </div>
 <div class="section" id="democratic-computing">
 <h1>Democratic Computing</h1>
@@ -127,6 +135,11 @@ system is used to resolve possible conflicts and auditing is possible.
 Additionally, it may be possible to relax strict requirements about
 knowing the input requests - answers to these questions should be
 available once more research is completed.</p>
+<p>This is a similar use case to the Strict Multi-Master protocol,
+however the use of an existing message queue system or some kind of
+cluster &quot;supervisor&quot; process are not allowed, and the system should be
+capable of operation with each node acting in rational self-interest
+only.</p>
 </div>
 <div class="section" id="partitioning-of-data">
 <h1>Partitioning of Data</h1>
@@ -137,29 +150,10 @@ key, or randomly when using a UUID or a hash for the primary key.</p>
 the partitioned chunks - just the SHA1 sums - nodes with incomplete
 information can compute some limited results as if they had the full
 set.</p>
-</div>
-<div class="section" id="distributed-result-processing-using-map-reduce">
-<h1>Distributed Result Processing using Map/Reduce</h1>
-<p>Map/Reduce is where a problem is chunked up into parts, and then
-farmed out to many nodes, which all compute a part calculation (&quot;map&quot;)
-and then the result is condensed into a result (&quot;reduce&quot;).</p>
-<p>In the framework of git db, there are many facilities to allow this to
-occur.  The commit id represents a known, immutable database state and
-already solves many of the problems encountered by mutable state
-systems.  Nodes can process their result in terms of that commit ID,
-allowing for what are effectively long-running transactions.  Update
-jobs could potentially work incrementally at little extra incurred
-cost.</p>
-</div>
-<div class="section" id="sharding">
-<h1>Sharding</h1>
-<p>Sharding is another form of scaling, for very large data sets.</p>
-<p>Implementing this in git db will require backing the actual object
-storage layer to a distributed system, not simple local git.</p>
-<p>However once this infrastructure is available, the partitioning
-facility described above goes hand-in-hand with sharding.  Nodes can
-be masters of their own shard, and hand the condensed summary SHA1 to
-other nodes for their results.</p>
+<p>While this doesn't in principal require a new protocol, the entire
+query system will need to be structured so that it can divide the work
+by the submodules present in the repository, and farm them out to
+nodes which have those submodules.  This is likely a complex approach.</p>
 </div>
 </div>
 
