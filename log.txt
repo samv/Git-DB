@@ -1,7 +1,7 @@
 Cannot find Psyco, skipping it
 rest2web version 0.5.1
 Running rest2web the Site Builder.
-Tue Feb 14 09:08:18 2012
+Tue Feb 14 09:09:54 2012
 
 Starting in "/Users/samv/src/Git-DB/docs" directory.
 
@@ -24,7 +24,7 @@ Skipping "code.html". Identical file exists.
 Building copyright.html
 Skipping "copyright.html". Identical file exists.
 Building scalability.html
-Writing scalability.html
+Skipping "scalability.html". Identical file exists.
 Building todo.html
 Skipping "todo.html". Identical file exists.
 Building index.html
@@ -53,7 +53,7 @@ Guessing encoding. We guessed: ISO8859-1
 Building design/columnformat.html
 Skipping "columnformat.html". Identical file exists.
 Building design/distribution.html
-Skipping "distribution.html". Identical file exists.
+Writing distribution.html
 Building design/encoding.html
 Skipping "encoding.html". Identical file exists.
 Building design/filenames.html
@@ -67,5 +67,5 @@ Skipping "tx.html". Identical file exists.
 Building design/index.html
 Skipping "index.html". Identical file exists.
 
-Time taken to build site was 1.832 seconds.
+Time taken to build site was 1.829 seconds.
 15 files processed.

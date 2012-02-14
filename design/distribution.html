@@ -153,7 +153,9 @@ set.</p>
 <p>While this doesn't in principal require a new protocol, the entire
 query system will need to be structured so that it can divide the work
 by the submodules present in the repository, and farm them out to
-nodes which have those submodules.  This is likely a complex approach.</p>
+nodes which have those submodules.  This is likely a complex approach,
+but it does have at least one small piece of elegance, in that each
+small piece of the database can be cloned with standard git.</p>
 </div>
 </div>
 
